@@ -1,309 +1,215 @@
-# HomeNetAI Team Setup Guide
+# 👥 Team Setup Guide
 
-Complete setup instructions for team members to run the HomeNetAI weather application.
+## 🚀 Quick Start (5 Minutes)
 
-## 📋 Prerequisites
+### **Prerequisites**
+- **Node.js** (v18+): [Download](https://nodejs.org)
+- **Python** (v3.8+): [Download](https://python.org)  
+- **PostgreSQL** (v12+): [Download](https://postgresql.org)
 
-### Required Software:
-- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
-- **Python** (3.8 or higher) - [Download here](https://python.org/downloads/)
-- **PostgreSQL** - [Download here](https://postgresql.org/download/)
-- **Git** - [Download here](https://git-scm.com/downloads)
+---
 
-### Verify Installation:
-```bash
-node --version    # Should show v18+
-python --version  # Should show Python 3.8+
-psql --version    # Should show PostgreSQL version
-git --version     # Should show Git version
-```
+## 📋 Step-by-Step Setup
 
-## 🚀 Quick Setup (5 Steps)
-
-### Step 1: Clone the Repository
+### **1. Clone Repository**
 ```bash
 git clone <your-repo-url>
 cd Fall_25_HomeNetAI
 ```
 
-### Step 2: Setup Backend
+### **2. Database Setup**
+```bash
+# Create PostgreSQL database
+createdb homenet
+
+# OR use the setup script
+python setup_postgresql.py
+```
+
+### **3. Backend Setup**
 ```bash
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Setup PostgreSQL database
-# 1. Open pgAdmin or command line
-# 2. Create database named 'homenet'
-# 3. Create user 'postgres' with password 'nathan-7108'
-#    (or update config.py with your credentials)
-```
+# Update database connection (if needed)
+# Edit backend/database/database.py line 12:
+# self.connection_string = "postgresql://username:password@localhost:5432/homenet"
 
-### Step 3: Setup Frontend
-```bash
-cd frontend
-npm install
-```
-
-### Step 4: Start Backend
-```bash
-# From project root
+# Start backend
 cd backend
 python start_backend.py
 ```
 
-### Step 5: Start Frontend
+**Backend runs at:** http://localhost:8000
+- **API Docs:** http://localhost:8000/docs
+- **Weather Scheduler:** Automatically collects data every 30 minutes
+
+### **4. Frontend Setup**
 ```bash
-# New terminal, from frontend directory
+# Install Node.js dependencies
 cd frontend
+npm install
+
+# Start development server
 npm run dev
+# OR use PowerShell script:
+.\start.ps1
 ```
 
-## 🔧 Detailed Setup Instructions
+**Frontend runs at:** http://localhost:5173
 
-### Backend Setup
+---
 
-#### 1. Python Environment
+## ✅ **Verification Checklist**
+
+### **Backend Working:**
+- [ ] Backend starts without errors
+- [ ] API docs accessible at http://localhost:8000/docs
+- [ ] Database connection successful
+- [ ] Weather scheduler running (check terminal output)
+
+### **Frontend Working:**
+- [ ] Frontend loads at http://localhost:5173
+- [ ] No console errors
+- [ ] Can register/login
+- [ ] Can search and add locations
+- [ ] Weather data displays correctly
+
+### **Database Working:**
+- [ ] PostgreSQL running
+- [ ] Database `homenet` exists
+- [ ] Tables created (users, user_locations, weather_data, daily_weather)
+- [ ] Can insert/query data
+
+---
+
+## 🔧 **Common Issues & Solutions**
+
+### **🐍 Python Issues**
+
+**"ModuleNotFoundError"**
 ```bash
-# Create virtual environment (recommended)
-python -m venv venv
-
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-#### 2. Database Setup
+**"Database connection failed"**
+- Check PostgreSQL is running
+- Verify credentials in `backend/database/database.py`
+- Ensure database `homenet` exists
 
-**Option A: Using pgAdmin (GUI)**
-1. Open pgAdmin
-2. Right-click "Servers" → "Create" → "Server"
-3. Name: `HomeNetAI`
-4. Host: `localhost`
-5. Port: `5432`
-6. Username: `postgres`
-7. Password: `nathan-7108`
-8. Right-click "Databases" → "Create" → "Database"
-9. Name: `homenet`
+### **⚛️ Node.js Issues**
 
-**Option B: Using Command Line**
-```bash
-# Connect to PostgreSQL
-psql -U postgres
+**"npm not recognized"**
+- Install Node.js from [nodejs.org](https://nodejs.org)
+- Restart terminal after installation
 
-# Create database
-CREATE DATABASE homenet;
-
-# Create user (if needed)
-CREATE USER postgres WITH PASSWORD 'nathan-7108';
-GRANT ALL PRIVILEGES ON DATABASE homenet TO postgres;
-
-# Exit
-\q
-```
-
-#### 3. Configure Database Connection
-Edit `config.py` if your database credentials are different:
-```python
-DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:YOUR_PASSWORD@localhost/homenet")
-```
-
-#### 4. Start Backend
-```bash
-cd backend
-python start_backend.py
-```
-
-**Expected Output:**
-```
-HomeNetAI Backend + Weather Scheduler
-==================================================
-Starting Weather Data Scheduler...
-Will collect weather data every 30 minutes
-Data stored in PostgreSQL for AI/ML analysis
-Starting FastAPI Backend Server...
-Backend available at: http://localhost:8000
-API Documentation: http://localhost:8000/docs
-Interactive API: http://localhost:8000/redoc
---------------------------------------------------
-```
-
-### Frontend Setup
-
-#### 1. Install Dependencies
+**"Cannot find module"**
 ```bash
 cd frontend
 npm install
 ```
 
-#### 2. Start Development Server
+### **🗄️ Database Issues**
+
+**"Database does not exist"**
 ```bash
-npm run dev
+createdb homenet
 ```
 
-**Expected Output:**
-```
-  VITE v5.0.8  ready in 500 ms
+**"Permission denied"**
+- Check PostgreSQL user permissions
+- Update connection string with correct credentials
 
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
-  ➜  press h to show help
-```
+---
 
-## 🌐 Access the Application
+## 📊 **Project Status**
 
-### Frontend (User Interface)
-- **URL**: http://localhost:5173
-- **Features**: Login, Register, Dashboard, Add Locations, Weather Data
+### **✅ What's Working:**
+- **User Authentication**: Register/login with JWT tokens
+- **Location Management**: Global city search and management  
+- **Weather Data**: Real-time current weather and 7-day forecasts
+- **Data Collection**: Automatic 30-minute weather data collection
+- **Database**: Professional PostgreSQL schema with 4 tables
+- **Frontend**: Clean, responsive React dashboard
+- **API**: RESTful endpoints with comprehensive error handling
 
-### Backend (API)
-- **URL**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Interactive API**: http://localhost:8000/redoc
+### **🔄 Data Flow:**
+1. User adds location → Weather data fetched immediately
+2. Scheduler runs every 30 minutes → Collects data for all locations
+3. Frontend displays real-time weather → From database cache
+4. Historical data stored → Ready for AI/ML analysis
 
-## 🔍 Troubleshooting
+### **📈 Database Stats:**
+- **4 Tables**: users, user_locations, weather_data, daily_weather
+- **Data Volume**: ~1,500 data points per location per week
+- **Collection**: Every 30 minutes automatically
+- **Storage**: PostgreSQL with proper indexing and relationships
 
-### Common Issues
+---
 
-#### 1. "npm not recognized" Error
-**Problem**: Node.js not in PATH
-**Solution**:
-```bash
-# Add Node.js to PATH manually
-# Or restart terminal after installing Node.js
-# Or use full path: "C:\Program Files\nodejs\npm.cmd" install
-```
+## 🎯 **Development Workflow**
 
-#### 2. Database Connection Error
-**Problem**: PostgreSQL not running or wrong credentials
-**Solution**:
-```bash
-# Start PostgreSQL service
-# Windows: Services → PostgreSQL → Start
-# Mac: brew services start postgresql
-# Linux: sudo systemctl start postgresql
-
-# Check connection
-psql -U postgres -h localhost -d homenet
-```
-
-#### 3. Port Already in Use
-**Problem**: Port 8000 or 5173 already in use
-**Solution**:
-```bash
-# Kill process using port
-# Windows:
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
-
-# Mac/Linux:
-lsof -ti:8000 | xargs kill -9
-```
-
-#### 4. Python Module Not Found
-**Problem**: Dependencies not installed
-**Solution**:
-```bash
-# Make sure you're in the right directory
-cd Fall_25_HomeNetAI
-
-# Install requirements
-pip install -r requirements.txt
-
-# If using virtual environment, activate it first
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Mac/Linux
-```
-
-#### 5. Frontend Build Errors
-**Problem**: Node modules issues
-**Solution**:
-```bash
-cd frontend
-rm -rf node_modules package-lock.json
-npm install
-```
-
-## 📁 Project Structure
-
-```
-Fall_25_HomeNetAI/
-├── backend/                 # Python FastAPI backend
-│   ├── database/           # Database management
-│   ├── weather/            # Weather API and scheduler
-│   ├── main.py            # FastAPI application
-│   └── start_backend.py   # Backend startup script
-├── frontend/               # React TypeScript frontend
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Application pages
-│   │   ├── services/      # API services
-│   │   └── contexts/      # React contexts
-│   └── package.json
-├── docs/                  # Documentation
-├── config.py              # Configuration
-└── requirements.txt       # Python dependencies
-```
-
-## 🚀 Development Workflow
-
-### Daily Development
+### **Daily Development:**
 1. **Start Backend**: `cd backend && python start_backend.py`
 2. **Start Frontend**: `cd frontend && npm run dev`
-3. **Access App**: http://localhost:5173
+3. **Test Features**: Register → Add Location → View Weather
+4. **Check Database**: Verify data is being collected
 
-### Making Changes
-- **Backend**: Changes auto-reload (uvicorn reload=True)
-- **Frontend**: Changes auto-reload (Vite HMR)
-- **Database**: Changes require backend restart
+### **Code Changes:**
+1. **Backend Changes**: Restart backend server
+2. **Frontend Changes**: Hot reload (automatic)
+3. **Database Changes**: Restart backend to apply schema changes
 
-### Testing
-- **API**: Visit http://localhost:8000/docs
-- **Frontend**: Visit http://localhost:5173
-- **Database**: Use pgAdmin or psql
+### **Testing:**
+- **API Testing**: Use http://localhost:8000/docs
+- **Frontend Testing**: Manual testing in browser
+- **Database Testing**: Check data in pgAdmin or psql
 
-## 📞 Getting Help
+---
 
-### If You're Stuck:
-1. **Check this guide** for common solutions
-2. **Check terminal output** for error messages
-3. **Verify all prerequisites** are installed
-4. **Ask team members** for help
+## 📚 **Documentation**
 
-### Useful Commands:
+- **Main README**: [README.md](../README.md)
+- **API Documentation**: [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+- **Database Overview**: [DATABASE_OVERVIEW.md](DATABASE_OVERVIEW.md)
+- **Project Plan**: [GroupProjectPlan.md](GroupProjectPlan.md)
+
+---
+
+## 🆘 **Getting Help**
+
+### **Check These First:**
+1. **Terminal Output**: Look for error messages
+2. **Browser Console**: Check for JavaScript errors
+3. **Database Status**: Ensure PostgreSQL is running
+4. **Port Conflicts**: Make sure ports 8000 and 5173 are free
+
+### **Common Commands:**
 ```bash
-# Check if backend is running
-curl http://localhost:8000
+# Check if ports are in use
+netstat -an | findstr :8000
+netstat -an | findstr :5173
 
-# Check if frontend is running
-curl http://localhost:5173
+# Check PostgreSQL status
+pg_ctl status
 
-# Check database connection
-psql -U postgres -h localhost -d homenet -c "SELECT 1;"
+# View database tables
+psql homenet -c "\dt"
 ```
 
-## ✅ Success Checklist
+### **Team Support:**
+- **GitHub Issues**: Create issues for bugs/features
+- **Code Reviews**: Submit pull requests for changes
+- **Documentation**: Update docs when making changes
 
-- [ ] Node.js installed and working
-- [ ] Python installed and working
-- [ ] PostgreSQL installed and running
-- [ ] Database 'homenet' created
-- [ ] Backend starts without errors
-- [ ] Frontend starts without errors
-- [ ] Can access http://localhost:5173
-- [ ] Can access http://localhost:8000/docs
-- [ ] Can register/login in the app
+---
 
-## 🎯 Next Steps
+## 🚀 **Ready to Code!**
 
-Once everything is running:
-1. **Register** a new account
-2. **Add locations** to your dashboard
-3. **View weather data** for your locations
-4. **Explore the API** at http://localhost:8000/docs
+Your development environment is now set up and ready for:
+- **Feature Development**: Add new weather features
+- **UI Improvements**: Enhance the frontend
+- **Database Optimization**: Improve queries and performance
+- **AI/ML Integration**: Use collected data for analysis
 
-Welcome to the HomeNetAI team! 🎉
+**Happy Coding!** 🎉

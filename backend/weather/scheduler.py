@@ -1,7 +1,4 @@
-"""
-Weather Data Scheduler
-Collects weather data for all user locations and stores in PostgreSQL
-"""
+# Weather Data Scheduler - Collects weather data for all user locations and stores in PostgreSQL
 
 import asyncio
 import aiohttp
@@ -24,17 +21,18 @@ class WeatherScheduler:
         self.running = False
         
     async def collect_weather_for_location(self, session: aiohttp.ClientSession, location: Dict[str, Any]) -> bool:
-        """Collect weather data for a single location"""
+        # Collect comprehensive weather data for a single location
         try:
-            # Get weather data from API
+            # Get comprehensive weather data from API
             weather_data = get_weather_data(location['latitude'], location['longitude'])
             
-            # Store in database with coordinates
+            # Store in database with user context
             self.db.insert_weather_data(
-                location['name'], 
-                weather_data, 
-                location['latitude'], 
-                location['longitude']
+                location['name'],
+                weather_data,
+                location['latitude'],
+                location['longitude'],
+                location['user_id']
             )
             
             print(f"Collected weather for {location['name']} at {datetime.now().strftime('%H:%M:%S')}")
@@ -45,7 +43,7 @@ class WeatherScheduler:
             return False
     
     async def collect_all_weather_data(self):
-        """Collect weather data for all user locations"""
+        # Collect weather data for all user locations
         print(f"\nStarting weather data collection at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         try:
@@ -55,7 +53,7 @@ class WeatherScheduler:
             
             try:
                 cursor.execute("""
-                    SELECT DISTINCT ul.name, ul.latitude, ul.longitude, ul.created_at
+                    SELECT DISTINCT ul.name, ul.latitude, ul.longitude, ul.user_id, ul.created_at
                     FROM user_locations ul
                     ORDER BY ul.created_at DESC
                 """)
@@ -65,7 +63,8 @@ class WeatherScheduler:
                     locations.append({
                         'name': row[0],
                         'latitude': float(row[1]),
-                        'longitude': float(row[2])
+                        'longitude': float(row[2]),
+                        'user_id': row[3]
                     })
             finally:
                 cursor.close()
@@ -95,7 +94,7 @@ class WeatherScheduler:
             print(f"Error in weather collection: {e}")
     
     async def run_scheduler(self):
-        """Run the weather data scheduler"""
+        # Run the weather data scheduler
         print("Weather Data Scheduler Started")
         print(f"Collection interval: {self.collection_interval} minutes")
         print("Press Ctrl+C to stop")
@@ -118,8 +117,5 @@ class WeatherScheduler:
             self.running = False
     
     def stop(self):
-        """Stop the scheduler"""
+        # Stop the scheduler
         self.running = False
-
-# Scheduler is now integrated into start_backend.py
-# No standalone runner needed

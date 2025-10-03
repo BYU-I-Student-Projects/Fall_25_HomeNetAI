@@ -1,10 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Search, ArrowLeft, Loader2, Globe, MapPin, Plus } from "lucide-react";
-import { Alert, AlertDescription } from "../components/ui/alert";
 import { locationAPI } from "../services/api";
 
 interface SearchResult {
@@ -63,132 +58,189 @@ export default function AddLocation() {
   };
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate("/dashboard")}
+    <div style={{ 
+      padding: '24px', 
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      backgroundColor: '#f8f9fa',
+      minHeight: '100vh'
+    }}>
+      <div style={{
+        maxWidth: '900px',
+        margin: '0 auto',
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '32px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        border: '1px solid #e9ecef'
+      }}>
+        {/* Header Section */}
+        <div style={{ 
+          marginBottom: '40px',
+          paddingBottom: '24px',
+          borderBottom: '1px solid #e9ecef'
+        }}>
+          <button 
+            onClick={() => navigate("/dashboard")} 
+            style={{ 
+              color: '#007bff', 
+              textDecoration: 'none',
+              fontSize: '16px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              marginBottom: '24px',
+              padding: '8px 0',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Add New Location
-            </h1>
-            <p className="text-gray-600 mt-1">Search for any city worldwide</p>
-          </div>
+            <span>←</span>
+            <span>Back to Dashboard</span>
+          </button>
+          <h1 style={{ 
+            margin: 0, 
+            color: '#1a1a1a', 
+            fontSize: '36px', 
+            fontWeight: '600',
+            letterSpacing: '-0.5px',
+            lineHeight: '1.2',
+            marginBottom: '8px'
+          }}>
+            Add New Location
+          </h1>
+          <p style={{ 
+            color: '#6c757d', 
+            margin: 0, 
+            fontSize: '16px',
+            fontWeight: '400'
+          }}>
+            Search and add locations to track weather data
+          </p>
         </div>
 
-        {/* Search Card */}
-        <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0 mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="w-5 h-5 text-blue-600" />
-              Search Locations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSearch} className="flex gap-3">
-              <Input
-                type="text"
-                placeholder="Enter city name (e.g., London, Tokyo, New York)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-                disabled={searching}
-              />
-              <Button
-                type="submit"
-                disabled={searching || !searchQuery.trim()}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 gap-2"
-              >
-                {searching ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-4 h-4" />
-                    Search
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        {/* Search Form */}
+        <form onSubmit={handleSearch} style={{ marginBottom: '32px' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            alignItems: 'stretch',
+            backgroundColor: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '12px',
+            border: '1px solid #e9ecef'
+          }}>
+            <input
+              type="text"
+              placeholder="Enter city name (e.g., London, Tokyo, New York)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ 
+                padding: '16px 20px', 
+                border: '1px solid #dee2e6',
+                borderRadius: '8px',
+                flex: 1,
+                fontSize: '16px',
+                outline: 'none',
+                backgroundColor: 'white',
+                transition: 'all 0.2s ease',
+                fontWeight: '400'
+              }}
+              disabled={searching}
+            />
+            <button 
+              type="submit" 
+              disabled={searching || !searchQuery.trim()}
+              style={{
+                backgroundColor: (searching || !searchQuery.trim()) ? '#6c757d' : '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '16px 28px',
+                borderRadius: '8px',
+                cursor: (searching || !searchQuery.trim()) ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                fontWeight: '600',
+                transition: 'all 0.2s ease',
+                boxShadow: (searching || !searchQuery.trim()) ? 'none' : '0 2px 8px rgba(0, 123, 255, 0.25)',
+                minWidth: '120px'
+              }}
+            >
+              {searching ? 'Searching...' : 'Search'}
+            </button>
+          </div>
+        </form>
 
-        {/* Error Alert */}
         {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <div style={{ 
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            padding: '12px 16px',
+            borderRadius: '6px',
+            marginBottom: '20px',
+            border: '1px solid #f5c6cb'
+          }}>
+            Error: {error}
+          </div>
         )}
 
-        {/* Search Results */}
         {searchResults.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">Search Results</h3>
-            <div className="grid gap-3">
+          <div>
+            <h3 style={{ color: '#2c3e50', marginBottom: '20px' }}>Search Results</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {searchResults.map((result, index) => (
-                <Card key={index} className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <MapPin className="w-5 h-5 text-blue-500" />
-                        <div>
-                          <h4 className="font-semibold text-gray-800">{result.name}</h4>
-                          <p className="text-sm text-gray-600">
-                            {result.admin1 && `${result.admin1}, `}{result.country}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {result.latitude.toFixed(4)}, {result.longitude.toFixed(4)}
-                          </p>
-                        </div>
+                <div key={index} style={{ 
+                  border: '1px solid #e0e0e0', 
+                  borderRadius: '8px',
+                  padding: '20px', 
+                  backgroundColor: '#fafafa',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ margin: '0 0 8px 0', color: '#2c3e50', fontSize: '18px' }}>
+                        <strong>{result.name}</strong>
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '14px', color: '#7f8c8d' }}>
+                        <div><strong>Location:</strong> {result.admin1 && `${result.admin1}, `}{result.country}</div>
+                        <div><strong>Coordinates:</strong> {result.latitude.toFixed(4)}, {result.longitude.toFixed(4)}</div>
                       </div>
-                      <Button
-                        onClick={() => handleAddLocation(result)}
-                        disabled={adding === result.latitude}
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 gap-2"
-                      >
-                        {adding === result.latitude ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Adding...
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="w-4 h-4" />
-                            Add
-                          </>
-                        )}
-                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                    <button
+                      onClick={() => handleAddLocation(result)}
+                      disabled={adding === result.latitude}
+                      style={{
+                        backgroundColor: adding === result.latitude ? '#bdc3c7' : '#27ae60',
+                        color: 'white',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '6px',
+                        cursor: adding === result.latitude ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        marginLeft: '20px'
+                      }}
+                    >
+                      {adding === result.latitude ? 'Adding...' : 'Add Location'}
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Empty State */}
         {searchResults.length === 0 && !searching && (
-          <div className="text-center py-12">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Globe className="w-12 h-12 text-blue-500" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">
-              Start Your Search
-            </h3>
-            <p className="text-gray-500">
-              Enter a city name above to find and add locations
-            </p>
-            <p className="text-sm text-gray-400 mt-4">
-              Search for any city worldwide using our geocoding service
-            </p>
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '40px', 
+            color: '#7f8c8d',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+            border: '1px solid #e0e0e0'
+          }}>
+            <div style={{ fontSize: '18px', marginBottom: '10px' }}>Ready to search</div>
+            <div style={{ fontSize: '14px' }}>Enter a city name above to find and add locations</div>
           </div>
         )}
       </div>

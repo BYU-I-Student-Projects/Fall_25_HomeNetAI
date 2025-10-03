@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-HomeNetAI Backend Startup Script
-Starts the FastAPI backend server and weather data scheduler
-"""
+# HomeNetAI Backend Startup Script - Starts the FastAPI backend server and weather data scheduler
 
 import uvicorn
 import os
@@ -17,7 +14,7 @@ backend_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, backend_dir)
 
 def start_weather_scheduler():
-    """Start the weather data scheduler in a separate thread"""
+    # Start the weather data scheduler in a separate thread
     print("Starting Weather Data Scheduler...")
     print(f"Will collect weather data every {config.COLLECTION_INTERVAL_MINUTES} minutes")
     print("Data stored in PostgreSQL for AI/ML analysis")
@@ -26,7 +23,7 @@ def start_weather_scheduler():
     asyncio.run(scheduler.run_scheduler())
 
 def start_backend_server():
-    """Start the FastAPI backend server"""
+    # Start the FastAPI backend server
     print("Starting FastAPI Backend Server...")
     print("Backend available at: http://localhost:8000")
     print("API Documentation: http://localhost:8000/docs")

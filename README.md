@@ -1,14 +1,16 @@
 # HomeNetAI Weather Application
 
-A full-stack weather monitoring web application with user authentication, dynamic location management, and real-time weather data.
+A professional full-stack weather monitoring web application with user authentication, dynamic location management, and comprehensive weather data collection for AI/ML analysis.
 
-## Features
+## ✨ Features
 
-- **User Authentication**: Secure registration and login with JWT tokens
-- **Global Location Search**: Search and add any city worldwide
-- **Real-Time Weather**: Current weather and 7-day forecasts
-- **Responsive Design**: Modern UI that works on desktop and mobile
-- **User Dashboard**: Personalized weather dashboard for saved locations
+- **🔐 User Authentication**: Secure registration and login with JWT tokens
+- **🌍 Global Location Search**: Search and add any city worldwide using Open-Meteo Geocoding API
+- **🌤️ Real-Time Weather**: Current weather conditions and 7-day forecasts
+- **📊 Professional Dashboard**: Clean, organized weather display with collapsible forecasts
+- **🔄 Automatic Data Collection**: Background scheduler collects weather data every 30 minutes
+- **📈 Historical Data**: Comprehensive weather data storage for AI/ML analysis
+- **👥 Multi-User Support**: User-isolated data with secure authentication
 
 ## Tech Stack
 
@@ -79,67 +81,82 @@ npm run dev
 
 Frontend will run at: **http://localhost:5173**
 
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 Fall_25_HomeNetAI/
-├── backend/
-│   ├── main.py                 # FastAPI app & API endpoints
+├── backend/                    # Backend API & Services
+│   ├── main.py                 # FastAPI app & API endpoints (332 lines)
 │   ├── start_backend.py        # Backend startup script
-│   ├── database/
-│   │   ├── database.py         # Database manager
-│   │   └── schema.sql          # Database schema
-│   └── weather/
-│       └── weather_api.py      # Weather API integration
-├── frontend/
+│   ├── config.py               # Configuration settings
+│   ├── database/               # Database Layer
+│   │   ├── database.py         # Database manager with connection pooling
+│   │   └── schema.sql          # PostgreSQL schema (4 tables)
+│   ├── weather/                # Weather Services
+│   │   ├── weather_api.py      # Open-Meteo API integration
+│   │   └── scheduler.py        # Background weather data collection
+│   ├── simulation/             # Simulation Tools
+│   │   └── home_sim.py         # Smart home simulator
+│   └── models/                 # Data models (ready for expansion)
+├── frontend/                   # React Frontend
 │   ├── src/
-│   │   ├── components/         # Reusable UI components
 │   │   ├── pages/              # Page components
+│   │   │   ├── Dashboard.tsx   # Main weather dashboard
+│   │   │   ├── AddLocation.tsx # Location search & add
+│   │   │   ├── Login.tsx       # User authentication
+│   │   │   └── Register.tsx    # User registration
 │   │   ├── services/           # API services
 │   │   ├── contexts/           # React contexts (Auth)
 │   │   └── App.tsx             # Main app component
-│   ├── package.json            # Frontend dependencies
-│   └── start.ps1               # Frontend startup script
-├── docs/
+│   └── package.json            # Frontend dependencies
+├── docs/                       # Documentation
 │   └── GroupProjectPlan.md     # Project documentation
 ├── requirements.txt            # Python dependencies
 └── README.md                   # This file
 ```
 
-## API Endpoints
+## 🔌 API Endpoints
 
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login user
-- `GET /auth/me` - Get current user info
+### 🔐 Authentication
+- `POST /auth/register` - Register new user with email/password
+- `POST /auth/login` - Login user (returns JWT token)
+- `GET /auth/me` - Get current user info (requires JWT)
 
-### Locations
-- `GET /locations/search?query={city}` - Search for locations
+### 📍 Location Management
+- `GET /locations/search?query={city}` - Search for locations worldwide
 - `GET /locations` - Get user's saved locations
-- `POST /locations` - Add new location
-- `DELETE /locations/{id}` - Delete location
+- `POST /locations` - Add new location (auto-fetches weather data)
+- `DELETE /locations/{id}` - Delete location and all associated data
 
-### Weather
-- `GET /weather/{location_id}` - Get weather data for location
+### 🌤️ Weather Data
+- `GET /weather/{location_id}` - Get comprehensive weather data for location
+- `GET /weather/{location_id}/forecast` - Get 7-day forecast
+- `GET /weather/{location_id}/history` - Get historical weather data
 
-## Usage
+### 📊 Data Collection
+- **Automatic**: Weather data collected every 30 minutes via scheduler
+- **Real-time**: Data fetched immediately when location is added
+- **Comprehensive**: 9 weather parameters per hour for 7 days
 
-1. **Register/Login**: Create an account or sign in
-2. **Search Location**: Click "Add Location" and search for a city
-3. **Add to Dashboard**: Select a city from search results
-4. **View Weather**: See current weather and 7-day forecast on dashboard
-5. **Manage Locations**: Delete locations you no longer need
+## 🚀 Usage
 
-## Configuration
+1. **🔐 Register/Login**: Create an account or sign in with existing credentials
+2. **🔍 Search Location**: Click "Add Location" and search for any city worldwide
+3. **➕ Add to Dashboard**: Select a city from search results (weather data auto-fetched)
+4. **📊 View Weather**: See current weather and 7-day forecast on clean dashboard
+5. **🗑️ Manage Locations**: Delete locations you no longer need
+6. **📈 Data Collection**: Weather data automatically collected every 30 minutes
 
-### Database Connection
+## ⚙️ Configuration
+
+### 🗄️ Database Connection
 
 Edit `backend/database/database.py`:
 ```python
 self.connection_string = "postgresql://username:password@localhost:5432/homenet"
 ```
 
-### Environment Variables (Optional)
+### 🔧 Environment Variables (Optional)
 
 Create `.env` in backend directory:
 ```
@@ -147,9 +164,22 @@ SECRET_KEY=your-secret-key-here
 DATABASE_URL=postgresql://username:password@localhost/homenet
 ```
 
-## Troubleshooting
+### 📊 Database Schema
 
-### Backend Issues
+**4 Professional Tables:**
+- `users` - User accounts with secure authentication
+- `user_locations` - User's saved locations with GPS coordinates  
+- `weather_data` - Hourly weather data (9 parameters per hour)
+- `daily_weather` - Daily weather summaries for analysis
+
+**Data Collection:**
+- **Real-time**: Immediate weather fetch when location added
+- **Scheduled**: Every 30 minutes for all user locations
+- **Comprehensive**: 9 weather parameters × 168 hours = 1,512 data points per location per week
+
+## 🔧 Troubleshooting
+
+### 🐍 Backend Issues
 
 **"ModuleNotFoundError"**
 ```bash
@@ -158,14 +188,20 @@ pip install -r requirements.txt
 
 **"Database connection failed"**
 - Ensure PostgreSQL is running
-- Verify database credentials
+- Verify database credentials in `backend/database/database.py`
 - Check that database `homenet` exists
+- Run `python setup_postgresql.py` to create database
 
-### Frontend Issues
+**"Weather API timeout"**
+- Check internet connection
+- Open-Meteo API is free but has rate limits
+- Scheduler will retry failed collections
+
+### ⚛️ Frontend Issues
 
 **"npm not recognized"**
 - Install Node.js from [nodejs.org](https://nodejs.org)
-- Restart terminal
+- Restart terminal after installation
 
 **"Cannot find module"**
 ```bash
@@ -176,35 +212,41 @@ npm install
 **CORS errors**
 - Ensure backend is running on port 8000
 - Check frontend is running on port 5173
-
-## Documentation
-
-- [Setup Guide](docs/SETUP_GUIDE.md) - Detailed setup instructions
-- [Team Setup](docs/TEAM_SETUP.md) - Quick start for team members
-- [Project Status](docs/PROJECT_STATUS.md) - Current project state
-- [Group Project Plan](docs/GroupProjectPlan.md) - Project planning docs
-
-## Contributing
-
-1. Create a feature branch
-2. Make your changes
-3. Test thoroughly
-4. Submit a pull request
-
-## License
-
-See [LICENSE](LICENSE) file for details.
+- Verify API endpoints are accessible
 
 ## 📚 Documentation
 
-- **[Team Setup Guide](docs/TEAM_SETUP_GUIDE.md)** - Complete setup instructions for team members
-- **[Quick Commands](docs/QUICK_COMMANDS.md)** - Quick reference for common tasks
-- **[Project Plan](docs/GroupProjectPlan.md)** - Detailed project documentation
+- **[Group Project Plan](docs/GroupProjectPlan.md)** - Detailed project documentation
+- **API Documentation**: Available at `http://localhost:8000/docs` when backend is running
+- **Database Schema**: See `backend/database/schema.sql` for table definitions
 
-## Team
+## 🎯 Key Features Summary
 
-CSE 310 - Fall 2025 Group Project
+### ✅ **What's Working:**
+- **User Authentication**: Secure JWT-based login/registration
+- **Location Management**: Global city search and management
+- **Weather Data**: Real-time current weather and 7-day forecasts
+- **Data Collection**: Automatic 30-minute weather data collection
+- **Database**: Professional PostgreSQL schema with 4 tables
+- **Frontend**: Clean, responsive React dashboard
+- **API**: RESTful endpoints with comprehensive error handling
+
+### 🔄 **Data Flow:**
+1. User adds location → Weather data fetched immediately
+2. Scheduler runs every 30 minutes → Collects data for all locations
+3. Frontend displays real-time weather → From database cache
+4. Historical data stored → Ready for AI/ML analysis
+
+### 📊 **Database Stats:**
+- **4 Tables**: users, user_locations, weather_data, daily_weather
+- **Data Volume**: ~1,500 data points per location per week
+- **Collection**: Every 30 minutes automatically
+- **Storage**: PostgreSQL with proper indexing and relationships
+
+## 👥 Team
+
+**CSE 310 - Fall 2025 Group Project**
 
 ---
 
-**Happy Coding!**
+**🚀 Ready for AI/ML Integration!**

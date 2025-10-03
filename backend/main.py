@@ -1,14 +1,10 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
-from typing import List, Optional
-import requests
 import jwt
-import os
 from datetime import datetime, timedelta
 import hashlib
-import secrets
 
 from database.database import HomeNetDatabase
 from weather.weather_api import get_weather_data, search_location
@@ -49,22 +45,11 @@ class LocationCreate(BaseModel):
     latitude: float
     longitude: float
 
-class LocationResponse(BaseModel):
-    id: int
-    name: str
-    latitude: float
-    longitude: float
-    created_at: str
-
-class WeatherResponse(BaseModel):
-    location: str
-    current_weather: dict
-    daily_forecast: List[dict]
 
 # Authentication functions
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(hours=24)
+    expire = datetime.now() + timedelta(hours=24)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -84,14 +69,11 @@ def hash_password(password: str) -> str:
 
 # API Endpoints
 
-@app.get("/")
-async def root():
-    return {"message": "HomeNetAI Weather API"}
 
 # Authentication endpoints
 @app.post("/auth/register")
 async def register(user: UserCreate):
-    """Register a new user"""
+    # Register a new user
     try:
         # Check if user already exists
         conn = db.get_connection()
@@ -108,7 +90,7 @@ async def register(user: UserCreate):
             INSERT INTO users (username, email, password_hash, created_at)
             VALUES (%s, %s, %s, %s)
             RETURNING id
-        """, (user.username, user.email, hashed_password, datetime.utcnow()))
+        """, (user.username, user.email, hashed_password, datetime.now()))
         
         user_id = cursor.fetchone()[0]
         conn.commit()
@@ -124,7 +106,7 @@ async def register(user: UserCreate):
 
 @app.post("/auth/login")
 async def login(user: UserLogin):
-    """Login user"""
+    # Login user
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -148,7 +130,7 @@ async def login(user: UserLogin):
 
 @app.get("/auth/me")
 async def get_current_user(username: str = Depends(verify_token)):
-    """Get current user info"""
+    # Get current user info
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -175,7 +157,7 @@ async def get_current_user(username: str = Depends(verify_token)):
 # Location search endpoint
 @app.get("/locations/search")
 async def search_locations(query: str):
-    """Search for locations using geocoding API"""
+    # Search for locations using geocoding API
     try:
         data = search_location(query)
         results = []
@@ -198,7 +180,7 @@ async def search_locations(query: str):
 # User locations endpoints
 @app.get("/locations")
 async def get_user_locations(username: str = Depends(verify_token)):
-    """Get user's saved locations"""
+    # Get user's saved locations
     conn = None
     cursor = None
     try:
@@ -235,7 +217,7 @@ async def get_user_locations(username: str = Depends(verify_token)):
 
 @app.post("/locations")
 async def add_user_location(location: LocationCreate, username: str = Depends(verify_token)):
-    """Add a new location for the user"""
+    # Add a new location for the user
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -253,21 +235,37 @@ async def add_user_location(location: LocationCreate, username: str = Depends(ve
             INSERT INTO user_locations (user_id, name, latitude, longitude, created_at)
             VALUES (%s, %s, %s, %s, %s)
             RETURNING id
-        """, (user_id, location.name, location.latitude, location.longitude, datetime.utcnow()))
+        """, (user_id, location.name, location.latitude, location.longitude, datetime.now()))
         
         location_id = cursor.fetchone()[0]
         conn.commit()
+        
+        # Immediately fetch and store weather data for this location
+        try:
+            weather_data = get_weather_data(location.latitude, location.longitude)
+            db.insert_weather_data(
+                location.name,
+                weather_data,
+                location.latitude,
+                location.longitude,
+                user_id
+            )
+            print(f"✅ Stored weather data for {location.name}")
+        except Exception as weather_error:
+            print(f"⚠️  Weather data collection failed for {location.name}: {weather_error}")
+            # Don't fail the location creation if weather fails
+        
         cursor.close()
         conn.close()
         
-        return {"id": location_id, "message": "Location added successfully"}
+        return {"id": location_id, "message": "Location added successfully with weather data"}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/locations/{location_id}")
 async def delete_user_location(location_id: int, username: str = Depends(verify_token)):
-    """Delete a user's location"""
+    # Delete a user's location
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -295,7 +293,7 @@ async def delete_user_location(location_id: int, username: str = Depends(verify_
 # Weather endpoints
 @app.get("/weather/{location_id}")
 async def get_weather_for_location(location_id: int, username: str = Depends(verify_token)):
-    """Get current weather for a user's location"""
+    # Get current weather for a user's location
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -326,6 +324,7 @@ async def get_weather_for_location(location_id: int, username: str = Depends(ver
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

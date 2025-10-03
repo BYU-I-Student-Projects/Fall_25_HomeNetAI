@@ -3,18 +3,38 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Dashboard from './pages/Dashboard';
 import AddLocation from './pages/AddLocation';
-import Locations from './pages/Locations';
-import WeatherDetails from './pages/WeatherDetails';
-import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
+
 // Loading component
 const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-      <p className="mt-4 text-gray-600">Loading...</p>
+  <div style={{ 
+    padding: '50px', 
+    textAlign: 'center',
+    fontFamily: 'Arial, sans-serif',
+    backgroundColor: '#f5f5f5',
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }}>
+    <div style={{
+      backgroundColor: 'white',
+      padding: '40px',
+      borderRadius: '8px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{ fontSize: '18px', color: '#2c3e50' }}>🔄 Loading...</div>
     </div>
   </div>
 );
@@ -39,7 +59,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div>
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={
@@ -67,21 +87,6 @@ function App() {
             <Route path="/add-location" element={
               <ProtectedRoute>
                 <AddLocation />
-              </ProtectedRoute>
-            } />
-            <Route path="/locations" element={
-              <ProtectedRoute>
-                <Locations />
-              </ProtectedRoute>
-            } />
-            <Route path="/weather-details" element={
-              <ProtectedRoute>
-                <WeatherDetails />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
               </ProtectedRoute>
             } />
           </Routes>
