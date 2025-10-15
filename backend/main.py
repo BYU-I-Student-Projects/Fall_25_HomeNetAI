@@ -278,6 +278,9 @@ async def add_user_location(location: LocationCreate, username: str = Depends(ve
             print(f"[OK] Stored weather data for {location.name}")
         except Exception as weather_error:
             print(f"[WARNING] Weather data collection failed for {location.name}: {weather_error}")
+            print(f"✅ Stored weather data for {location.name}")
+        except Exception as weather_error:
+            print(f"⚠️  Weather data collection failed for {location.name}: {weather_error}")
             # Don't fail the location creation if weather fails
         
         cursor.close()

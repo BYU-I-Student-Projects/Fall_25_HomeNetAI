@@ -102,5 +102,3 @@ export async function apiClearUserData() {
   const res = await api.delete("/user/data");
   return res.data as { message: string };
 }
-
-

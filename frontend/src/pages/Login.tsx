@@ -47,7 +47,7 @@ const Login = () => {
     
     toast({
       title: "Welcome back!",
-      description: `Logged in as ${user.name}`,
+      description: `Logged in successfully`,
     });
     
     setLoading(false);
