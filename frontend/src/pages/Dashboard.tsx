@@ -1,576 +1,340 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { locationAPI, weatherAPI } from "../services/api";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import WeatherCard from "@/components/WeatherCard";
+import DeviceCard from "@/components/DeviceCard";
+import { getLocations, getDevices, updateDevice, saveDevices, saveLocations, clearPresetLocations, SavedLocation, SmartDevice } from "@/lib/storage";
+import { getInitialLocations, getInitialDevices, generateAIInsights } from "@/lib/mockData";
+import { apiGetLocations, apiGetWeather } from "@/services/api";
+// Removed mock data imports - using real API data only
+import { Plus, Sparkles, TrendingUp, Zap } from "lucide-react";
 
-interface Location {
-  id: number;
-  name: string;
-  latitude: number;
-  longitude: number;
-  created_at: string;
-}
+// Weather data processing functions
+const processHourlyData = (hourly: any) => {
+  if (!hourly || !hourly.time) return [];
+  
+  return hourly.time.slice(0, 24).map((time: string, index: number) => ({
+    time: new Date(time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }),
+    temperature: Math.round(hourly.temperature_2m?.[index] || 0),
+    condition: getWeatherCondition(hourly.weathercode?.[index] || 0),
+    icon: getWeatherIcon(hourly.weathercode?.[index] || 0),
+    precipitation: Math.round(hourly.precipitation_probability?.[index] || 0),
+  }));
+};
 
-interface WeatherData {
-  location: string;
-  current_weather: any;
-  daily_forecast: any;
-}
+const processDailyData = (daily: any) => {
+  if (!daily || !daily.time) return [];
+  
+  return daily.time.slice(0, 7).map((time: string, index: number) => ({
+    date: new Date(time).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+    high: Math.round(daily.temperature_2m_max?.[index] || 0),
+    low: Math.round(daily.temperature_2m_min?.[index] || 0),
+    condition: getWeatherCondition(daily.weathercode?.[index] || 0),
+    icon: getWeatherIcon(daily.weathercode?.[index] || 0),
+    precipitation: Math.round(daily.precipitation_probability_max?.[index] || 0),
+    humidity: Math.round(daily.relative_humidity_2m_max?.[index] || 0),
+  }));
+};
 
-export default function Dashboard() {
+// Weather code mapping functions
+const getWeatherCondition = (code: number): string => {
+  const conditions: { [key: number]: string } = {
+    0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast",
+    45: "Fog", 48: "Depositing Rime Fog", 51: "Light Drizzle", 53: "Moderate Drizzle",
+    55: "Dense Drizzle", 56: "Light Freezing Drizzle", 57: "Dense Freezing Drizzle",
+    61: "Slight Rain", 63: "Moderate Rain", 65: "Heavy Rain",
+    66: "Light Freezing Rain", 67: "Heavy Freezing Rain", 71: "Slight Snow",
+    73: "Moderate Snow", 75: "Heavy Snow", 77: "Snow Grains",
+    80: "Slight Rain Showers", 81: "Moderate Rain Showers", 82: "Violent Rain Showers",
+    85: "Slight Snow Showers", 86: "Heavy Snow Showers", 95: "Thunderstorm",
+    96: "Thunderstorm with Slight Hail", 99: "Thunderstorm with Heavy Hail"
+  };
+  return conditions[code] || "Unknown";
+};
+
+const getWeatherIcon = (code: number): string => {
+  const icons: { [key: number]: string } = {
+    0: "☀️", 1: "☀️", 2: "⛅", 3: "☁️",
+    45: "🌫️", 48: "🌫️", 51: "🌦️", 53: "🌦️",
+    55: "🌧️", 56: "🌧️", 57: "🌧️",
+    61: "🌧️", 63: "🌧️", 65: "🌧️",
+    66: "🌧️", 67: "🌧️", 71: "❄️",
+    73: "❄️", 75: "❄️", 77: "❄️",
+    80: "🌦️", 81: "🌧️", 82: "🌧️",
+    85: "❄️", 86: "❄️", 95: "⛈️",
+    96: "⛈️", 99: "⛈️"
+  };
+  return icons[code] || "🌤️";
+};
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const [locations, setLocations] = useState<SavedLocation[]>([]);
+  const [devices, setDevices] = useState<SmartDevice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [weatherData, setWeatherData] = useState<{[key: number]: WeatherData}>({});
-  const [expandedForecasts, setExpandedForecasts] = useState<{[key: number]: boolean}>({});
-
-  const loadLocations = async () => {
-    try {
-      const response = await locationAPI.getUserLocations();
-      setLocations(response.locations);
-    } catch (error) {
-      console.error("Failed to load locations:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadWeatherData = async (locationId: number) => {
-    try {
-      const weather = await weatherAPI.getWeather(locationId);
-      setWeatherData(prev => ({ ...prev, [locationId]: weather }));
-    } catch (error) {
-      console.error("Failed to load weather data:", error);
-    }
-  };
-
-  const handleDeleteLocation = async (locationId: number) => {
-    try {
-      await locationAPI.deleteLocation(locationId);
-      setLocations(prev => prev.filter(loc => loc.id !== locationId));
-      setWeatherData(prev => {
-        const newData = { ...prev };
-        delete newData[locationId];
-        return newData;
-      });
-    } catch (error) {
-      console.error("Failed to delete location:", error);
-    }
-  };
-
-  const toggleForecast = (locationId: number) => {
-    setExpandedForecasts(prev => ({
-      ...prev,
-      [locationId]: !prev[locationId]
-    }));
-  };
+  // Memoize expensive calculations
+  const insights = useMemo(() => generateAIInsights(locations, devices), [locations, devices]);
+  const activeDevices = useMemo(() => devices.filter(d => d.status === "on").length, [devices]);
+  const avgTemp = useMemo(() => 
+    locations.length > 0
+      ? Math.round(locations.reduce((sum, l) => sum + l.weather.temperature, 0) / locations.length)
+      : 0,
+    [locations]
+  );
 
   useEffect(() => {
-    loadLocations();
+    const initializeDashboard = async () => {
+      try {
+        // Clear any preset locations
+        clearPresetLocations();
+        
+        // Fetch real locations with real weather data
+        try {
+          const serverLocations = await apiGetLocations();
+          const mapped = (await Promise.all(serverLocations.map(async (loc) => {
+            try {
+              // Fetch real weather data from API
+              const weatherData = await apiGetWeather(loc.id);
+              const currentWeather = weatherData.current_weather as any;
+              const hourly = weatherData.hourly as any;
+              
+              // Get apparent temperature from hourly data (first hour)
+              const apparentTemp = hourly?.apparent_temperature?.[0] || currentWeather?.temperature;
+              
+              return {
+                id: String(loc.id),
+                city: { id: String(loc.id), name: loc.name, country: "", latitude: loc.latitude, longitude: loc.longitude, timezone: "" },
+                weather: {
+                  temperature: Math.round(currentWeather?.temperature || 0), // Already in Fahrenheit
+                  feelsLike: Math.round(apparentTemp || currentWeather?.temperature), // Use hourly apparent temp or fallback to temperature
+                  humidity: Math.round(hourly?.relative_humidity_2m?.[0] || 0),
+                  windSpeed: Math.round(currentWeather?.windspeed || 0), // Already in mph
+                  windDirection: Math.round(currentWeather?.winddirection || 0),
+                  pressure: Math.round(hourly?.surface_pressure?.[0] || 0),
+                  uvIndex: Math.round(hourly?.uv_index?.[0] || 0),
+                  visibility: Math.round((hourly?.visibility?.[0] || 0) * 0.000621371), // Convert m to miles
+                  condition: getWeatherCondition(currentWeather?.weathercode),
+                  icon: getWeatherIcon(currentWeather?.weathercode),
+                  precipitation: Math.round(hourly?.precipitation_probability?.[0] || 0),
+                },
+                hourly: processHourlyData(hourly),
+                daily: processDailyData(weatherData.daily),
+                addedAt: new Date().toISOString(),
+              };
+            } catch (weatherErr) {
+              console.error(`Failed to fetch weather for ${loc.name}:`, weatherErr);
+              console.error('Weather API Error Details:', {
+                locationId: loc.id,
+                locationName: loc.name,
+                error: weatherErr,
+                response: weatherErr?.response?.data,
+                status: weatherErr?.response?.status
+              });
+              // Skip this location if API fails - don't use mock data
+              return null;
+            }
+          }))).filter(loc => loc !== null);
+          
+          saveLocations(mapped);
+          setLocations(mapped);
+        } catch (apiErr) {
+          console.warn('Failed to fetch locations from API:', apiErr);
+          setLocations([]);
+        }
+        
+        // Initialize devices
+        const deviceData = getDevices();
+        if (deviceData.length === 0) {
+      const initial = getInitialDevices();
+      saveDevices(initial);
+      setDevices(initial);
+        } else {
+          setDevices(deviceData);
+        }
+      } catch (error) {
+        console.error('Dashboard initialization error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initializeDashboard();
   }, []);
 
-  useEffect(() => {
-    locations.forEach(location => {
-      loadWeatherData(location.id);
-    });
-  }, [locations]);
+  const handleDeviceToggle = useCallback((id: string) => {
+    const device = devices.find(d => d.id === id);
+    if (device) {
+      const newStatus = device.status === "on" ? "off" : "on";
+      updateDevice(id, { status: newStatus });
+      
+      if (device.type === "lock") {
+        updateDevice(id, { locked: newStatus === "off" });
+      }
+      
+      setDevices(getDevices());
+    }
+  }, [devices]);
+
+  const handleDeviceValueChange = useCallback((id: string, value: number) => {
+    updateDevice(id, { value });
+    setDevices(getDevices());
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ 
-      padding: '24px', 
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      backgroundColor: '#f8f9fa',
-      minHeight: '100vh'
-    }}>
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto',
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '32px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-        border: '1px solid #e9ecef'
-      }}>
-        {/* Header Section */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'flex-start', 
-          marginBottom: '40px',
-          paddingBottom: '24px',
-          borderBottom: '1px solid #e9ecef'
-        }}>
-          <div>
-            <h1 style={{ 
-              margin: 0, 
-              color: '#1a1a1a', 
-              fontSize: '36px', 
-              fontWeight: '600',
-              letterSpacing: '-0.5px',
-              lineHeight: '1.2'
-            }}>
-              Weather Dashboard
-            </h1>
-            <p style={{ 
-              margin: '8px 0 0 0', 
-              color: '#6c757d', 
-              fontSize: '16px',
-              fontWeight: '400'
-            }}>
-              Monitor weather conditions across your locations
-            </p>
-          </div>
-          <Link to="/add-location" style={{ textDecoration: 'none' }}>
-            <button style={{
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              padding: '14px 28px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '500',
-              boxShadow: '0 2px 8px rgba(0, 123, 255, 0.25)',
-              transition: 'all 0.2s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span>+</span>
-              <span>Add Location</span>
-            </button>
-          </Link>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-weather-primary to-ai-primary bg-clip-text text-transparent">
+          Dashboard
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          Welcome back! Here's your home overview
+        </p>
+      </div>
 
-        {/* Content Section */}
-        {loading ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '80px 40px', 
-            color: '#6c757d'
-          }}>
-            <div style={{ 
-              width: '48px', 
-              height: '48px', 
-              border: '3px solid #f3f3f3',
-              borderTop: '3px solid #007bff',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 24px'
-            }}></div>
-            <div style={{ 
-              fontSize: '20px', 
-              fontWeight: '500',
-              color: '#1a1a1a',
-              marginBottom: '8px'
-            }}>
-              Loading weather data
-            </div>
-            <div style={{ fontSize: '16px', color: '#6c757d' }}>
-              Fetching the latest conditions...
-            </div>
-          </div>
-        ) : locations.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '80px 40px', 
-            color: '#6c757d'
-          }}>
-            <div style={{ 
-              width: '96px', 
-              height: '96px', 
-              backgroundColor: '#f8f9fa',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 32px',
-              fontSize: '40px',
-              color: '#007bff'
-            }}>📍</div>
-            <div style={{ 
-              fontSize: '24px', 
-              marginBottom: '12px', 
-              fontWeight: '600', 
-              color: '#1a1a1a' 
-            }}>
-              No locations added yet
-            </div>
-            <div style={{ 
-              fontSize: '18px', 
-              marginBottom: '40px',
-              color: '#6c757d',
-              maxWidth: '400px',
-              margin: '0 auto 40px'
-            }}>
-              Start by adding your first location to begin tracking weather conditions
-            </div>
-            <Link to="/add-location" style={{ 
-              color: '#007bff', 
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: '500',
-              padding: '16px 32px',
-              border: '2px solid #007bff',
-              borderRadius: '8px',
-              display: 'inline-block',
-              transition: 'all 0.2s ease',
-              backgroundColor: 'transparent'
-            }}>
-              Add your first location
-            </Link>
-          </div>
-        ) : (
-          <div style={{ 
-            display: 'grid', 
-            gap: '24px', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))'
-          }}>
-            {locations.map((location) => {
-              const weather = weatherData[location.id];
-              return (
-                <div key={location.id} style={{ 
-                  border: '1px solid #e9ecef', 
-                  borderRadius: '16px',
-                  padding: '28px', 
-                  backgroundColor: '#ffffff',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-                  transition: 'all 0.3s ease',
-                  position: 'relative'
-                }}>
-                  {/* Location Header */}
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'flex-start', 
-                    marginBottom: '24px',
-                    paddingBottom: '20px',
-                    borderBottom: '1px solid #f1f3f4'
-                  }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ 
-                        margin: 0, 
-                        color: '#1a1a1a', 
-                        fontSize: '24px', 
-                        fontWeight: '600',
-                        lineHeight: '1.3',
-                        marginBottom: '4px'
-                      }}>
-                        {location.name}
-                      </h3>
-                      <div style={{ 
-                        fontSize: '14px', 
-                        color: '#6c757d',
-                        fontFamily: 'monospace',
-                        backgroundColor: '#f8f9fa',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        display: 'inline-block'
-                      }}>
-                        {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => handleDeleteLocation(location.id)}
-                      style={{
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 16px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        boxShadow: '0 2px 6px rgba(220, 53, 69, 0.25)',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <span>×</span>
-                      <span>Remove</span>
-                    </button>
-                  </div>
-                  
-                  {weather ? (
-                    <div>
-                      {weather.current_weather && (
-                        <div style={{ 
-                          background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
-                          color: 'white',
-                          padding: '28px',
-                          borderRadius: '16px',
-                          marginBottom: '24px',
-                          boxShadow: '0 6px 20px rgba(0, 123, 255, 0.25)',
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}>
-                          {/* Current Weather Header */}
-                          <div style={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            alignItems: 'flex-start', 
-                            marginBottom: '20px'
-                          }}>
-                            <div>
-                              <div style={{ 
-                                fontSize: '56px', 
-                                fontWeight: '300', 
-                                lineHeight: '1',
-                                marginBottom: '8px'
-                              }}>
-                                {Math.round(weather.current_weather.temperature)}°
-                              </div>
-                              <div style={{ 
-                                fontSize: '18px', 
-                                opacity: '0.9',
-                                fontWeight: '400'
-                              }}>
-                                Feels like {Math.round(weather.current_weather.apparent_temperature || weather.current_weather.temperature)}°
-                              </div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ 
-                                fontSize: '16px', 
-                                opacity: '0.9',
-                                fontWeight: '500',
-                                marginBottom: '4px'
-                              }}>
-                                Current Weather
-                              </div>
-                              <div style={{ 
-                                fontSize: '14px', 
-                                opacity: '0.7',
-                                fontWeight: '400'
-                              }}>
-                                {new Date().toLocaleDateString('en-US', { 
-                                  weekday: 'long', 
-                                  month: 'short', 
-                                  day: 'numeric' 
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Weather Details */}
-                          <div style={{ 
-                            display: 'grid', 
-                            gridTemplateColumns: '1fr 1fr', 
-                            gap: '20px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                            padding: '20px',
-                            borderRadius: '12px',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)'
-                          }}>
-                            <div style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '12px'
-                            }}>
-                              <div style={{ 
-                                fontSize: '18px', 
-                                fontWeight: '700',
-                                letterSpacing: '0.5px'
-                              }}>
-                                WIND
-                              </div>
-                              <div>
-                                <div style={{ 
-                                  fontSize: '14px', 
-                                  opacity: '0.9',
-                                  marginBottom: '2px'
-                                }}>
-                                  Speed
-                                </div>
-                                <div style={{ 
-                                  fontSize: '18px', 
-                                  fontWeight: '600'
-                                }}>
-                                  {weather.current_weather.windspeed} km/h
-                                </div>
-                              </div>
-                            </div>
-                            <div style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '12px'
-                            }}>
-                              <div style={{ 
-                                fontSize: '18px', 
-                                fontWeight: '700',
-                                letterSpacing: '0.5px'
-                              }}>
-                                DIR
-                              </div>
-                              <div>
-                                <div style={{ 
-                                  fontSize: '14px', 
-                                  opacity: '0.9',
-                                  marginBottom: '2px'
-                                }}>
-                                  Direction
-                                </div>
-                                <div style={{ 
-                                  fontSize: '18px', 
-                                  fontWeight: '600'
-                                }}>
-                                  {weather.current_weather.winddirection}°
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {weather.daily_forecast && weather.daily_forecast.time && (
-                        <div>
-                          <button 
-                            onClick={() => toggleForecast(location.id)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              width: '100%',
-                              padding: '18px 24px',
-                              backgroundColor: '#f8f9fa',
-                              border: '1px solid #e9ecef',
-                              borderRadius: '12px',
-                              cursor: 'pointer',
-                              fontSize: '18px',
-                              fontWeight: '600',
-                              color: '#1a1a1a',
-                              marginBottom: expandedForecasts[location.id] ? '20px' : '0',
-                              transition: 'all 0.3s ease',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                            }}
-                          >
-                            <span>7-Day Forecast</span>
-                            <span style={{ 
-                              transform: expandedForecasts[location.id] ? 'rotate(180deg)' : 'rotate(0deg)',
-                              transition: 'transform 0.3s ease',
-                              fontSize: '16px',
-                              fontWeight: 'bold'
-                            }}>
-                              ▼
-                            </span>
-                          </button>
-                          
-                          {expandedForecasts[location.id] && (
-                            <div style={{ 
-                              display: 'grid', 
-                              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', 
-                              gap: '20px',
-                              overflowX: 'auto',
-                              paddingBottom: '12px'
-                            }}>
-                              {weather.daily_forecast.time.slice(0, 7).map((date: string, index: number) => (
-                                <div key={date} style={{
-                                  backgroundColor: '#ffffff',
-                                  padding: '24px 20px',
-                                  borderRadius: '16px',
-                                  border: '1px solid #e9ecef',
-                                  textAlign: 'center',
-                                  minWidth: '150px',
-                                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                                  transition: 'all 0.3s ease',
-                                  position: 'relative'
-                                }}>
-                                  <div style={{ 
-                                    fontSize: '16px', 
-                                    color: '#6c757d', 
-                                    marginBottom: '16px', 
-                                    fontWeight: '700',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '1px'
-                                  }}>
-                                    {new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
-                                  </div>
-                                  <div style={{ 
-                                    fontSize: '28px', 
-                                    fontWeight: '700', 
-                                    color: '#1a1a1a', 
-                                    marginBottom: '8px',
-                                    lineHeight: '1'
-                                  }}>
-                                    {Math.round(weather.daily_forecast.temperature_2m_max[index])}°
-                                  </div>
-                                  <div style={{ 
-                                    fontSize: '18px', 
-                                    color: '#6c757d', 
-                                    marginBottom: '16px',
-                                    fontWeight: '500'
-                                  }}>
-                                    {Math.round(weather.daily_forecast.temperature_2m_min[index])}°
-                                  </div>
-                                  <div style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    alignItems: 'center',
-                                    fontSize: '13px',
-                                    color: '#6c757d',
-                                    backgroundColor: '#f8f9fa',
-                                    padding: '8px 12px',
-                                    borderRadius: '8px',
-                                    marginTop: '12px'
-                                  }}>
-                                    {weather.daily_forecast.precipitation_sum && (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#007bff' }}>RAIN</span>
-                                        <span style={{ fontWeight: '600' }}>{weather.daily_forecast.precipitation_sum[index]?.toFixed(1) || 0}mm</span>
-                                      </div>
-                                    )}
-                                    {weather.daily_forecast.uv_index_max && (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#ffc107' }}>UV</span>
-                                        <span style={{ fontWeight: '600' }}>{weather.daily_forecast.uv_index_max[index]?.toFixed(1) || 0}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ 
-                      textAlign: 'center', 
-                      padding: '48px 24px', 
-                      color: '#6c757d',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '16px',
-                      border: '1px solid #e9ecef',
-                      marginTop: '20px'
-                    }}>
-                      <div style={{ 
-                        width: '40px', 
-                        height: '40px', 
-                        border: '3px solid #f3f3f3',
-                        borderTop: '3px solid #007bff',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
-                        margin: '0 auto 20px'
-                      }}></div>
-                      <div style={{ 
-                        fontSize: '18px', 
-                        fontWeight: '600',
-                        color: '#1a1a1a',
-                        marginBottom: '8px'
-                      }}>
-                        Loading weather data
-                      </div>
-                      <div style={{ fontSize: '14px', color: '#6c757d' }}>
-                        Fetching current conditions...
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+      {/* Stats */}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Locations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold">{locations.length}</div>
+            <p className="text-xs text-muted-foreground">Avg {avgTemp}°F</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Active Devices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold">{activeDevices}</div>
+            <p className="text-xs text-muted-foreground">of {devices.length} total</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">AI Insights</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold">{insights.length}</div>
+            <p className="text-xs text-muted-foreground">New recommendations</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Energy Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold">Good</div>
+            <p className="text-xs text-muted-foreground">Optimized consumption</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AI Insights */}
+      {insights.length > 0 && (
+        <Card className="border bg-card">
+          <CardHeader>
+            <CardTitle className="text-lg">AI Insights</CardTitle>
+            <CardDescription>
+              Personalized recommendations based on your data
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {insights.slice(0, 2).map((insight, i) => (
+              <div
+                key={i}
+                className="p-3 rounded border bg-muted/20"
+              >
+                <p className="text-sm">{insight}</p>
+              </div>
+            ))}
+            {insights.length > 2 && (
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => navigate('/ai-insights')}
+                size="sm"
+              >
+                View all {insights.length} insights
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+           {/* Weather Overview */}
+           <div className="space-y-3">
+             <div className="flex items-center justify-between">
+               <h2 className="text-xl font-bold">Weather</h2>
+               <Button onClick={() => navigate('/locations')} size="sm">
+                 <Plus className="h-4 w-4 mr-2" />
+                 Add Location
+               </Button>
+             </div>
+
+             {locations.length === 0 ? (
+               <Card className="border bg-card">
+                 <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+                   <p className="text-muted-foreground mb-3">No locations added yet</p>
+                   <Button onClick={() => navigate('/locations')} size="sm">
+                     Add Your First Location
+                   </Button>
+                 </CardContent>
+               </Card>
+             ) : (
+               <div className="space-y-3">
+                 {locations.slice(0, 2).map((location) => (
+                   <WeatherCard
+                     key={location.id}
+                     location={location}
+                     onClick={() => navigate(`/locations/${location.id}`)}
+                   />
+                 ))}
+               </div>
+             )}
+           </div>
+
+         {/* Smart Home Overview */}
+         <div className="space-y-3">
+           <div className="flex items-center justify-between">
+             <h2 className="text-xl font-bold">Smart Home</h2>
+             <Button onClick={() => navigate('/smart-home')} size="sm">
+               View All
+             </Button>
+           </div>
+
+           <div className="space-y-2">
+             {devices.slice(0, 3).map((device) => (
+               <DeviceCard
+                 key={device.id}
+                 device={device}
+                 onToggle={handleDeviceToggle}
+                 onValueChange={handleDeviceValueChange}
+               />
+             ))}
+           </div>
+         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

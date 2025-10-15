@@ -20,10 +20,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Security
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)  # Don't auto-raise on missing auth
 SECRET_KEY = config.SECRET_KEY
 ALGORITHM = "HS256"
 
@@ -55,6 +56,8 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     try:
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
@@ -69,6 +72,9 @@ def hash_password(password: str) -> str:
 
 # API Endpoints
 
+@app.get("/")
+async def root():
+    return {"message": "HomeNetAI API", "version": "1.0.0", "status": "running"}
 
 # Authentication endpoints
 @app.post("/auth/register")
@@ -82,6 +88,8 @@ async def register(user: UserCreate):
         cursor.execute("SELECT id FROM users WHERE username = %s OR email = %s", 
                       (user.username, user.email))
         if cursor.fetchone():
+            cursor.close()
+            conn.close()
             raise HTTPException(status_code=400, detail="Username or email already exists")
         
         # Create user
@@ -101,8 +109,12 @@ async def register(user: UserCreate):
         access_token = create_access_token(data={"sub": user.username})
         return {"access_token": access_token, "token_type": "bearer", "user_id": user_id}
         
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e) if str(e) else f"{type(e).__name__}: Registration failed"
+        print(f"Registration error: {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @app.post("/auth/login")
 async def login(user: UserLogin):
@@ -230,6 +242,19 @@ async def add_user_location(location: LocationCreate, username: str = Depends(ve
         
         user_id = user_result[0]
         
+        # Check for duplicate location (same coordinates within 0.01 degrees)
+        cursor.execute("""
+            SELECT id FROM user_locations 
+            WHERE user_id = %s 
+            AND ABS(latitude - %s) < 0.01 
+            AND ABS(longitude - %s) < 0.01
+        """, (user_id, location.latitude, location.longitude))
+        
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            raise HTTPException(status_code=400, detail="Location already exists")
+        
         # Add location
         cursor.execute("""
             INSERT INTO user_locations (user_id, name, latitude, longitude, created_at)
@@ -250,9 +275,9 @@ async def add_user_location(location: LocationCreate, username: str = Depends(ve
                 location.longitude,
                 user_id
             )
-            print(f"✅ Stored weather data for {location.name}")
+            print(f"[OK] Stored weather data for {location.name}")
         except Exception as weather_error:
-            print(f"⚠️  Weather data collection failed for {location.name}: {weather_error}")
+            print(f"[WARNING] Weather data collection failed for {location.name}: {weather_error}")
             # Don't fail the location creation if weather fails
         
         cursor.close()
@@ -319,11 +344,50 @@ async def get_weather_for_location(location_id: int, username: str = Depends(ver
         return {
             "location": location[0],
             "current_weather": weather_data.get("current_weather", {}),
-            "daily_forecast": weather_data.get("daily", {})
+            "hourly": weather_data.get("hourly", {}),
+            "daily": weather_data.get("daily", {})
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# User data management endpoints
+@app.delete("/user/data")
+async def clear_user_data(username: str = Depends(verify_token)):
+    # Clear all user data (locations, weather data, etc.)
+    try:
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        
+        # Get user ID
+        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        user_result = cursor.fetchone()
+        if not user_result:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result[0]
+        
+        # Delete all user locations and associated weather data
+        cursor.execute("DELETE FROM weather_data WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM daily_weather WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM user_locations WHERE user_id = %s", (user_id,))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {"message": "All user data has been cleared successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error clearing user data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 if __name__ == "__main__":

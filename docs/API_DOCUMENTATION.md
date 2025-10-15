@@ -512,4 +512,3 @@ These provide interactive documentation where you can test endpoints directly in
 
 ---
 
-**🚀 Your API is fully documented and ready for frontend integration!**
