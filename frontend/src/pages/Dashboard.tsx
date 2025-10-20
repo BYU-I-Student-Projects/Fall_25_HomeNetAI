@@ -83,6 +83,13 @@ const Dashboard = () => {
     [locations]
   );
 
+  const toggleForecast = (locationId: number) => {
+    setExpandedForecasts(prev => ({
+      ...prev,
+      [locationId]: !prev[locationId]
+    }));
+  };
+
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
