@@ -17,7 +17,7 @@
 <!-- Describe the program you will create. What is the objective of the software? What kind of Database are you planning to use? What Platform are you using? What languages are you using? What frameworks might you use? -->
 The IoT Smart Home Dashboard will combine real-time weather data and simulated smart
 home sensor data into a single platform. Data will be collected hourly, stored in a SQL
-database, and displayed in a React-based UI. AI/ML models will add predictive insights,
+database, and accessed via REST API. AI/ML models will add predictive insights,
 anomaly detection, and chatbot support. A notification system will provide users with timely
 alerts.
 
@@ -52,19 +52,18 @@ metrics as needed.
   - Maintain referential integrity between users, devices, and readings.
   - Enable historical analysis for ML models.
 
-2.3 UI/UX Dashboard (Frontend)
-- Framework: React with Rocket template.
-- Views:
-  - Overview: Current home status + weather.
-  - Smart Home: Device states, toggles, charts.
-  - Weather: Current & forecasted conditions, graphs.
-  - Notifications: Alerts, history, user preferences.
-  - AI/Insights: Predictions, chatbot interface.
-- Styling: Modified Rocket template with team branding.
+2.3 API & Backend Services
+- Framework: FastAPI (Python)
+- Endpoints:
+  - Authentication: Register, Login, User Management
+  - Locations: Search, Add, Delete user locations
+  - Weather: Current weather and forecasts for locations
+  - Data: Historical data access
 - Requirements:
-  - Responsive design (desktop + mobile).
-  - Charts for trends (energy usage, temperature, etc.).
-  - Dark/light mode optional.
+  - RESTful API design
+  - JWT authentication
+  - PostgreSQL database integration
+  - CORS enabled for client access
 
 2.4 AI & Machine Learning
 - Chatbot:

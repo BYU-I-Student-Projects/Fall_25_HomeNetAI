@@ -1,14 +1,14 @@
-# HomeNetAI Weather Application
+# HomeNetAI Weather API
 
-A full-stack weather monitoring web application with user authentication, dynamic location management, and real-time weather data.
+A RESTful weather monitoring API with user authentication, dynamic location management, and real-time weather data.
 
 ## Features
 
 - **User Authentication**: Secure registration and login with JWT tokens
-- **Global Location Search**: Search and add any city worldwide
-- **Real-Time Weather**: Current weather and 7-day forecasts
-- **Responsive Design**: Modern UI that works on desktop and mobile
-- **User Dashboard**: Personalized weather dashboard for saved locations
+- **Global Location Search**: Search and add any city worldwide via API
+- **Real-Time Weather**: Current weather and 7-day forecasts via API endpoints
+- **RESTful API**: Complete API for weather data and location management
+- **Weather Scheduler**: Automatic weather data collection every 30 minutes
 
 ## Tech Stack
 
@@ -18,16 +18,8 @@ A full-stack weather monitoring web application with user authentication, dynami
 - **Open-Meteo API**: Free weather and geocoding data
 - **JWT**: Secure authentication
 
-### Frontend
-- **React**: Modern UI library
-- **TypeScript**: Type-safe JavaScript
-- **Vite**: Fast build tool
-- **Tailwind CSS**: Utility-first styling
-- **Axios**: HTTP client
-
 ## Prerequisites
 
-- **Node.js** (v18+): [Download](https://nodejs.org)
 - **Python** (v3.8+): [Download](https://python.org)
 - **PostgreSQL** (v12+): [Download](https://postgresql.org)
 
@@ -44,40 +36,44 @@ cd Fall_25_HomeNetAI
 createdb homenet
 ```
 
-### 2. Backend Setup
+### 2. Install Dependencies
 
 ```bash
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Update database connection in backend/database/database.py
-# Change line 12 to your PostgreSQL credentials:
-# self.connection_string = "postgresql://username:password@localhost/homenet"
-
-# Start backend server
-cd backend
-python start_backend.py
-```
-
-Backend will run at: **http://localhost:8000**
-- API Docs: http://localhost:8000/docs
-- Interactive API: http://localhost:8000/redoc
-- Weather Scheduler: Automatically collects weather data every 30 minutes
-
-### 3. Frontend Setup
-
-```bash
-# Install Node.js dependencies
+# Install frontend dependencies
 cd frontend
 npm install
-
-# Start development server
-npm run dev
-# OR use the PowerShell script:
-.\start.ps1
+cd ..
 ```
 
-Frontend will run at: **http://localhost:5173**
+### 3. Start Everything
+
+**Simple way - Use the start script:**
+```bash
+python start.py
+```
+
+This will start both backend and frontend automatically!
+
+**Manual way:**
+```bash
+# Terminal 1 - Backend
+cd backend
+python start_backend.py
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+```
+
+### 4. Access the Application
+
+- **Frontend**: http://localhost:8080
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Interactive API**: http://localhost:8000/redoc
 
 ## Project Structure
 
@@ -91,15 +87,6 @@ Fall_25_HomeNetAI/
 │   │   └── schema.sql          # Database schema
 │   └── weather/
 │       └── weather_api.py      # Weather API integration
-├── frontend/
-│   ├── src/
-│   │   ├── components/         # Reusable UI components
-│   │   ├── pages/              # Page components
-│   │   ├── services/           # API services
-│   │   ├── contexts/           # React contexts (Auth)
-│   │   └── App.tsx             # Main app component
-│   ├── package.json            # Frontend dependencies
-│   └── start.ps1               # Frontend startup script
 ├── docs/
 │   └── GroupProjectPlan.md     # Project documentation
 ├── requirements.txt            # Python dependencies
@@ -124,11 +111,11 @@ Fall_25_HomeNetAI/
 
 ## Usage
 
-1. **Register/Login**: Create an account or sign in
-2. **Search Location**: Click "Add Location" and search for a city
-3. **Add to Dashboard**: Select a city from search results
-4. **View Weather**: See current weather and 7-day forecast on dashboard
-5. **Manage Locations**: Delete locations you no longer need
+1. **Register/Login**: Use the API endpoints to create an account or sign in
+2. **Search Location**: Use `/locations/search` endpoint to search for cities
+3. **Add Location**: Use `/locations` POST endpoint to add a location
+4. **Get Weather**: Use `/weather/{location_id}` endpoint to get weather data
+5. **Manage Locations**: Use `/locations/{id}` DELETE endpoint to remove locations
 
 ## Configuration
 
@@ -160,22 +147,6 @@ pip install -r requirements.txt
 - Ensure PostgreSQL is running
 - Verify database credentials
 - Check that database `homenet` exists
-
-### Frontend Issues
-
-**"npm not recognized"**
-- Install Node.js from [nodejs.org](https://nodejs.org)
-- Restart terminal
-
-**"Cannot find module"**
-```bash
-cd frontend
-npm install
-```
-
-**CORS errors**
-- Ensure backend is running on port 8000
-- Check frontend is running on port 5173
 
 ## Documentation
 

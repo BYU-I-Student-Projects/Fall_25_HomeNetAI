@@ -1,94 +1,128 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Dashboard from './pages/Dashboard';
-import AddLocation from './pages/AddLocation';
-import Locations from './pages/Locations';
-import WeatherDetails from './pages/WeatherDetails';
-import Profile from './pages/Profile';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import React, { useEffect } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { initializeDarkMode } from "@/lib/storage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Locations from "./pages/Locations";
+import LocationDetail from "./pages/LocationDetail";
+import SmartHome from "./pages/SmartHome";
+import AIInsights from "./pages/AIInsights";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
+import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardLayout from "./components/DashboardLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
 
-// Loading component
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-      <p className="mt-4 text-gray-600">Loading...</p>
-    </div>
-  </div>
-);
+const queryClient = new QueryClient();
 
-// Protected Route component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) return <LoadingSpinner />;
-  return user ? <>{children}</> : <Navigate to="/login" replace />;
-};
+const App = () => {
+  useEffect(() => {
+    initializeDarkMode();
+  }, []);
 
-// Public Route component (redirect if authenticated)
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) return <LoadingSpinner />;
-  return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
-};
-
-function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            } />
-            <Route path="/register" element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            } />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             
-            {/* Protected routes */}
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Navigate to="/dashboard" replace />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/add-location" element={
-              <ProtectedRoute>
-                <AddLocation />
-              </ProtectedRoute>
-            } />
-            <Route path="/locations" element={
-              <ProtectedRoute>
-                <Locations />
-              </ProtectedRoute>
-            } />
-            <Route path="/weather-details" element={
-              <ProtectedRoute>
-                <WeatherDetails />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Dashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/locations"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Locations />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/locations/:id"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <LocationDetail />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/smart-home"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <SmartHome />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/ai-insights"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <AIInsights />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Analytics />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Settings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+    </ErrorBoundary>
   );
-}
+};
 
 export default App;
+

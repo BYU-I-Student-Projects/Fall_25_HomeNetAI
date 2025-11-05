@@ -34,7 +34,8 @@ class WeatherScheduler:
                 location['name'], 
                 weather_data, 
                 location['latitude'], 
-                location['longitude']
+                location['longitude'],
+                location['user_id']
             )
             
             print(f"Collected weather for {location['name']} at {datetime.now().strftime('%H:%M:%S')}")
@@ -55,7 +56,7 @@ class WeatherScheduler:
             
             try:
                 cursor.execute("""
-                    SELECT DISTINCT ul.name, ul.latitude, ul.longitude, ul.created_at
+                    SELECT DISTINCT ul.id, ul.user_id, ul.name, ul.latitude, ul.longitude, ul.created_at
                     FROM user_locations ul
                     ORDER BY ul.created_at DESC
                 """)
@@ -63,9 +64,11 @@ class WeatherScheduler:
                 locations = []
                 for row in cursor.fetchall():
                     locations.append({
-                        'name': row[0],
-                        'latitude': float(row[1]),
-                        'longitude': float(row[2])
+                        'id': row[0],
+                        'user_id': row[1],
+                        'name': row[2],
+                        'latitude': float(row[3]),
+                        'longitude': float(row[4])
                     })
             finally:
                 cursor.close()

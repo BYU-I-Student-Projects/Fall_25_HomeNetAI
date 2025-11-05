@@ -1,83 +1,127 @@
-import axios from 'axios';
+/**
+ * API Service - Clean integration with backend
+ * Connects frontend to Fall_25_HomeNetAI backend API
+ */
 
 const API_BASE_URL = 'http://localhost:8000';
 
-// Create axios instance
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
+// Helper to get auth token
+const getToken = (): string | null => {
+  return localStorage.getItem('auth_token');
+};
+
+// Helper to make API requests
+const apiRequest = async <T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> => {
+  const token = getToken();
+  
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
+    ...options.headers,
+  };
+  
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    headers['Authorization'] = `Bearer ${token}`;
   }
-  return config;
-});
 
-// Handle auth errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
+      throw new Error('Unauthorized');
     }
-    return Promise.reject(error);
+    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+    throw new Error(error.detail || 'Request failed');
   }
-);
+
+  return response.json();
+};
 
 // Auth API
 export const authAPI = {
-  register: async (userData: { username: string; email: string; password: string }) => {
-    const response = await api.post('/auth/register', userData);
-    return response.data;
+  register: async (username: string, email: string, password: string) => {
+    const data = await apiRequest<{ access_token: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password }),
+    });
+    if (data.access_token) {
+      localStorage.setItem('auth_token', data.access_token);
+    }
+    return data;
   },
 
-  login: async (credentials: { username: string; password: string }) => {
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
+  login: async (username: string, password: string) => {
+    const data = await apiRequest<{ access_token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    if (data.access_token) {
+      localStorage.setItem('auth_token', data.access_token);
+    }
+    return data;
   },
 
   getCurrentUser: async () => {
-    const response = await api.get('/auth/me');
-    return response.data;
+    return apiRequest<{ id: number; username: string; email: string; created_at: string }>('/auth/me');
+  },
+
+  logout: () => {
+    localStorage.removeItem('auth_token');
   },
 };
 
 // Location API
 export const locationAPI = {
   search: async (query: string) => {
-    const response = await api.get(`/locations/search?query=${encodeURIComponent(query)}`);
-    return response.data;
+    return apiRequest<{ results: Array<{
+      name: string;
+      country: string;
+      admin1: string;
+      latitude: number;
+      longitude: number;
+      display_name: string;
+    }> }>(`/locations/search?query=${encodeURIComponent(query)}`);
   },
 
   getUserLocations: async () => {
-    const response = await api.get('/locations');
-    return response.data;
+    return apiRequest<{ locations: Array<{
+      id: number;
+      name: string;
+      latitude: number;
+      longitude: number;
+      created_at: string;
+    }> }>('/locations');
   },
 
-  addLocation: async (locationData: { name: string; latitude: number; longitude: number }) => {
-    const response = await api.post('/locations', locationData);
-    return response.data;
+  addLocation: async (name: string, latitude: number, longitude: number) => {
+    return apiRequest<{ id: number; message: string }>('/locations', {
+      method: 'POST',
+      body: JSON.stringify({ name, latitude, longitude }),
+    });
   },
 
   deleteLocation: async (locationId: number) => {
-    const response = await api.delete(`/locations/${locationId}`);
-    return response.data;
+    return apiRequest<{ message: string }>(`/locations/${locationId}`, {
+      method: 'DELETE',
+    });
   },
 };
 
 // Weather API
 export const weatherAPI = {
   getWeather: async (locationId: number) => {
-    const response = await api.get(`/weather/${locationId}`);
-    return response.data;
+    return apiRequest<{
+      location: string;
+      current_weather: any;
+      daily_forecast: any;
+    }>(`/weather/${locationId}`);
   },
 };
 
-export default api;

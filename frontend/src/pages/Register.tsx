@@ -1,155 +1,164 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { useAuth } from '../contexts/AuthContext';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "@/hooks/use-toast";
+import { authAPI } from "@/services/api";
+import { CloudRain } from "lucide-react";
 
-export default function Register() {
+const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const calculatePasswordStrength = (pass: string): number => {
+    let strength = 0;
+    if (pass.length >= 8) strength += 25;
+    if (pass.length >= 12) strength += 25;
+    if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) strength += 25;
+    if (/\d/.test(pass)) strength += 15;
+    if (/[^a-zA-Z\d]/.test(pass)) strength += 10;
+    return Math.min(strength, 100);
+  };
+
+  const passwordStrength = calculatePasswordStrength(password);
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
+    
+    if (!username || !email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
       return;
     }
 
+    setLoading(true);
+    
     try {
-      await register(formData.username, formData.email, formData.password);
-      navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed');
+      await authAPI.register(username, email, password);
+      
+      // Get user info
+      const user = await authAPI.getCurrentUser();
+      
+      toast({
+        title: "Account created!",
+        description: `Welcome to HomeNetAI, ${user.username}!`,
+      });
+      
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Registration failed",
+        description: error.message || "Could not create account",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            HomeNetAI Weather
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Create your account
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-weather-primary/10 via-background to-ai-primary/10 p-4">
+      <Card className="w-full max-w-md glass-card animate-fade-in">
+        <CardHeader className="space-y-4 text-center">
+          <div className="flex justify-center gap-2">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-weather-primary to-weather-secondary">
+              <CloudRain className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <div>
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-weather-primary to-ai-primary bg-clip-text text-transparent">
+              Join HomeNetAI
+            </CardTitle>
+            <CardDescription className="mt-2">
+              Create your account to get started
+            </CardDescription>
+          </div>
+        </CardHeader>
         
-        <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
-          <CardHeader>
-            <CardTitle className="text-center">Sign Up</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                  Username
-                </label>
-                <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  value={formData.username}
-                  onChange={handleChange}
-                  placeholder="Choose a username"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter your email"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Create a password"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
-                </label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm your password"
-                />
-              </div>
-              
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                {loading ? 'Creating account...' : 'Sign Up'}
-              </Button>
-            </form>
+        <form onSubmit={handleRegister}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="yourusername"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
             
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{' '}
-                <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
-                  Sign in
-                </Link>
-              </p>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              
+              {password && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Progress value={passwordStrength} className="flex-1" />
+                    <span className="text-xs text-muted-foreground">{passwordStrength}%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {passwordStrength < 40 && "Weak password"}
+                    {passwordStrength >= 40 && passwordStrength < 70 && "Fair password"}
+                    {passwordStrength >= 70 && passwordStrength < 90 && "Good password"}
+                    {passwordStrength >= 90 && "Strong password"}
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
-        </Card>
-      </div>
+          
+          <CardFooter className="flex flex-col gap-4">
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-weather-primary to-weather-secondary hover:opacity-90 transition-opacity"
+              disabled={loading}
+            >
+              {loading ? "Creating account..." : "Create Account"}
+            </Button>
+            
+            <p className="text-sm text-center text-muted-foreground">
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                Sign in
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
   );
-}
+};
+
+export default Register;
+

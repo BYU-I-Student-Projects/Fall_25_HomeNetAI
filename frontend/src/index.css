@@ -2,28 +2,127 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 220 25% 98%;
+    --foreground: 220 15% 15%;
+
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 15% 15%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
+    --popover-foreground: 220 15% 15%;
+
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 15% 15%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 172 66% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 199 89% 48%;
+
+    --radius: 0.75rem;
+
+    /* Weather theme */
+    --weather-primary: 199 89% 48%;
+    --weather-secondary: 172 66% 50%;
+    --weather-gradient: linear-gradient(135deg, hsl(199 89% 48%), hsl(172 66% 50%));
+
+    /* Smart home theme */
+    --smart-primary: 142 76% 36%;
+    --smart-secondary: 160 84% 39%;
+    --smart-gradient: linear-gradient(135deg, hsl(142 76% 36%), hsl(160 84% 39%));
+
+    /* AI theme */
+    --ai-primary: 262 83% 58%;
+    --ai-secondary: 271 91% 65%;
+    --ai-gradient: linear-gradient(135deg, hsl(262 83% 58%), hsl(271 91% 65%));
+
+    /* Glass effects */
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 220 13% 91% / 0.3;
+
+    --sidebar-background: 220 25% 98%;
+    --sidebar-foreground: 220 15% 15%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 220 15% 15%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 199 89% 48%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 172 66% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+
+    --border: 217 33% 24%;
+    --input: 217 33% 24%;
+    --ring: 199 89% 48%;
+
+    /* Weather theme - dark */
+    --weather-primary: 199 89% 48%;
+    --weather-secondary: 172 66% 50%;
+    --weather-gradient: linear-gradient(135deg, hsl(199 89% 48% / 0.8), hsl(172 66% 50% / 0.8));
+
+    /* Smart home theme - dark */
+    --smart-primary: 142 76% 36%;
+    --smart-secondary: 160 84% 39%;
+    --smart-gradient: linear-gradient(135deg, hsl(142 76% 36% / 0.8), hsl(160 84% 39% / 0.8));
+
+    /* AI theme - dark */
+    --ai-primary: 262 83% 58%;
+    --ai-secondary: 271 91% 65%;
+    --ai-gradient: linear-gradient(135deg, hsl(262 83% 58% / 0.8), hsl(271 91% 65% / 0.8));
+
+    /* Glass effects - dark */
+    --glass-bg: 217 33% 17% / 0.4;
+    --glass-border: 217 33% 24% / 0.3;
+
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 24%;
+    --sidebar-ring: 199 89% 48%;
   }
 }
 
@@ -31,7 +130,71 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
+
+@layer utilities {
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/70 dark:bg-card/40 border border-white/30 dark:border-border/30;
+  }
+
+  .gradient-weather {
+    background: var(--weather-gradient);
+  }
+
+  .gradient-smart {
+    background: var(--smart-gradient);
+  }
+
+  .gradient-ai {
+    background: var(--ai-gradient);
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
