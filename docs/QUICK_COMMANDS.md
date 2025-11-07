@@ -4,7 +4,24 @@ Quick reference for common development tasks.
 
 ## 🚀 Start Everything
 
-### Backend
+### Backend (Linux/Mac/Git Bash)
+```bash
+# From project root
+./start.sh
+
+# Or make it executable first
+chmod +x start.sh
+./start.sh
+```
+
+### Backend (Windows PowerShell)
+```powershell
+# From project root
+cd backend
+python start_backend.py
+```
+
+### Backend (Manual)
 ```bash
 cd backend
 python start_backend.py

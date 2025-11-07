@@ -9,12 +9,17 @@ import os
 import sys
 import asyncio
 import threading
-from weather.scheduler import WeatherScheduler
-from config import config
 
 # Add the backend directory to Python path
 backend_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, backend_dir)
+
+# Add parent directory to path for config import
+parent_dir = os.path.dirname(backend_dir)
+sys.path.insert(0, parent_dir)
+
+from weather.scheduler import WeatherScheduler
+from config import config
 
 def start_weather_scheduler():
     """Start the weather data scheduler in a separate thread"""
@@ -35,7 +40,7 @@ def start_backend_server():
     
     uvicorn.run(
         "main:app",
-        host=config.HOST,
+        host="127.0.0.1",  # Use 127.0.0.1 for Windows compatibility
         port=config.PORT,
         reload=True,  # Auto-reload on code changes
         log_level="info"

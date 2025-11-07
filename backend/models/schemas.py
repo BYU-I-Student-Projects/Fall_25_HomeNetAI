@@ -1,7 +1,7 @@
 """Request and response models for API endpoints."""
 
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class UserCreate(BaseModel):
@@ -39,3 +39,40 @@ class WeatherResponse(BaseModel):
     current_weather: dict
     daily_forecast: List[dict]
 
+
+class DeviceCreate(BaseModel):
+    """Request model for creating a device"""
+    name: str
+    type: str  # 'thermostat', 'light', 'plug', 'lock', 'blind', 'camera'
+    status: str = "off"  # 'on' or 'off'
+    room: Optional[str] = None
+    value: Optional[float] = None
+    color: Optional[str] = None
+    locked: Optional[bool] = None
+    position: Optional[int] = None  # For blinds (0-100)
+
+
+class DeviceUpdate(BaseModel):
+    """Request model for updating a device"""
+    name: Optional[str] = None
+    status: Optional[str] = None
+    room: Optional[str] = None
+    value: Optional[float] = None
+    color: Optional[str] = None
+    locked: Optional[bool] = None
+    position: Optional[int] = None
+
+
+class DeviceResponse(BaseModel):
+    """Response model for device data"""
+    id: int
+    name: str
+    type: str
+    status: str
+    room: Optional[str] = None
+    value: Optional[float] = None
+    color: Optional[str] = None
+    locked: Optional[bool] = None
+    position: Optional[int] = None
+    created_at: str
+    updated_at: str

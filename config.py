@@ -14,11 +14,12 @@ class Config:
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
     
     # Server
-    HOST: str = os.getenv("HOST", "0.0.0.0")
+    HOST: str = os.getenv("HOST", "127.0.0.1")  # Use 127.0.0.1 for Windows compatibility
     PORT: int = int(os.getenv("PORT", "8000"))
     
     # CORS - Allowed origins for API access
-    CORS_ORIGINS: list = ["http://localhost:8080", "http://localhost:5173", "http://localhost:3000"]
+    # Allow all localhost ports for development
+    CORS_ORIGINS: list = ["*"]  # Allow all origins in development
     
     # Weather Collection
     COLLECTION_INTERVAL_MINUTES: int = int(os.getenv("COLLECTION_INTERVAL_MINUTES", "30"))

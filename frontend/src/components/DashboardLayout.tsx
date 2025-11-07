@@ -108,10 +108,22 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-weather-primary to-weather-secondary">
+            <div 
+              className="p-2 rounded-lg"
+              style={{ background: "linear-gradient(135deg, hsl(var(--weather-primary)), hsl(var(--weather-secondary)))" }}
+            >
               <CloudRain className="h-5 w-5 text-white" />
             </div>
-            <span className="hidden sm:inline bg-gradient-to-r from-weather-primary to-ai-primary bg-clip-text text-transparent">
+            <span 
+              className="hidden sm:inline font-bold"
+              style={{ 
+                background: "linear-gradient(90deg, hsl(var(--weather-primary)), hsl(var(--ai-primary)))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                color: "transparent"
+              }}
+            >
               HomeNetAI
             </span>
           </Link>

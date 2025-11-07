@@ -56,12 +56,24 @@ const Login = () => {
       <Card className="w-full max-w-md glass-card animate-fade-in">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center gap-2">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-weather-primary to-weather-secondary">
+            <div 
+              className="p-3 rounded-2xl"
+              style={{ background: "linear-gradient(135deg, hsl(var(--weather-primary)), hsl(var(--weather-secondary)))" }}
+            >
               <CloudRain className="h-8 w-8 text-white" />
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-weather-primary to-ai-primary bg-clip-text text-transparent">
+            <CardTitle 
+              className="text-3xl font-bold"
+              style={{ 
+                background: "linear-gradient(90deg, hsl(var(--weather-primary)), hsl(var(--ai-primary)))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                color: "transparent"
+              }}
+            >
               HomeNetAI
             </CardTitle>
             <CardDescription className="mt-2">

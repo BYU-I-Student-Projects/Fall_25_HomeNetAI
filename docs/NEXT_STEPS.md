@@ -10,7 +10,6 @@
 - ✅ **Code Organization**: Clean structure with routes, models, auth modules
 - ✅ **API Integration**: Frontend connected to backend
 
-## Priority 1: Core Features (Sprint 2)
 
 ### 1. Smart Home Device Management
 **Status**: Frontend UI exists, backend API needed
@@ -31,7 +30,6 @@
 - `backend/models/schemas.py` - Device models
 - `frontend/src/services/api.ts` - Device API calls
 
-**Estimated Time**: 2-3 days
 
 ---
 
@@ -50,7 +48,6 @@
 - `backend/weather/scheduler.py` - Add sensor simulation
 - `backend/homedata_sim/home_sim.py` - Integrate with database
 
-**Estimated Time**: 1-2 days
 
 ---
 
@@ -69,11 +66,9 @@
 - `backend/routes/data.py` - Historical data endpoints
 - `frontend/src/pages/Analytics.tsx` - Implement charts
 
-**Estimated Time**: 2-3 days
 
 ---
 
-## Priority 2: AI/ML Features (Sprint 3)
 
 ### 4. AI Chatbot Integration
 **Status**: Frontend placeholder exists
@@ -90,7 +85,6 @@
 - `backend/services/ai_service.py` - GPT API integration
 - `frontend/src/components/ChatInterface.tsx` - Chat UI
 
-**Estimated Time**: 3-4 days
 
 ---
 
@@ -114,11 +108,9 @@
 - `backend/services/anomaly_detector.py` - Anomaly detection
 - `backend/routes/ai.py` - Add prediction endpoints
 
-**Estimated Time**: 4-5 days
 
 ---
 
-## Priority 3: Notification System (Sprint 3)
 
 ### 6. Notification System
 **Status**: Not started
@@ -139,11 +131,9 @@
 - `backend/routes/notifications.py` - Notification endpoints
 - `frontend/src/pages/Settings.tsx` - Notification preferences
 
-**Estimated Time**: 2-3 days
 
 ---
 
-## Priority 4: Analytics & Insights (Sprint 4)
 
 ### 7. Analytics Dashboard
 **Status**: Frontend placeholder exists
@@ -163,7 +153,6 @@
 - `frontend/src/components/Charts.tsx` - Chart components
 - `backend/routes/data.py` - Add aggregation endpoints
 
-**Estimated Time**: 3-4 days
 
 ---
 
@@ -183,11 +172,9 @@
 - `frontend/src/pages/AIInsights.tsx` - Implement insights
 - `backend/services/insights.py` - Insight generation
 
-**Estimated Time**: 2-3 days
 
 ---
 
-## Priority 5: Testing & Quality (Ongoing)
 
 ### 9. Testing
 **Tasks:**
@@ -201,7 +188,6 @@
 - `backend/tests/` - Test files
 - `frontend/src/__tests__/` - Frontend tests
 
-**Estimated Time**: Ongoing
 
 ---
 
@@ -213,11 +199,9 @@
 - [ ] Handle API failures gracefully
 - [ ] Add retry logic for external APIs
 
-**Estimated Time**: 1-2 days
 
 ---
 
-## Priority 6: Security & Performance
 
 ### 11. Security Improvements
 **Tasks:**
@@ -227,7 +211,6 @@
 - [ ] Add environment variable validation
 - [ ] Add API key rotation
 
-**Estimated Time**: 2-3 days
 
 ---
 
@@ -239,81 +222,28 @@
 - [ ] Optimize frontend bundle size
 - [ ] Add pagination everywhere
 
-**Estimated Time**: 2-3 days
 
 ---
 
 ## Recommended Team Workflow
 
-### Week 1-2: Core Features
+### Core Features
 - **Person 1**: Smart Home Device Management (backend)
 - **Person 2**: Smart Home Device Management (frontend)
 - **Person 3**: Sensor Simulation Integration
 - **Person 4**: Historical Data API
 
-### Week 3-4: AI/ML Features
+### AI/ML Features
 - **Person 1**: Chatbot Integration
 - **Person 2**: Predictive Models (Energy)
 - **Person 3**: Anomaly Detection
 - **Person 4**: Frontend AI Integration
 
-### Week 5: Notifications & Polish
+### Notifications & Polish
 - **Person 1**: Notification System
 - **Person 2**: Analytics Dashboard
 - **Person 3**: AI Insights Page
 - **Person 4**: Testing & Bug Fixes
-
----
-
-## Quick Start for Each Feature
-
-### Setting Up a New Feature
-
-1. **Create Database Tables** (if needed):
-   ```sql
-   -- Add to backend/database/schema.sql
-   CREATE TABLE IF NOT EXISTS devices (
-       id SERIAL PRIMARY KEY,
-       user_id INTEGER NOT NULL,
-       name VARCHAR(255) NOT NULL,
-       type VARCHAR(50) NOT NULL,
-       ...
-       FOREIGN KEY (user_id) REFERENCES users (id)
-   );
-   ```
-
-2. **Create Backend Route**:
-   ```python
-   # backend/routes/devices.py
-   from fastapi import APIRouter
-   router = APIRouter(prefix="/devices", tags=["devices"])
-   
-   @router.get("")
-   async def get_devices(...):
-       ...
-   ```
-
-3. **Add to Main App**:
-   ```python
-   # backend/main.py
-   from routes import devices
-   app.include_router(devices.router)
-   ```
-
-4. **Create Frontend API**:
-   ```typescript
-   // frontend/src/services/api.ts
-   export const deviceAPI = {
-     getDevices: async () => { ... },
-     addDevice: async (device) => { ... },
-   };
-   ```
-
-5. **Update Frontend Page**:
-   ```typescript
-   // frontend/src/pages/SmartHome.tsx
-   const devices = await deviceAPI.getDevices();
-   ```
 
 ---
 
@@ -331,12 +261,3 @@
 2. **AI API**: Which service? (OpenAI, Anthropic, local model?)
 3. **Notifications**: User preferences storage?
 4. **Deployment**: Where to deploy? (Heroku, AWS, local?)
-
----
-
-## Next Immediate Steps
-
-1. **Today**: Set up database and verify everything works
-2. **This Week**: Start Smart Home Device Management (highest priority)
-3. **Next Week**: Begin AI/ML feature planning and research
-

@@ -4,18 +4,47 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import WeatherCard from "@/components/WeatherCard";
 import DeviceCard from "@/components/DeviceCard";
-import { getDevices, updateDevice, saveDevices } from "@/lib/storage";
+import { SmartDevice } from "@/lib/storage";
+import { deviceAPI, Device } from "@/services/api";
 import { getInitialDevices, generateAIInsights } from "@/lib/mockData";
 import { locationAPI, weatherAPI } from "@/services/api";
 import { formatWeatherData } from "@/lib/weatherHelpers";
 import { Plus, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { toast } from "sonner";
+
+// Helper function to convert API Device to SmartDevice
+const convertDeviceToSmartDevice = (device: Device): SmartDevice => {
+  return {
+    id: device.id.toString(),
+    name: device.name,
+    type: device.type,
+    status: device.status,
+    room: device.room || "",
+    value: device.value,
+    color: device.color,
+    locked: device.locked,
+    position: device.position,
+  };
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [locations, setLocations] = useState<any[]>([]);
-  const [devices, setDevices] = useState(getDevices());
+  const [devices, setDevices] = useState<SmartDevice[]>([]);
   const [insights, setInsights] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Fetch devices from API
+  const fetchDevices = async () => {
+    try {
+      const apiDevices = await deviceAPI.getDevices();
+      const smartDevices = apiDevices.map(convertDeviceToSmartDevice);
+      setDevices(smartDevices);
+    } catch (error) {
+      console.error("Failed to fetch devices:", error);
+      setDevices([]);
+    }
+  };
 
   useEffect(() => {
     // Fetch locations from API
@@ -63,36 +92,64 @@ const Dashboard = () => {
     };
     
     fetchLocations();
-    
-    // Initialize devices if empty
-    if (devices.length === 0) {
-      const initial = getInitialDevices();
-      saveDevices(initial);
-      setDevices(initial);
-    }
+    fetchDevices();
   }, []);
 
   useEffect(() => {
     setInsights(generateAIInsights(locations, devices));
   }, [locations, devices]);
 
-  const handleDeviceToggle = (id: string) => {
+  const handleDeviceToggle = async (id: string) => {
     const device = devices.find(d => d.id === id);
-    if (device) {
+    if (!device) return;
+
+    try {
       const newStatus = device.status === "on" ? "off" : "on";
-      updateDevice(id, { status: newStatus });
+      const updates: any = { status: newStatus };
       
       if (device.type === "lock") {
-        updateDevice(id, { locked: newStatus === "off" });
+        updates.locked = newStatus === "off";
       }
       
-      setDevices(getDevices());
+      await deviceAPI.updateDevice(parseInt(id), updates);
+      
+      // Update local state
+      setDevices(devices.map(d => 
+        d.id === id 
+          ? { ...d, status: newStatus, ...(device.type === "lock" ? { locked: updates.locked } : {}) }
+          : d
+      ));
+    } catch (err: any) {
+      console.error("Failed to update device:", err);
+      toast.error(`Failed to update ${device.name}`);
     }
   };
 
-  const handleDeviceValueChange = (id: string, value: number) => {
-    updateDevice(id, { value });
-    setDevices(getDevices());
+  const handleDeviceValueChange = async (id: string, value: number) => {
+    const device = devices.find(d => d.id === id);
+    if (!device) return;
+
+    try {
+      const updates: any = {};
+      
+      if (device.type === "blind") {
+        updates.position = value;
+      } else {
+        updates.value = value;
+      }
+      
+      await deviceAPI.updateDevice(parseInt(id), updates);
+      
+      // Update local state
+      setDevices(devices.map(d => 
+        d.id === id 
+          ? { ...d, ...updates }
+          : d
+      ));
+    } catch (err: any) {
+      console.error("Failed to update device:", err);
+      toast.error(`Failed to update ${device.name}`);
+    }
   };
 
   const activeDevices = devices.filter(d => d.status === "on").length;
@@ -232,21 +289,39 @@ const Dashboard = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Smart Home</h2>
-            <Button onClick={() => navigate('/smart-home')} size="sm">
-              View All
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate('/smart-home')} size="sm" variant="outline">
+                View All
+              </Button>
+              <Button onClick={() => navigate('/smart-home')} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Device
+              </Button>
+            </div>
           </div>
 
-          <div className="grid gap-4">
-            {devices.slice(0, 4).map((device) => (
-              <DeviceCard
-                key={device.id}
-                device={device}
-                onToggle={handleDeviceToggle}
-                onValueChange={handleDeviceValueChange}
-              />
-            ))}
-          </div>
+          {devices.length === 0 ? (
+            <Card className="glass-card">
+              <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+                <p className="text-muted-foreground mb-4">No devices added yet</p>
+                <Button onClick={() => navigate('/smart-home')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Device
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {devices.slice(0, 4).map((device) => (
+                <DeviceCard
+                  key={device.id}
+                  device={device}
+                  onToggle={handleDeviceToggle}
+                  onValueChange={handleDeviceValueChange}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -2,16 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SmartDevice } from "@/lib/storage";
-import { Thermometer, Lightbulb, Plug, Lock, Blinds, Camera } from "lucide-react";
+import { Thermometer, Lightbulb, Plug, Lock, Blinds, Camera, Trash2 } from "lucide-react";
 
 interface DeviceCardProps {
   device: SmartDevice;
   onToggle: (id: string) => void;
   onValueChange?: (id: string, value: number) => void;
+  onDelete?: (id: string) => void;
 }
 
-const DeviceCard = ({ device, onToggle, onValueChange }: DeviceCardProps) => {
+const DeviceCard = ({ device, onToggle, onValueChange, onDelete }: DeviceCardProps) => {
   const getIcon = () => {
     const iconClass = "h-5 w-5 text-white";
     switch (device.type) {
@@ -133,6 +135,18 @@ const DeviceCard = ({ device, onToggle, onValueChange }: DeviceCardProps) => {
           <Badge variant="outline" className="w-full justify-center text-smart-primary border-smart-primary">
             Active
           </Badge>
+        )}
+
+        {onDelete && (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="w-full"
+            onClick={() => onDelete(device.id)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Device
+          </Button>
         )}
       </CardContent>
     </Card>
