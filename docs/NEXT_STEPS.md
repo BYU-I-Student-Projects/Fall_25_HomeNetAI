@@ -34,19 +34,20 @@
 ---
 
 ### 2. Smart Home Sensor Simulation
-**Status**: `homedata_sim/home_sim.py` exists but not integrated
+**Status**: Not yet implemented
 
 **Tasks:**
+- [ ] Create sensor simulation module
 - [ ] Integrate sensor simulation with scheduler
 - [ ] Store simulated sensor readings in database
 - [ ] Create `readings` table for time-series sensor data
 - [ ] Run simulation every hour (alongside weather collection)
 - [ ] Connect simulation to device management
 
-**Files to modify:**
+**Files to create/modify:**
 - `backend/database/schema.sql` - Add readings table
 - `backend/weather/scheduler.py` - Add sensor simulation
-- `backend/homedata_sim/home_sim.py` - Integrate with database
+- `backend/homedata_sim/home_sim.py` - Create sensor simulation module
 
 
 ---
