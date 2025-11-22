@@ -52,28 +52,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-weather-primary/10 via-background to-ai-primary/10 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md glass-card animate-fade-in">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center gap-2">
-            <div 
-              className="p-3 rounded-2xl"
-              style={{ background: "linear-gradient(135deg, hsl(var(--weather-primary)), hsl(var(--weather-secondary)))" }}
-            >
-              <CloudRain className="h-8 w-8 text-white" />
+            <div className="p-3 rounded-lg bg-primary/10">
+              <CloudRain className="h-8 w-8 text-primary" />
             </div>
           </div>
           <div>
-            <CardTitle 
-              className="text-3xl font-bold"
-              style={{ 
-                background: "linear-gradient(90deg, hsl(var(--weather-primary)), hsl(var(--ai-primary)))",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                color: "transparent"
-              }}
-            >
+            <CardTitle className="text-3xl font-bold text-foreground">
               HomeNetAI
             </CardTitle>
             <CardDescription className="mt-2">
@@ -112,7 +100,7 @@ const Login = () => {
           <CardFooter className="flex flex-col gap-4">
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-weather-primary to-weather-secondary hover:opacity-90 transition-opacity"
+              className="w-full bg-primary hover:bg-primary/90 transition-colors"
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign In"}

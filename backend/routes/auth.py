@@ -13,6 +13,8 @@ db = HomeNetDatabase()
 @router.post("/register")
 async def register(user: UserCreate):
     """Register a new user."""
+    conn = None
+    cursor = None
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -31,8 +33,6 @@ async def register(user: UserCreate):
         
         user_id = cursor.fetchone()[0]
         conn.commit()
-        cursor.close()
-        conn.close()
         
         access_token = create_access_token(data={"sub": user.username})
         return {"access_token": access_token, "token_type": "bearer", "user_id": user_id}
@@ -41,11 +41,18 @@ async def register(user: UserCreate):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 @router.post("/login")
 async def login(user: UserLogin):
     """Login an existing user."""
+    conn = None
+    cursor = None
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -57,8 +64,6 @@ async def login(user: UserLogin):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
         user_id = result[0]
-        cursor.close()
-        conn.close()
         
         access_token = create_access_token(data={"sub": user.username})
         return {"access_token": access_token, "token_type": "bearer", "user_id": user_id}
@@ -67,11 +72,18 @@ async def login(user: UserLogin):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 @router.get("/me")
 async def get_current_user(username: str = Depends(verify_token)):
     """Get current authenticated user information."""
+    conn = None
+    cursor = None
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -81,9 +93,6 @@ async def get_current_user(username: str = Depends(verify_token)):
         
         if not result:
             raise HTTPException(status_code=404, detail="User not found")
-        
-        cursor.close()
-        conn.close()
         
         return {
             "id": result[0],
@@ -96,4 +105,9 @@ async def get_current_user(username: str = Depends(verify_token)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 

@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 220 25% 98%;
+    --background: 0 0% 96%;
     --foreground: 220 15% 15%;
 
     --card: 0 0% 100%;
@@ -17,41 +17,41 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    --primary: 199 89% 48%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
+    --secondary: 220 15% 95%;
     --secondary-foreground: 220 15% 15%;
 
-    --muted: 220 14% 96%;
+    --muted: 220 15% 95%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 172 66% 50%;
+    --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 199 89% 48%;
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Weather theme */
-    --weather-primary: 199 89% 48%;
-    --weather-secondary: 172 66% 50%;
-    --weather-gradient: linear-gradient(135deg, hsl(199 89% 48%), hsl(172 66% 50%));
+    /* Weather theme - Professional blue */
+    --weather-primary: 217 91% 60%;
+    --weather-secondary: 217 78% 55%;
+    --weather-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 78% 55%));
 
-    /* Smart home theme */
-    --smart-primary: 142 76% 36%;
-    --smart-secondary: 160 84% 39%;
-    --smart-gradient: linear-gradient(135deg, hsl(142 76% 36%), hsl(160 84% 39%));
+    /* Smart home theme - Professional blue variant */
+    --smart-primary: 217 91% 60%;
+    --smart-secondary: 217 78% 55%;
+    --smart-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 78% 55%));
 
-    /* AI theme */
-    --ai-primary: 262 83% 58%;
-    --ai-secondary: 271 91% 65%;
-    --ai-gradient: linear-gradient(135deg, hsl(262 83% 58%), hsl(271 91% 65%));
+    /* AI theme - Professional blue variant */
+    --ai-primary: 217 91% 60%;
+    --ai-secondary: 217 78% 55%;
+    --ai-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 78% 55%));
 
     /* Glass effects */
     --glass-bg: 0 0% 100% / 0.7;
@@ -59,71 +59,14 @@ All colors MUST be HSL.
 
     --sidebar-background: 220 25% 98%;
     --sidebar-foreground: 220 15% 15%;
-    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent: 220 15% 95%;
     --sidebar-accent-foreground: 220 15% 15%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 199 89% 48%;
+    --sidebar-border: 220 13% 90%;
+    --sidebar-ring: 217 91% 60%;
   }
 
-  .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 199 89% 48%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 172 66% 50%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 24%;
-    --input: 217 33% 24%;
-    --ring: 199 89% 48%;
-
-    /* Weather theme - dark */
-    --weather-primary: 199 89% 48%;
-    --weather-secondary: 172 66% 50%;
-    --weather-gradient: linear-gradient(135deg, hsl(199 89% 48% / 0.8), hsl(172 66% 50% / 0.8));
-
-    /* Smart home theme - dark */
-    --smart-primary: 142 76% 36%;
-    --smart-secondary: 160 84% 39%;
-    --smart-gradient: linear-gradient(135deg, hsl(142 76% 36% / 0.8), hsl(160 84% 39% / 0.8));
-
-    /* AI theme - dark */
-    --ai-primary: 262 83% 58%;
-    --ai-secondary: 271 91% 65%;
-    --ai-gradient: linear-gradient(135deg, hsl(262 83% 58% / 0.8), hsl(271 91% 65% / 0.8));
-
-    /* Glass effects - dark */
-    --glass-bg: 217 33% 17% / 0.4;
-    --glass-border: 217 33% 24% / 0.3;
-
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 24%;
-    --sidebar-ring: 199 89% 48%;
-  }
 }
 
 @layer base {
@@ -134,12 +77,24 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground font-sans antialiased;
     transition: background-color 0.3s ease, color 0.3s ease;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  html {
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  #root {
+    overflow: hidden;
+    height: 100vh;
   }
 }
 
 @layer utilities {
   .glass-card {
-    @apply backdrop-blur-xl bg-white/70 dark:bg-card/40 border border-white/30 dark:border-border/30;
+    @apply backdrop-blur-xl bg-white/90 border border-gray-200/40 shadow-lg rounded-xl;
   }
 
   .gradient-weather {
@@ -197,4 +152,5 @@ All colors MUST be HSL.
     transform: scale(1);
   }
 }
+
 

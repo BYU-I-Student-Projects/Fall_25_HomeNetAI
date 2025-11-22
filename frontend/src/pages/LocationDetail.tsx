@@ -1,171 +1,59 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Droplets, Wind, Eye, Gauge, Thermometer, CloudRain } from "lucide-react";
-import { locationAPI, weatherAPI } from "@/services/api";
-import { formatWeatherData, getWeatherCondition } from "@/lib/weatherHelpers";
+import { Input } from "@/components/ui/input";
 
 const LocationDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [location, setLocation] = useState<any>(null);
-  const [weather, setWeather] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await locationAPI.getUserLocations();
-        const locations = data.locations || [];
-        const loc = locations.find((l: any) => l.id === parseInt(id || '0'));
-        
-        if (!loc) {
-          navigate('/locations');
-          return;
-        }
-        setLocation(loc);
-        
-        const weatherData = await weatherAPI.getWeather(parseInt(id || '0'));
-        setWeather(weatherData);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        navigate('/locations');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    if (id) {
-      fetchData();
-    }
-  }, [id, navigate]);
-
-  if (loading || !location) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
-  const currentWeather = weather?.current_weather || {};
-  const dailyForecast = weather?.daily_forecast || {};
-  
-  const formattedWeather = formatWeatherData(weather);
-  
-  // Get daily forecast data
-  const dailyData = dailyForecast.daily || {};
-  const dailyTemps = dailyData.temperature_2m_max || [];
-  const dailyMins = dailyData.temperature_2m_min || [];
-  const dailyDates = dailyData.time || [];
-  const dailyCodes = dailyData.weathercode || [];
-
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/locations')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-4xl font-bold">{location.name}</h1>
-          <p className="text-muted-foreground mt-1">
-            {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-          </p>
+    <div className="h-screen bg-gray-100 overflow-hidden flex flex-col relative" style={{ height: '100vh', overflow: 'hidden' }}>
+      {/* Fixed Header Bar */}
+      <div className="fixed top-0 left-0 right-0 h-20 bg-gray-100 z-50 flex items-center" style={{ position: 'fixed', zIndex: 50 }}>
+        {/* HomeNetAI - Top left */}
+        <div className="absolute left-6">
+          <h1 className="text-xl font-bold text-[#0F4C5C]">HomeNetAI</h1>
+        </div>
+        
+        {/* Centered Page Title */}
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <h2 className="text-xl font-semibold text-[#0F4C5C]">Location Detail</h2>
+        </div>
+        
+        {/* Search and Icons - Top right */}
+        <div className="absolute right-6 flex items-center gap-3">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0F4C5C]" />
+            <Input
+              type="text"
+              placeholder="Search for any Weather info....."
+              className="pl-11 pr-4 h-12 w-72 rounded-full bg-white shadow-sm border-0 focus-visible:ring-2 focus-visible:ring-[#0F4C5C]/20"
+            />
+          </div>
+          
+          {/* Notification Icon */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-12 w-12 rounded-full bg-white shadow-sm hover:bg-slate-50 border-0"
+          >
+            <Bell className="h-6 w-6 text-[#0F4C5C]" />
+          </Button>
+          
+          {/* Menu Icon */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-12 w-12 rounded-full bg-white shadow-sm hover:bg-slate-50 border-0"
+          >
+            <Menu className="h-6 w-6 text-[#0F4C5C]" />
+          </Button>
         </div>
       </div>
-
-      {weather && (
-        <>
-          <Card className="glass-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-end gap-2 mb-2">
-                    <span className="text-6xl font-bold">{formattedWeather.temperature}°</span>
-                    <span className="text-2xl text-muted-foreground mb-2">F</span>
-                  </div>
-                  <p className="text-xl font-medium mb-1">{formattedWeather.condition}</p>
-                  <p className="text-muted-foreground">Feels like {formattedWeather.feelsLike}°F</p>
-                </div>
-                <span className="text-8xl">{formattedWeather.icon}</span>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t">
-                <div className="flex items-center gap-2">
-                  <Droplets className="h-5 w-5 text-weather-secondary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Humidity</p>
-                    <p className="font-medium">{formattedWeather.humidity}%</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Wind className="h-5 w-5 text-weather-secondary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Wind Speed</p>
-                    <p className="font-medium">{formattedWeather.windSpeed} mph</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-weather-secondary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Visibility</p>
-                    <p className="font-medium">{formattedWeather.visibility} mi</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Gauge className="h-5 w-5 text-weather-secondary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Pressure</p>
-                    <p className="font-medium">{formattedWeather.pressure} mb</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {dailyDates.length > 0 && (
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle>7-Day Forecast</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {dailyDates.slice(0, 7).map((date: string, i: number) => {
-                  const dateObj = new Date(date);
-                  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-                  const monthDay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                  
-                  return (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        <p className="font-medium min-w-[120px]">{dayName}, {monthDay}</p>
-                        <span className="text-3xl">{getWeatherCondition(dailyCodes[i] || 0).icon}</span>
-                        <p className="text-sm text-muted-foreground flex-1">{getWeatherCondition(dailyCodes[i] || 0).condition}</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="font-bold">{Math.round(dailyTemps[i] || 0)}°</p>
-                          <p className="text-sm text-muted-foreground">{Math.round(dailyMins[i] || 0)}°</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
+      
+      <div className="flex-1 overflow-hidden flex flex-col pt-20 pb-6 px-6" style={{ height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
+        {/* Page content goes here */}
+      </div>
     </div>
   );
 };
 
 export default LocationDetail;
-

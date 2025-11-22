@@ -75,6 +75,8 @@ async def get_user_locations(username: str = Depends(verify_token)):
 @router.post("")
 async def add_user_location(location: LocationCreate, username: str = Depends(verify_token)):
     """Add a new location for the authenticated user."""
+    conn = None
+    cursor = None
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -94,8 +96,6 @@ async def add_user_location(location: LocationCreate, username: str = Depends(ve
         
         location_id = cursor.fetchone()[0]
         conn.commit()
-        cursor.close()
-        conn.close()
         
         return {"id": location_id, "message": "Location added successfully"}
         
@@ -103,11 +103,18 @@ async def add_user_location(location: LocationCreate, username: str = Depends(ve
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 @router.delete("/{location_id}")
 async def delete_user_location(location_id: int, username: str = Depends(verify_token)):
     """Delete a location owned by the authenticated user."""
+    conn = None
+    cursor = None
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -123,8 +130,6 @@ async def delete_user_location(location_id: int, username: str = Depends(verify_
             raise HTTPException(status_code=404, detail="Location not found or not owned by user")
         
         conn.commit()
-        cursor.close()
-        conn.close()
         
         return {"message": "Location deleted successfully"}
         
@@ -132,4 +137,9 @@ async def delete_user_location(location_id: int, username: str = Depends(verify_
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
