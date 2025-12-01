@@ -118,26 +118,48 @@ export default function Dashboard() {
               Monitor weather conditions across your locations
             </p>
           </div>
-          <Link to="/add-location" style={{ textDecoration: 'none' }}>
-            <button style={{
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              padding: '14px 28px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '500',
-              boxShadow: '0 2px 8px rgba(0, 123, 255, 0.25)',
-              transition: 'all 0.2s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span>+</span>
-              <span>Add Location</span>
-            </button>
-          </Link>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Link to="/ai-insights" style={{ textDecoration: 'none' }}>
+              <button style={{
+                backgroundColor: '#6f42c1',
+                color: 'white',
+                border: 'none',
+                padding: '14px 28px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: '500',
+                boxShadow: '0 2px 8px rgba(111, 66, 193, 0.25)',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>🤖</span>
+                <span>AI Insights</span>
+              </button>
+            </Link>
+            <Link to="/add-location" style={{ textDecoration: 'none' }}>
+              <button style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '14px 28px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: '500',
+                boxShadow: '0 2px 8px rgba(0, 123, 255, 0.25)',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>+</span>
+                <span>Add Location</span>
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* Content Section */}

@@ -80,4 +80,20 @@ export const weatherAPI = {
   },
 };
 
+// AI API
+export const aiAPI = {
+  chat: async (message: string, conversationId?: string) => {
+    const response = await api.post('/ai/chat', {
+      message,
+      conversation_id: conversationId,
+    });
+    return response.data;
+  },
+
+  getInsights: async () => {
+    const response = await api.get('/ai/insights');
+    return response.data;
+  },
+};
+
 export default api;
