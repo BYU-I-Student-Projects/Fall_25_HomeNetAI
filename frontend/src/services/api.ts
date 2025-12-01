@@ -1,83 +1,104 @@
-import axios from 'axios';
+import axios from "axios";
+import { getAuthToken } from "@/lib/storage";
 
-const API_BASE_URL = 'http://localhost:8000';
+const BASE_URL = "http://localhost:8000";
 
-// Create axios instance
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+export const api = axios.create({
+  baseURL: BASE_URL,
 });
 
-// Add auth token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
+  const token = getAuthToken();
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers = config.headers ?? {};
+    config.headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    console.warn("No auth token found for request:", config.url);
   }
   return config;
 });
 
-// Handle auth errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+      console.error("Authentication failed:", error.response.data);
+      // Clear invalid token
+      localStorage.removeItem('homenet_jwt_token');
     }
     return Promise.reject(error);
   }
 );
 
-// Auth API
-export const authAPI = {
-  register: async (userData: { username: string; email: string; password: string }) => {
-    const response = await api.post('/auth/register', userData);
-    return response.data;
-  },
+// Auth
+export async function apiLogin(username: string, password: string) {
+  const res = await api.post("/auth/login", { username, password });
+  return res.data as { access_token: string; token_type: string; user_id: number };
+}
 
-  login: async (credentials: { username: string; password: string }) => {
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
-  },
+export async function apiRegister(username: string, email: string, password: string) {
+  const res = await api.post("/auth/register", { username, email, password });
+  return res.data as { access_token: string; token_type: string; user_id: number };
+}
 
-  getCurrentUser: async () => {
-    const response = await api.get('/auth/me');
-    return response.data;
-  },
+export async function apiMe() {
+  const res = await api.get("/auth/me");
+  return res.data as { id: number; username: string; email: string; created_at: string };
+}
+
+// Locations
+export type SearchLocationResult = {
+  name: string;
+  country: string;
+  admin1: string;
+  latitude: number;
+  longitude: number;
+  display_name: string;
 };
 
-// Location API
-export const locationAPI = {
-  search: async (query: string) => {
-    const response = await api.get(`/locations/search?query=${encodeURIComponent(query)}`);
-    return response.data;
-  },
+export async function apiSearchLocations(query: string) {
+  const res = await api.get("/locations/search", { params: { query } });
+  return (res.data.results ?? []) as SearchLocationResult[];
+}
 
-  getUserLocations: async () => {
-    const response = await api.get('/locations');
-    return response.data;
-  },
-
-  addLocation: async (locationData: { name: string; latitude: number; longitude: number }) => {
-    const response = await api.post('/locations', locationData);
-    return response.data;
-  },
-
-  deleteLocation: async (locationId: number) => {
-    const response = await api.delete(`/locations/${locationId}`);
-    return response.data;
-  },
+export type UserLocation = {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  created_at: string;
 };
 
-// Weather API
-export const weatherAPI = {
-  getWeather: async (locationId: number) => {
-    const response = await api.get(`/weather/${locationId}`);
-    return response.data;
-  },
+export async function apiGetLocations() {
+  const res = await api.get("/locations");
+  return (res.data.locations ?? []) as UserLocation[];
+}
+
+export async function apiAddLocation(payload: { name: string; latitude: number; longitude: number }) {
+  const res = await api.post("/locations", payload);
+  return res.data as { id: number; message: string };
+}
+
+export async function apiDeleteLocation(id: number) {
+  const res = await api.delete(`/locations/${id}`);
+  return res.data as { message: string };
+}
+
+// Weather
+export type WeatherResponse = {
+  location: string | { id: number; name: string; latitude?: number; longitude?: number };
+  current_weather?: Record<string, unknown>;
+  hourly?: Record<string, unknown>;
+  daily?: Record<string, unknown>;
 };
 
-export default api;
+export async function apiGetWeather(locationId: number) {
+  const res = await api.get(`/weather/${locationId}`);
+  return res.data as WeatherResponse;
+}
+
+// User data management
+export async function apiClearUserData() {
+  const res = await api.delete("/user/data");
+  return res.data as { message: string };
+}

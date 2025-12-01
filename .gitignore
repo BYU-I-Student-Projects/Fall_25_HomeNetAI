@@ -10,7 +10,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+- lib/
 lib64/
 parts/
 sdist/
@@ -74,3 +74,17 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Corrupted files
+*uccessful*
+tatus*
+
+# IDE specific
+*.sublime-project
+*.sublime-workspace
+
+# OS specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

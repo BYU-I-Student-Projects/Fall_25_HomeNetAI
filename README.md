@@ -1,4 +1,4 @@
-# HomeNetAI Weather Application
+# HomeNetAI
 
 A professional full-stack weather monitoring web application with user authentication, dynamic location management, and comprehensive weather data collection for AI/ML analysis.
 
@@ -35,51 +35,36 @@ A professional full-stack weather monitoring web application with user authentic
 
 ## Quick Start
 
-### 1. Clone & Setup Database
+### Prerequisites
+- Node.js (v18+)
+- Python (v3.8+)
+- PostgreSQL (v12+)
 
+### Setup
 ```bash
-# Clone repository
+# 1. Clone repository
 git clone <your-repo-url>
 cd Fall_25_HomeNetAI
 
-# Create PostgreSQL database
+# 2. Create database
 createdb homenet
-```
 
-### 2. Backend Setup
-
-```bash
-# Install Python dependencies
+# 3. Install dependencies
 pip install -r requirements.txt
+cd frontend && npm install && cd ..
 
-# Update database connection in backend/database/database.py
-# Change line 12 to your PostgreSQL credentials:
-# self.connection_string = "postgresql://username:password@localhost/homenet"
-
-# Start backend server
+# 4. Start backend
 cd backend
 python start_backend.py
-```
 
-Backend will run at: **http://localhost:8000**
-- API Docs: http://localhost:8000/docs
-- Interactive API: http://localhost:8000/redoc
-- Weather Scheduler: Automatically collects weather data every 30 minutes
-
-### 3. Frontend Setup
-
-```bash
-# Install Node.js dependencies
+# 5. Start frontend (new terminal)
 cd frontend
-npm install
-
-# Start development server
 npm run dev
-# OR use the PowerShell script:
-.\start.ps1
 ```
 
-Frontend will run at: **http://localhost:5173**
+### Access
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000
 
 ## 🏗️ Project Structure
 

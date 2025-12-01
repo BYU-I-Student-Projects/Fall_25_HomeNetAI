@@ -18,7 +18,10 @@ def get_weather_data(latitude: float, longitude: float) -> Dict[str, Any]:
         "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,uv_index_max",
         "current_weather": True,
         "timezone": "auto",
-        "forecast_days": 7
+        "forecast_days": 7,
+        "temperature_unit": "fahrenheit",
+        "windspeed_unit": "mph",
+        "precipitation_unit": "inch"
     }
     
     try:

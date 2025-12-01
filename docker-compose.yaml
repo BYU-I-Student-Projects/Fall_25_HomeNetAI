@@ -1,0 +1,22 @@
+services:
+  homenetai-db:
+    image: postgres:latest
+    container_name: homenetai-db
+    restart: unless-stopped
+
+# -- Environment variables                      --
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: nathan-7108
+      POSTGRES_DB: homenet
+
+# -- Port mapping: host:container               --
+    ports:
+      - "5432:5432"
+
+# -- Persistent storage                         --
+    volumes:
+      - homenetai_db_data:/var/lib/postgresql/data
+
+volumes:
+  homenetai_db_data:
