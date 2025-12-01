@@ -101,8 +101,8 @@ async def register(user: UserCreate):
         cursor.close()
         conn.close()
         
-        # Create token
-        access_token = create_access_token(data={"sub": user.username})
+        # Create token with user_id
+        access_token = create_access_token(data={"sub": user.username, "user_id": user_id})
         return {"access_token": access_token, "token_type": "bearer", "user_id": user_id}
         
     except Exception as e:
@@ -125,8 +125,8 @@ async def login(user: UserLogin):
         cursor.close()
         conn.close()
         
-        # Create token
-        access_token = create_access_token(data={"sub": user.username})
+        # Create token with user_id
+        access_token = create_access_token(data={"sub": user.username, "user_id": user_id})
         return {"access_token": access_token, "token_type": "bearer", "user_id": user_id}
         
     except Exception as e:

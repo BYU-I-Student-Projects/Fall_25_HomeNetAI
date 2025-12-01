@@ -24,6 +24,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.error('401 Unauthorized error:', error.response?.data);
+      console.error('Request URL:', error.config?.url);
+      console.error('Token in localStorage:', localStorage.getItem('auth_token') ? 'exists' : 'missing');
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
     }
