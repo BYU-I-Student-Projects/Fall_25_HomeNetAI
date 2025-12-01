@@ -4,14 +4,42 @@ Handles chatbot and AI insights endpoints
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime
+import jwt
 
 from services.ai_service import ai_service
+from config import config
 
 # Create router
 router = APIRouter(prefix="/ai", tags=["AI"])
+
+# Security
+security = HTTPBearer()
+
+
+# Authentication dependency
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Verify JWT token and return current user"""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, config.SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        username = payload.get("sub") or payload.get("username")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token: missing user_id")
+        
+        return {"user_id": user_id, "username": username}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        print(f"Authentication error: {e}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 # Pydantic Models
@@ -186,23 +214,3 @@ def _generate_conversation_id() -> str:
     """Generate a unique conversation ID"""
     import uuid
     return str(uuid.uuid4())
-
-
-# Dependency imports (these should be imported from main.py or auth module)
-# For now, we'll add a placeholder
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import jwt
-from config import config
-
-security = HTTPBearer()
-
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify JWT token and return current user"""
-    try:
-        token = credentials.credentials
-        payload = jwt.decode(token, config.SECRET_KEY, algorithms=["HS256"])
-        return {"user_id": payload.get("user_id"), "username": payload.get("username")}
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")

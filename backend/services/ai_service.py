@@ -1,9 +1,9 @@
 """
 AI Service for HomeNetAI
-Integrates with OpenAI GPT API to provide intelligent insights about weather and home data
+Integrates with Google Gemini API to provide intelligent insights about weather and home data
 """
 
-import openai
+import google.generativeai as genai
 from typing import Dict, List, Optional
 from datetime import datetime
 import json
@@ -14,11 +14,13 @@ class AIService:
     """Service for AI-powered chat and insights"""
     
     def __init__(self):
-        """Initialize OpenAI client with API key"""
-        if config.OPENAI_API_KEY:
-            openai.api_key = config.OPENAI_API_KEY
+        """Initialize Gemini client with API key"""
+        if config.GEMINI_API_KEY:
+            genai.configure(api_key=config.GEMINI_API_KEY)
+            self.model = genai.GenerativeModel(config.GEMINI_MODEL)
         else:
-            print("Warning: OPENAI_API_KEY not set. AI features will be disabled.")
+            print("Warning: GEMINI_API_KEY not set. AI features will be disabled.")
+            self.model = None
     
     async def generate_chat_response(
         self, 
@@ -38,45 +40,42 @@ class AIService:
             AI-generated response string
         """
         try:
+            if not self.model:
+                return "AI service is not configured. Please add your Gemini API key to the configuration."
+            
             # Build system prompt with context
             system_prompt = self._build_system_prompt(context)
             
-            # Build messages array
-            messages = [
-                {"role": "system", "content": system_prompt}
-            ]
-            
-            # Add conversation history if available
+            # Build conversation history for Gemini
+            chat_history = []
             if conversation_history:
                 for msg in conversation_history[-10:]:  # Last 10 messages for context
-                    messages.append({
-                        "role": msg.get("role", "user"),
-                        "content": msg.get("content", "")
-                    })
+                    role = msg.get("role", "user")
+                    content = msg.get("content", "")
+                    # Gemini uses 'user' and 'model' roles
+                    gemini_role = "model" if role == "assistant" else "user"
+                    chat_history.append({"role": gemini_role, "parts": [content]})
             
-            # Add current user message
-            messages.append({"role": "user", "content": user_message})
+            # Start chat with history
+            chat = self.model.start_chat(history=chat_history)
             
-            # Call OpenAI API
-            response = await openai.ChatCompletion.acreate(
-                model=config.OPENAI_MODEL,
-                messages=messages,
-                max_tokens=config.OPENAI_MAX_TOKENS,
-                temperature=config.OPENAI_TEMPERATURE
-            )
+            # Combine system prompt with user message
+            full_message = f"{system_prompt}\n\nUser: {user_message}"
             
-            return response.choices[0].message.content.strip()
+            # Generate response
+            response = chat.send_message(full_message)
             
-        except openai.error.AuthenticationError:
-            return "AI service is not configured. Please add your OpenAI API key to the configuration."
-        except openai.error.RateLimitError:
-            return "AI service is temporarily unavailable due to rate limits. Please try again later."
-        except openai.error.APIError as e:
-            print(f"OpenAI API error: {e}")
-            return "I'm having trouble connecting to the AI service. Please try again later."
+            return response.text.strip()
+            
         except Exception as e:
-            print(f"Unexpected error in AI service: {e}")
-            return "An unexpected error occurred. Please try again."
+            error_msg = str(e).lower()
+            if "api key" in error_msg or "authentication" in error_msg:
+                return "AI service is not configured. Please add your Gemini API key to the configuration."
+            elif "quota" in error_msg or "rate" in error_msg:
+                return "AI service is temporarily unavailable due to rate limits. Please try again later."
+            else:
+                print(f"Gemini API error: {e}")
+                return "I'm having trouble connecting to the AI service. Please try again later."
     
     def _build_system_prompt(self, context: Optional[Dict] = None) -> str:
         """
