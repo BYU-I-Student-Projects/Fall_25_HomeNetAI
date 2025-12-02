@@ -57,9 +57,26 @@ CREATE TABLE IF NOT EXISTS daily_weather (
     UNIQUE(location_id, date)
 );
 
+-- User preferences table
+CREATE TABLE IF NOT EXISTS user_preferences (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL UNIQUE,
+    unit_system VARCHAR(20) DEFAULT 'imperial' CHECK (unit_system IN ('metric', 'imperial')),
+    theme VARCHAR(20) DEFAULT 'light' CHECK (theme IN ('light', 'dark', 'auto')),
+    alerts_enabled BOOLEAN DEFAULT TRUE,
+    temperature_alerts BOOLEAN DEFAULT TRUE,
+    precipitation_alerts BOOLEAN DEFAULT TRUE,
+    wind_alerts BOOLEAN DEFAULT TRUE,
+    anomaly_alerts BOOLEAN DEFAULT TRUE,
+    email_notifications BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_weather_location_time ON weather_data(location_id, timestamp);
 CREATE INDEX IF NOT EXISTS idx_daily_location_date ON daily_weather(location_id, date);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_locations_user_id ON user_locations(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
