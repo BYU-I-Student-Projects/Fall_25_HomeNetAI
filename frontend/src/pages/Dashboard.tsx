@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { locationAPI, weatherAPI } from "../services/api";
+import Alerts from "../components/Alerts";
 
 interface Location {
   id: number;
@@ -291,6 +292,9 @@ export default function Dashboard() {
                   transition: 'all 0.3s ease',
                   position: 'relative'
                 }}>
+                  {/* Smart Alerts */}
+                  <Alerts locationId={location.id} />
+
                   {/* Location Header */}
                   <div style={{ 
                     display: 'flex', 
