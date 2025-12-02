@@ -36,7 +36,24 @@ class AlertsService:
         severity_order = {'critical': 0, 'warning': 1, 'info': 2, 'recommendation': 3}
         alerts.sort(key=lambda x: (severity_order.get(x['severity'], 999), x['timestamp']))
         
-        return alerts
+        # Add unique IDs and format for frontend compatibility
+        formatted_alerts = []
+        for idx, alert in enumerate(alerts):
+            formatted_alerts.append({
+                'id': idx + 1,  # Unique ID for each alert
+                'user_id': user_id,
+                'location_id': location_id,
+                'alert_type': alert.get('title', alert.get('type', 'Alert')),
+                'severity': alert.get('severity', 'info'),
+                'title': alert.get('title', ''),
+                'message': alert.get('message', '') + (' ' + alert.get('recommendation', '') if alert.get('recommendation') else ''),
+                'is_read': False,
+                'created_at': alert.get('timestamp', datetime.now().isoformat()),
+                'expires_at': None,
+                'icon': alert.get('icon', 'info')
+            })
+        
+        return formatted_alerts
     
     def _get_recent_weather(self, location_id: int) -> Optional[Dict[str, Any]]:
         """Get recent weather data (last 24 hours)"""
