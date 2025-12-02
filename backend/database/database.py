@@ -154,6 +154,36 @@ class HomeNetDatabase:
     def get_connection(self):
         # Simple connection getter for main.py
         return psycopg2.connect(self.connection_string)
+    
+    def execute_query(self, query: str, params: tuple = None) -> List[Dict[str, Any]]:
+        """Execute a SQL query and return results as list of dictionaries"""
+        conn = None
+        cursor = None
+        try:
+            conn = psycopg2.connect(self.connection_string)
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            
+            # For SELECT queries, fetch results
+            if cursor.description:
+                columns = [desc[0] for desc in cursor.description]
+                results = []
+                for row in cursor.fetchall():
+                    results.append(dict(zip(columns, row)))
+                return results
+            else:
+                conn.commit()
+                return []
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"Query execution error: {e}")
+            raise
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
 # Example usage
 if __name__ == "__main__":

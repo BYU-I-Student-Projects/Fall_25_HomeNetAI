@@ -25,15 +25,15 @@ class SettingsService:
             prefs = result[0]
             return {
                 'user_id': user_id,
-                'unit_system': prefs[0],
-                'theme': prefs[1],
-                'alerts_enabled': prefs[2],
-                'temperature_alerts': prefs[3],
-                'precipitation_alerts': prefs[4],
-                'wind_alerts': prefs[5],
-                'anomaly_alerts': prefs[6],
-                'email_notifications': prefs[7],
-                'updated_at': prefs[8].isoformat() if prefs[8] else None
+                'unit_system': prefs.get('unit_system', 'imperial'),
+                'theme': prefs.get('theme', 'light'),
+                'alerts_enabled': prefs.get('alerts_enabled', True),
+                'temperature_alerts': prefs.get('temperature_alerts', True),
+                'precipitation_alerts': prefs.get('precipitation_alerts', True),
+                'wind_alerts': prefs.get('wind_alerts', True),
+                'anomaly_alerts': prefs.get('anomaly_alerts', True),
+                'email_notifications': prefs.get('email_notifications', False),
+                'updated_at': prefs['updated_at'].isoformat() if prefs.get('updated_at') else None
             }
         else:
             # Create default preferences
@@ -61,15 +61,15 @@ class SettingsService:
             prefs = result[0]
             return {
                 'user_id': user_id,
-                'unit_system': prefs[0],
-                'theme': prefs[1],
-                'alerts_enabled': prefs[2],
-                'temperature_alerts': prefs[3],
-                'precipitation_alerts': prefs[4],
-                'wind_alerts': prefs[5],
-                'anomaly_alerts': prefs[6],
-                'email_notifications': prefs[7],
-                'updated_at': prefs[8].isoformat() if prefs[8] else None
+                'unit_system': prefs.get('unit_system', 'imperial'),
+                'theme': prefs.get('theme', 'light'),
+                'alerts_enabled': prefs.get('alerts_enabled', True),
+                'temperature_alerts': prefs.get('temperature_alerts', True),
+                'precipitation_alerts': prefs.get('precipitation_alerts', True),
+                'wind_alerts': prefs.get('wind_alerts', True),
+                'anomaly_alerts': prefs.get('anomaly_alerts', True),
+                'email_notifications': prefs.get('email_notifications', False),
+                'updated_at': prefs['updated_at'].isoformat() if prefs.get('updated_at') else None
             }
         else:
             # Return defaults if insert failed (conflict)
@@ -127,15 +127,15 @@ class SettingsService:
             prefs = result[0]
             return {
                 'user_id': user_id,
-                'unit_system': prefs[0],
-                'theme': prefs[1],
-                'alerts_enabled': prefs[2],
-                'temperature_alerts': prefs[3],
-                'precipitation_alerts': prefs[4],
-                'wind_alerts': prefs[5],
-                'anomaly_alerts': prefs[6],
-                'email_notifications': prefs[7],
-                'updated_at': prefs[8].isoformat() if prefs[8] else None
+                'unit_system': prefs.get('unit_system', 'imperial'),
+                'theme': prefs.get('theme', 'light'),
+                'alerts_enabled': prefs.get('alerts_enabled', True),
+                'temperature_alerts': prefs.get('temperature_alerts', True),
+                'precipitation_alerts': prefs.get('precipitation_alerts', True),
+                'wind_alerts': prefs.get('wind_alerts', True),
+                'anomaly_alerts': prefs.get('anomaly_alerts', True),
+                'email_notifications': prefs.get('email_notifications', False),
+                'updated_at': prefs['updated_at'].isoformat() if prefs.get('updated_at') else None
             }
         
         return self.get_user_preferences(user_id)

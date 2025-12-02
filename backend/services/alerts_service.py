@@ -41,8 +41,8 @@ class AlertsService:
     def _get_recent_weather(self, location_id: int) -> Optional[Dict[str, Any]]:
         """Get recent weather data (last 24 hours)"""
         query = """
-            SELECT temperature, humidity, precipitation, windspeed, 
-                   apparent_temperature, pressure, cloud_cover, timestamp
+            SELECT temperature, humidity, precipitation, wind_speed, 
+                   apparent_temperature, cloud_cover, timestamp
             FROM weather_data
             WHERE location_id = %s 
             AND timestamp >= NOW() - INTERVAL '24 hours'
@@ -62,7 +62,7 @@ class AlertsService:
     def _get_forecast_weather(self, location_id: int) -> Optional[Dict[str, Any]]:
         """Get forecast weather data (next 24 hours)"""
         query = """
-            SELECT temperature, humidity, precipitation, windspeed,
+            SELECT temperature, humidity, precipitation, wind_speed,
                    apparent_temperature, timestamp
             FROM weather_data
             WHERE location_id = %s 

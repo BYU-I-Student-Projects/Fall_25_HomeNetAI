@@ -113,25 +113,29 @@ async def register(user: UserCreate):
 
 @app.post("/auth/login")
 async def login(user: UserLogin):
-    # Login user
+    # Login user - accepts username OR email
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
         
-        cursor.execute("SELECT id, password_hash FROM users WHERE username = %s", (user.username,))
+        # Try to find user by username or email
+        cursor.execute("SELECT id, username, password_hash FROM users WHERE username = %s OR email = %s", (user.username, user.username))
         result = cursor.fetchone()
         
-        if not result or result[1] != hash_password(user.password):
+        if not result or result[2] != hash_password(user.password):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
         user_id = result[0]
+        actual_username = result[1]
         cursor.close()
         conn.close()
         
-        # Create token with user_id
-        access_token = create_access_token(data={"sub": user.username, "user_id": user_id})
+        # Create token with user_id using actual username
+        access_token = create_access_token(data={"sub": actual_username, "user_id": user_id})
         return {"access_token": access_token, "token_type": "bearer", "user_id": user_id}
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
