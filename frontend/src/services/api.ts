@@ -282,8 +282,7 @@ export const locationAPI = {
   addLocation: apiAddLocation,
   delete: apiDeleteLocation,
   search: async (query: string) => {
-    // Placeholder for search functionality - can be implemented later
-    const res = await api.get("/locations/search", { params: { q: query } });
+    const res = await api.get("/locations/search", { params: { query } });
     return res.data;
   }
 };
