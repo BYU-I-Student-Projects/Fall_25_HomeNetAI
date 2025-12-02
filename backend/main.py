@@ -331,6 +331,71 @@ async def add_user_location(location: LocationCreate, username: str = Depends(ve
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/locations/refresh-weather")
+async def refresh_weather_data(username: str = Depends(verify_token)):
+    """
+    Manually refresh weather data for all user locations
+    Useful when locations were added but weather data is missing
+    """
+    try:
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        
+        # Get user ID
+        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        user_result = cursor.fetchone()
+        if not user_result:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result[0]
+        
+        # Get all user locations
+        cursor.execute("""
+            SELECT id, name, latitude, longitude
+            FROM user_locations
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        locations = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        if not locations:
+            return {
+                "success": True,
+                "message": "No locations to refresh",
+                "refreshed_count": 0
+            }
+        
+        # Refresh weather data for each location
+        success_count = 0
+        errors = []
+        
+        for loc in locations:
+            location_id, name, latitude, longitude = loc
+            try:
+                weather_data = get_weather_data(float(latitude), float(longitude))
+                db.insert_weather_data(name, weather_data, float(latitude), float(longitude), user_id)
+                success_count += 1
+                print(f"✅ Refreshed weather data for {name}")
+            except Exception as e:
+                error_msg = f"Failed to refresh {name}: {str(e)}"
+                errors.append(error_msg)
+                print(f"⚠️  {error_msg}")
+        
+        return {
+            "success": True,
+            "message": f"Refreshed {success_count}/{len(locations)} locations",
+            "refreshed_count": success_count,
+            "total_locations": len(locations),
+            "errors": errors if errors else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error refreshing weather data: {str(e)}")
+
 @app.delete("/locations/{location_id}")
 async def delete_user_location(location_id: int, username: str = Depends(verify_token)):
     # Delete a user's location

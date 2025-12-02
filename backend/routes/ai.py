@@ -118,6 +118,21 @@ async def get_insights(current_user: dict = Depends(get_current_user)):
         # Get user's context
         context = await _get_user_context(current_user["user_id"])
         
+        # Check if user has locations and weather data
+        if not context.get("locations") or len(context.get("locations", [])) == 0:
+            return [{
+                "type": "info",
+                "title": "No Locations Added",
+                "message": "Add your first location to start receiving AI-powered weather insights and recommendations."
+            }]
+        
+        if not context.get("current_weather"):
+            return [{
+                "type": "warning",
+                "title": "Weather Data Loading",
+                "message": "Weather data is being collected for your locations. Please refresh in a few moments or use the 'Refresh Weather' button in your dashboard."
+            }]
+        
         # Generate insights
         insights = await ai_service.generate_insights(context)
         

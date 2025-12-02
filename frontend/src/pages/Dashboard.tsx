@@ -7,9 +7,10 @@ import DeviceCard from "@/components/DeviceCard";
 import AlertsPanel from "@/components/AlertsPanel";
 import { getLocations, getDevices, updateDevice, saveDevices, saveLocations, clearPresetLocations, SavedLocation, SmartDevice } from "@/lib/storage";
 import { getInitialLocations, getInitialDevices, generateAIInsights } from "@/lib/mockData";
-import { apiGetLocations, apiGetWeather } from "@/services/api";
+import { apiGetLocations, apiGetWeather, apiRefreshWeatherData } from "@/services/api";
 // Removed mock data imports - using real API data only
-import { Plus, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { Plus, Sparkles, TrendingUp, Zap, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Weather data processing functions
 const processHourlyData = (hourly: any) => {
@@ -71,9 +72,11 @@ const getWeatherIcon = (code: number): string => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [locations, setLocations] = useState<SavedLocation[]>([]);
   const [devices, setDevices] = useState<SmartDevice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expandedForecasts, setExpandedForecasts] = useState<{ [key: number]: boolean }>({});
   // Memoize expensive calculations
   const insights = useMemo(() => generateAIInsights(locations, devices), [locations, devices]);
@@ -190,6 +193,29 @@ const Dashboard = () => {
     setDevices(getDevices());
   }, []);
 
+  const handleRefreshWeather = async () => {
+    setRefreshing(true);
+    try {
+      const result = await apiRefreshWeatherData();
+      toast({
+        title: "Weather Data Refreshed",
+        description: result.message,
+      });
+      
+      // Reload the dashboard after refresh
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to refresh weather:", error);
+      toast({
+        title: "Refresh Failed",
+        description: "Could not refresh weather data. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -204,13 +230,24 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-weather-primary to-ai-primary bg-clip-text text-transparent">
-          Dashboard
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Welcome back! Here's your home overview
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-weather-primary to-ai-primary bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Welcome back! Here's your home overview
+          </p>
+        </div>
+        <Button 
+          onClick={handleRefreshWeather} 
+          disabled={refreshing || locations.length === 0}
+          variant="outline"
+          size="sm"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh Weather
+        </Button>
       </div>
 
       {/* Stats */}

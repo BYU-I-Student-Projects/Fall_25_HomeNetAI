@@ -89,6 +89,17 @@ export async function apiDeleteLocation(id: number) {
   return res.data as { message: string };
 }
 
+export async function apiRefreshWeatherData() {
+  const res = await api.post("/locations/refresh-weather");
+  return res.data as { 
+    success: boolean; 
+    message: string; 
+    refreshed_count: number; 
+    total_locations: number;
+    errors?: string[];
+  };
+}
+
 // Weather
 export type WeatherResponse = {
   location: string | { id: number; name: string; latitude?: number; longitude?: number };
@@ -133,7 +144,8 @@ export type AIInsight = {
 
 export async function apiGetAIInsights() {
   const res = await api.get("/ai/insights");
-  return res.data as { insights: AIInsight[] };
+  // Backend returns array directly, not wrapped in object
+  return { insights: Array.isArray(res.data) ? res.data : [] };
 }
 
 // Analytics
