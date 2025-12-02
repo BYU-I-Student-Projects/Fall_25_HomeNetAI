@@ -79,6 +79,11 @@ export async function apiAddLocation(payload: { name: string; latitude: number; 
   return res.data as { id: number; message: string };
 }
 
+export async function apiGetLocation(id: number) {
+  const res = await api.get(`/locations/${id}`);
+  return res.data as UserLocation;
+}
+
 export async function apiDeleteLocation(id: number) {
   const res = await api.delete(`/locations/${id}`);
   return res.data as { message: string };
