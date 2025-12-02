@@ -249,19 +249,32 @@ async def search_locations(query: str):
 @app.get("/locations")
 async def get_user_locations(username: str = Depends(verify_token)):
     # Get user's saved locations
+    print(f"[GET /locations] Request from user: {username}")
     conn = None
     cursor = None
     try:
         conn = db.get_connection()
+        print(f"[GET /locations] Database connection established")
         cursor = conn.cursor()
         
+        # First verify the user exists
+        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        user_result = cursor.fetchone()
+        
+        if not user_result:
+            print(f"[GET /locations] User {username} not found in database")
+            return {"locations": []}
+        
+        user_id = user_result[0]
+        print(f"[GET /locations] Found user_id: {user_id}")
+        
+        # Get locations for this user
         cursor.execute("""
-            SELECT ul.id, ul.name, ul.latitude, ul.longitude, ul.created_at
-            FROM user_locations ul
-            JOIN users u ON ul.user_id = u.id
-            WHERE u.username = %s
-            ORDER BY ul.created_at DESC
-        """, (username,))
+            SELECT id, name, latitude, longitude, created_at
+            FROM user_locations
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+        """, (user_id,))
         
         locations = []
         for row in cursor.fetchall():
@@ -273,9 +286,13 @@ async def get_user_locations(username: str = Depends(verify_token)):
                 "created_at": row[4].isoformat()
             })
         
+        print(f"[GET /locations] Returning {len(locations)} locations")
         return {"locations": locations}
         
     except Exception as e:
+        print(f"[GET /locations] ERROR for user {username}: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if cursor:
