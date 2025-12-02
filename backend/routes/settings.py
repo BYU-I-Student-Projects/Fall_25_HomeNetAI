@@ -67,11 +67,10 @@ async def get_preferences(current_user: dict = Depends(get_current_user)):
         user_id = current_user.get("user_id")
         preferences = settings_service.get_user_preferences(user_id)
         
-        return {
-            "success": True,
-            "preferences": preferences
-        }
+        # Return preferences directly to match frontend expectations
+        return preferences
     except Exception as e:
+        print(f"Error in get_preferences: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching preferences: {str(e)}")
 
 
@@ -104,11 +103,8 @@ async def update_preferences(
         
         updated_preferences = settings_service.update_user_preferences(user_id, update_data)
         
-        return {
-            "success": True,
-            "message": "Preferences updated successfully",
-            "preferences": updated_preferences
-        }
+        # Return preferences directly to match frontend expectations
+        return updated_preferences
     except HTTPException:
         raise
     except Exception as e:

@@ -174,48 +174,48 @@ const Settings = () => {
           ) : settings ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="temp-unit">Temperature Unit</Label>
+                <Label htmlFor="unit-system">Unit System</Label>
                 <Select
-                  value={settings.temperature_unit}
-                  onValueChange={(value) => handleSettingUpdate({ temperature_unit: value })}
+                  value={settings.unit_system}
+                  onValueChange={(value) => handleSettingUpdate({ unit_system: value })}
                   disabled={savingSettings}
                 >
-                  <SelectTrigger id="temp-unit">
+                  <SelectTrigger id="unit-system">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fahrenheit">Fahrenheit (°F)</SelectItem>
-                    <SelectItem value="celsius">Celsius (°C)</SelectItem>
+                    <SelectItem value="imperial">Imperial (°F, mph)</SelectItem>
+                    <SelectItem value="metric">Metric (°C, km/h)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="notifications">Notifications</Label>
+                  <Label htmlFor="alerts">All Alerts</Label>
                   <p className="text-sm text-muted-foreground">
-                    Enable push notifications
+                    Enable all weather alerts
                   </p>
                 </div>
                 <Switch
-                  id="notifications"
-                  checked={settings.notifications_enabled}
-                  onCheckedChange={(checked) => handleSettingUpdate({ notifications_enabled: checked })}
+                  id="alerts"
+                  checked={settings.alerts_enabled}
+                  onCheckedChange={(checked) => handleSettingUpdate({ alerts_enabled: checked })}
                   disabled={savingSettings}
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="email-alerts">Email Alerts</Label>
+                  <Label htmlFor="email-notifications">Email Notifications</Label>
                   <p className="text-sm text-muted-foreground">
                     Receive alerts via email
                   </p>
                 </div>
                 <Switch
-                  id="email-alerts"
-                  checked={settings.alert_email_enabled}
-                  onCheckedChange={(checked) => handleSettingUpdate({ alert_email_enabled: checked })}
+                  id="email-notifications"
+                  checked={settings.email_notifications}
+                  onCheckedChange={(checked) => handleSettingUpdate({ email_notifications: checked })}
                   disabled={savingSettings}
                 />
               </div>
@@ -248,15 +248,60 @@ const Settings = () => {
             <>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="push-alerts">Push Alerts</Label>
+                  <Label htmlFor="temp-alerts">Temperature Alerts</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive push notifications for alerts
+                    Get notified about extreme temperatures
                   </p>
                 </div>
                 <Switch
-                  id="push-alerts"
-                  checked={settings.alert_push_enabled}
-                  onCheckedChange={(checked) => handleSettingUpdate({ alert_push_enabled: checked })}
+                  id="temp-alerts"
+                  checked={settings.temperature_alerts}
+                  onCheckedChange={(checked) => handleSettingUpdate({ temperature_alerts: checked })}
+                  disabled={savingSettings}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="precip-alerts">Precipitation Alerts</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Get notified about rain and snow
+                  </p>
+                </div>
+                <Switch
+                  id="precip-alerts"
+                  checked={settings.precipitation_alerts}
+                  onCheckedChange={(checked) => handleSettingUpdate({ precipitation_alerts: checked })}
+                  disabled={savingSettings}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="wind-alerts">Wind Alerts</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Get notified about high winds
+                  </p>
+                </div>
+                <Switch
+                  id="wind-alerts"
+                  checked={settings.wind_alerts}
+                  onCheckedChange={(checked) => handleSettingUpdate({ wind_alerts: checked })}
+                  disabled={savingSettings}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="anomaly-alerts">Anomaly Alerts</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Get notified about unusual weather patterns
+                  </p>
+                </div>
+                <Switch
+                  id="anomaly-alerts"
+                  checked={settings.anomaly_alerts}
+                  onCheckedChange={(checked) => handleSettingUpdate({ anomaly_alerts: checked })}
                   disabled={savingSettings}
                 />
               </div>

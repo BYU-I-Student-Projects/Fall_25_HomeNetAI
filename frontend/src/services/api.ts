@@ -257,18 +257,16 @@ export async function apiGenerateAlerts(locationId: number) {
 
 // Settings
 export type UserSettings = {
-  id: number;
   user_id: number;
-  temperature_unit: string;
-  wind_speed_unit: string;
-  precipitation_unit: string;
-  time_format: string;
-  theme: string;
-  notifications_enabled: boolean;
-  alert_email_enabled: boolean;
-  alert_push_enabled: boolean;
-  created_at: string;
-  updated_at: string;
+  unit_system: string;  // 'metric' or 'imperial'
+  theme: string;  // 'light', 'dark', or 'auto'
+  alerts_enabled: boolean;
+  temperature_alerts: boolean;
+  precipitation_alerts: boolean;
+  wind_alerts: boolean;
+  anomaly_alerts: boolean;
+  email_notifications: boolean;
+  updated_at?: string;
 };
 
 export async function apiGetSettings() {

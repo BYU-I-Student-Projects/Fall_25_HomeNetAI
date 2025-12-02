@@ -97,6 +97,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const initializeDashboard = async () => {
+      setLoading(true);
       try {
         // Clear any preset locations
         clearPresetLocations();
@@ -104,10 +105,29 @@ const Dashboard = () => {
         // Fetch real locations with real weather data
         try {
           const serverLocations = await apiGetLocations();
+          console.log('Fetched locations:', serverLocations);
+          
+          if (serverLocations.length === 0) {
+            console.log('No locations found');
+            setLocations([]);
+            setLoading(false);
+            // Still initialize devices even if no locations
+            const deviceData = getDevices();
+            if (deviceData.length === 0) {
+              const initial = getInitialDevices();
+              saveDevices(initial);
+              setDevices(initial);
+            } else {
+              setDevices(deviceData);
+            }
+            return;
+          }
+          
           const mapped = (await Promise.all(serverLocations.map(async (loc) => {
             try {
               // Fetch real weather data from API
               const weatherData = await apiGetWeather(loc.id);
+              console.log(`Weather data for ${loc.name}:`, weatherData);
               const currentWeather = weatherData.current_weather as any;
               const hourly = weatherData.hourly as any;
               
@@ -148,25 +168,37 @@ const Dashboard = () => {
             }
           }))).filter(loc => loc !== null);
           
+          console.log('Mapped locations:', mapped);
           saveLocations(mapped);
           setLocations(mapped);
         } catch (apiErr) {
-          console.warn('Failed to fetch locations from API:', apiErr);
+          console.error('Failed to fetch locations from API:', apiErr);
           setLocations([]);
         }
         
         // Initialize devices
         const deviceData = getDevices();
         if (deviceData.length === 0) {
-      const initial = getInitialDevices();
-      saveDevices(initial);
-      setDevices(initial);
+          const initial = getInitialDevices();
+          saveDevices(initial);
+          setDevices(initial);
         } else {
           setDevices(deviceData);
         }
       } catch (error) {
         console.error('Dashboard initialization error:', error);
+        // Make sure we clear loading state even on error
+        setLocations([]);
+        const deviceData = getDevices();
+        if (deviceData.length === 0) {
+          const initial = getInitialDevices();
+          saveDevices(initial);
+          setDevices(initial);
+        } else {
+          setDevices(deviceData);
+        }
       } finally {
+        console.log('Dashboard initialization complete');
         setLoading(false);
       }
     };

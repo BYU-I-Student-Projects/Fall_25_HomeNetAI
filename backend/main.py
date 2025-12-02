@@ -452,7 +452,8 @@ async def get_weather_for_location(location_id: int, username: str = Depends(ver
         return {
             "location": location[0],
             "current_weather": weather_data.get("current_weather", {}),
-            "daily_forecast": weather_data.get("daily", {})
+            "hourly": weather_data.get("hourly", {}),
+            "daily": weather_data.get("daily", {})
         }
         
     except Exception as e:
