@@ -9,7 +9,7 @@ import hashlib
 from database.database import HomeNetDatabase
 from weather.weather_api import get_weather_data, search_location
 from config import config
-from routes import ai, analytics, alerts
+from routes import ai, analytics, alerts, settings
 
 # Initialize FastAPI app
 app = FastAPI(title="HomeNetAI Weather API", version="1.0.0")
@@ -18,6 +18,7 @@ app = FastAPI(title="HomeNetAI Weather API", version="1.0.0")
 app.include_router(ai.router)
 app.include_router(analytics.router)
 app.include_router(alerts.router)
+app.include_router(settings.router)
 
 # CORS middleware for frontend
 app.add_middleware(

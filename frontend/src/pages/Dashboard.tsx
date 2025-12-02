@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { locationAPI, weatherAPI } from "../services/api";
 import Alerts from "../components/Alerts";
+import { Button } from "../components/ui/Button";
+import { Card, CardContent } from "../components/ui/Card";
+import { Loader2, Plus, Trash2, BarChart3, Bot, Settings, ChevronDown, ChevronUp, Wind, Compass } from "lucide-react";
 
 interface Location {
   id: number;
@@ -11,9 +14,19 @@ interface Location {
   created_at: string;
 }
 
+interface CurrentWeather {
+  temperature: number;
+  windspeed: number;
+  winddirection: number;
+  weathercode: number;
+  is_day: number;
+  time: string;
+  apparent_temperature?: number;
+}
+
 interface WeatherData {
   location: string;
-  current_weather: any;
+  current_weather: CurrentWeather;
   daily_forecast: any;
 }
 
@@ -88,543 +101,221 @@ export default function Dashboard() {
   }, [locations]);
 
   return (
-    <div style={{ 
-      padding: '24px', 
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      backgroundColor: '#f8f9fa',
-      minHeight: '100vh'
-    }}>
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto',
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '32px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-        border: '1px solid #e9ecef'
-      }}>
+    <div className="min-h-screen bg-gray-50 p-6 font-sans">
+      <div className="mx-auto max-w-[1400px] rounded-xl bg-white p-8 shadow-sm border border-gray-200">
         {/* Header Section */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'flex-start', 
-          marginBottom: '40px',
-          paddingBottom: '24px',
-          borderBottom: '1px solid #e9ecef'
-        }}>
+        <div className="flex flex-col md:flex-row justify-between items-start mb-10 pb-6 border-b border-gray-200 gap-4">
           <div>
-            <h1 style={{ 
-              margin: 0, 
-              color: '#1a1a1a', 
-              fontSize: '36px', 
-              fontWeight: '600',
-              letterSpacing: '-0.5px',
-              lineHeight: '1.2'
-            }}>
+            <h1 className="m-0 text-gray-900 text-4xl font-semibold tracking-tight leading-tight">
               Weather Dashboard
             </h1>
-            <p style={{ 
-              margin: '8px 0 0 0', 
-              color: '#6c757d', 
-              fontSize: '16px',
-              fontWeight: '400'
-            }}>
+            <p className="mt-2 text-gray-500 text-base font-normal">
               Monitor weather conditions across your locations
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <Link to="/analytics" style={{ textDecoration: 'none' }}>
-              <button style={{
-                backgroundColor: '#10b981',
-                color: 'white',
-                border: 'none',
-                padding: '14px 28px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '500',
-                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span>📊</span>
-                <span>Analytics</span>
-              </button>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/analytics">
+              <Button variant="default" className="bg-emerald-500 hover:bg-emerald-600 shadow-sm">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Analytics
+              </Button>
             </Link>
-            <Link to="/ai-insights" style={{ textDecoration: 'none' }}>
-              <button style={{
-                backgroundColor: '#6f42c1',
-                color: 'white',
-                border: 'none',
-                padding: '14px 28px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '500',
-                boxShadow: '0 2px 8px rgba(111, 66, 193, 0.25)',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span>🤖</span>
-                <span>AI Insights</span>
-              </button>
+            <Link to="/ai-insights">
+              <Button variant="default" className="bg-purple-600 hover:bg-purple-700 shadow-sm">
+                <Bot className="mr-2 h-4 w-4" />
+                AI Insights
+              </Button>
             </Link>
-            <Link to="/add-location" style={{ textDecoration: 'none' }}>
-              <button style={{
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                padding: '14px 28px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '500',
-                boxShadow: '0 2px 8px rgba(0, 123, 255, 0.25)',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span>+</span>
-                <span>Add Location</span>
-              </button>
+            <Link to="/settings">
+              <Button variant="secondary" className="bg-gray-500 text-white hover:bg-gray-600 shadow-sm">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+            </Link>
+            <Link to="/add-location">
+              <Button variant="default" className="bg-blue-600 hover:bg-blue-700 shadow-sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Location
+              </Button>
             </Link>
           </div>
         </div>
 
         {/* Content Section */}
         {loading ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '80px 40px', 
-            color: '#6c757d'
-          }}>
-            <div style={{ 
-              width: '48px', 
-              height: '48px', 
-              border: '3px solid #f3f3f3',
-              borderTop: '3px solid #007bff',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 24px'
-            }}></div>
-            <div style={{ 
-              fontSize: '20px', 
-              fontWeight: '500',
-              color: '#1a1a1a',
-              marginBottom: '8px'
-            }}>
+          <div className="text-center py-20 px-10 text-gray-500">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-6 text-blue-500" />
+            <div className="text-xl font-medium text-gray-900 mb-2">
               Loading weather data
             </div>
-            <div style={{ fontSize: '16px', color: '#6c757d' }}>
+            <div className="text-base text-gray-500">
               Fetching the latest conditions...
             </div>
           </div>
         ) : locations.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '80px 40px', 
-            color: '#6c757d'
-          }}>
-            <div style={{ 
-              width: '96px', 
-              height: '96px', 
-              backgroundColor: '#f8f9fa',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 32px',
-              fontSize: '40px',
-              color: '#007bff'
-            }}>📍</div>
-            <div style={{ 
-              fontSize: '24px', 
-              marginBottom: '12px', 
-              fontWeight: '600', 
-              color: '#1a1a1a' 
-            }}>
+          <div className="text-center py-20 px-10 text-gray-500">
+            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 text-4xl text-blue-500">
+              📍
+            </div>
+            <div className="text-2xl mb-3 font-semibold text-gray-900">
               No locations added yet
             </div>
-            <div style={{ 
-              fontSize: '18px', 
-              marginBottom: '40px',
-              color: '#6c757d',
-              maxWidth: '400px',
-              margin: '0 auto 40px'
-            }}>
+            <div className="text-lg mb-10 text-gray-500 max-w-md mx-auto">
               Start by adding your first location to begin tracking weather conditions
             </div>
-            <Link to="/add-location" style={{ 
-              color: '#007bff', 
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: '500',
-              padding: '16px 32px',
-              border: '2px solid #007bff',
-              borderRadius: '8px',
-              display: 'inline-block',
-              transition: 'all 0.2s ease',
-              backgroundColor: 'transparent'
-            }}>
-              Add your first location
+            <Link to="/add-location">
+              <Button variant="outline" className="border-blue-500 text-blue-500 hover:bg-blue-50 h-auto py-4 px-8 text-base">
+                Add your first location
+              </Button>
             </Link>
           </div>
         ) : (
-          <div style={{ 
-            display: 'grid', 
-            gap: '24px', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))'
-          }}>
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {locations.map((location) => {
               const weather = weatherData[location.id];
               return (
-                <div key={location.id} style={{ 
-                  border: '1px solid #e9ecef', 
-                  borderRadius: '16px',
-                  padding: '28px', 
-                  backgroundColor: '#ffffff',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-                  transition: 'all 0.3s ease',
-                  position: 'relative'
-                }}>
-                  {/* Smart Alerts */}
-                  <Alerts locationId={location.id} />
+                <Card key={location.id} className="overflow-hidden transition-all duration-300 hover:shadow-md border-gray-200">
+                  <CardContent className="p-7">
+                    {/* Smart Alerts */}
+                    <Alerts locationId={location.id} />
 
-                  {/* Location Header */}
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'flex-start', 
-                    marginBottom: '24px',
-                    paddingBottom: '20px',
-                    borderBottom: '1px solid #f1f3f4'
-                  }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ 
-                        margin: 0, 
-                        color: '#1a1a1a', 
-                        fontSize: '24px', 
-                        fontWeight: '600',
-                        lineHeight: '1.3',
-                        marginBottom: '4px'
-                      }}>
-                        {location.name}
-                      </h3>
-                      <div style={{ 
-                        fontSize: '14px', 
-                        color: '#6c757d',
-                        fontFamily: 'monospace',
-                        backgroundColor: '#f8f9fa',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        display: 'inline-block'
-                      }}>
-                        {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                    {/* Location Header */}
+                    <div className="flex justify-between items-start mb-6 pb-5 border-b border-gray-100">
+                      <div className="flex-1">
+                        <h3 className="m-0 text-gray-900 text-2xl font-semibold leading-tight mb-1">
+                          {location.name}
+                        </h3>
+                        <div className="text-sm text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded inline-block">
+                          {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                        </div>
                       </div>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => handleDeleteLocation(location.id)}
+                        className="shadow-sm"
+                      >
+                        <Trash2 className="mr-2 h-3 w-3" />
+                        Remove
+                      </Button>
                     </div>
-                    <button 
-                      onClick={() => handleDeleteLocation(location.id)}
-                      style={{
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 16px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        boxShadow: '0 2px 6px rgba(220, 53, 69, 0.25)',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <span>×</span>
-                      <span>Remove</span>
-                    </button>
-                  </div>
-                  
-                  {weather ? (
-                    <div>
-                      {weather.current_weather && (
-                        <div style={{ 
-                          background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
-                          color: 'white',
-                          padding: '28px',
-                          borderRadius: '16px',
-                          marginBottom: '24px',
-                          boxShadow: '0 6px 20px rgba(0, 123, 255, 0.25)',
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}>
-                          {/* Current Weather Header */}
-                          <div style={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            alignItems: 'flex-start', 
-                            marginBottom: '20px'
-                          }}>
-                            <div>
-                              <div style={{ 
-                                fontSize: '56px', 
-                                fontWeight: '300', 
-                                lineHeight: '1',
-                                marginBottom: '8px'
-                              }}>
-                                {Math.round(celsiusToFahrenheit(weather.current_weather.temperature))}°
-                              </div>
-                              <div style={{ 
-                                fontSize: '18px', 
-                                opacity: '0.9',
-                                marginTop: '8px'
-                              }}>
-                                Feels like {Math.round(celsiusToFahrenheit(weather.current_weather.apparent_temperature || weather.current_weather.temperature))}°
-                              </div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ 
-                                fontSize: '16px', 
-                                opacity: '0.9',
-                                fontWeight: '500',
-                                marginBottom: '4px'
-                              }}>
-                                Current Weather
-                              </div>
-                              <div style={{ 
-                                fontSize: '14px', 
-                                opacity: '0.7',
-                                fontWeight: '400'
-                              }}>
-                                {new Date().toLocaleDateString('en-US', { 
-                                  weekday: 'long', 
-                                  month: 'short', 
-                                  day: 'numeric' 
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Weather Details */}
-                          <div style={{ 
-                            display: 'grid', 
-                            gridTemplateColumns: '1fr 1fr', 
-                            gap: '20px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                            padding: '20px',
-                            borderRadius: '12px',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)'
-                          }}>
-                            <div style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '12px'
-                            }}>
-                              <div style={{ 
-                                fontSize: '18px', 
-                                fontWeight: '700',
-                                letterSpacing: '0.5px'
-                              }}>
-                                WIND
-                              </div>
+                    
+                    {weather ? (
+                      <div>
+                        {weather.current_weather && weather.current_weather.temperature !== undefined && (
+                          <div className="bg-blue-600 text-white p-7 rounded-2xl mb-6 shadow-lg relative overflow-hidden">
+                            {/* Current Weather Header */}
+                            <div className="flex justify-between items-start mb-5">
                               <div>
-                                <div style={{ 
-                                  fontSize: '14px', 
-                                  opacity: '0.9',
-                                  marginBottom: '2px'
-                                }}>
-                                  Speed
+                                <div className="text-6xl font-light leading-none mb-2">
+                                  {Math.round(celsiusToFahrenheit(weather.current_weather.temperature))}°
                                 </div>
-                                <div style={{ 
-                                  fontSize: '18px', 
-                                  fontWeight: '600'
-                                }}>
-                                  {kmhToMph(weather.current_weather.windspeed)} mph
+                                <div className="text-lg opacity-90 mt-2">
+                                  Feels like {Math.round(celsiusToFahrenheit(weather.current_weather.apparent_temperature || weather.current_weather.temperature))}°
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-base opacity-90 font-medium mb-1">
+                                  Current Weather
+                                </div>
+                                <div className="text-sm opacity-70 font-normal">
+                                  {new Date().toLocaleDateString('en-US', { 
+                                    weekday: 'long', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
                                 </div>
                               </div>
                             </div>
-                            <div style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '12px'
-                            }}>
-                              <div style={{ 
-                                fontSize: '18px', 
-                                fontWeight: '700',
-                                letterSpacing: '0.5px'
-                              }}>
-                                DIR
-                              </div>
-                              <div>
-                                <div style={{ 
-                                  fontSize: '14px', 
-                                  opacity: '0.9',
-                                  marginBottom: '2px'
-                                }}>
-                                  Direction
+                            
+                            {/* Weather Details */}
+                            <div className="grid grid-cols-2 gap-5 bg-white/15 p-5 rounded-xl backdrop-blur-md border border-white/20">
+                              <div className="flex items-center gap-3">
+                                <Wind className="h-6 w-6 opacity-80" />
+                                <div>
+                                  <div className="text-sm opacity-90 mb-0.5">
+                                    Speed
+                                  </div>
+                                  <div className="text-lg font-semibold">
+                                    {weather.current_weather.windspeed !== undefined 
+                                      ? `${kmhToMph(weather.current_weather.windspeed).toFixed(1)} mph`
+                                      : 'N/A'}
+                                  </div>
                                 </div>
-                                <div style={{ 
-                                  fontSize: '18px', 
-                                  fontWeight: '600'
-                                }}>
-                                  {weather.current_weather.winddirection}°
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Compass className="h-6 w-6 opacity-80" />
+                                <div>
+                                  <div className="text-sm opacity-90 mb-0.5">
+                                    Direction
+                                  </div>
+                                  <div className="text-lg font-semibold">
+                                    {weather.current_weather.winddirection !== undefined 
+                                      ? `${weather.current_weather.winddirection}°`
+                                      : 'N/A'}
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {weather.daily_forecast && weather.daily_forecast.time && (
-                        <div>
-                          <button 
-                            onClick={() => toggleForecast(location.id)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              width: '100%',
-                              padding: '18px 24px',
-                              backgroundColor: '#f8f9fa',
-                              border: '1px solid #e9ecef',
-                              borderRadius: '12px',
-                              cursor: 'pointer',
-                              fontSize: '18px',
-                              fontWeight: '600',
-                              color: '#1a1a1a',
-                              marginBottom: expandedForecasts[location.id] ? '20px' : '0',
-                              transition: 'all 0.3s ease',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                            }}
-                          >
-                            <span>7-Day Forecast</span>
-                            <span style={{ 
-                              transform: expandedForecasts[location.id] ? 'rotate(180deg)' : 'rotate(0deg)',
-                              transition: 'transform 0.3s ease',
-                              fontSize: '16px',
-                              fontWeight: 'bold'
-                            }}>
-                              ▼
-                            </span>
-                          </button>
-                          
-                          {expandedForecasts[location.id] && (
-                            <div style={{ 
-                              display: 'grid', 
-                              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', 
-                              gap: '20px',
-                              overflowX: 'auto',
-                              paddingBottom: '12px'
-                            }}>
-                              {weather.daily_forecast.time.slice(0, 7).map((date: string, index: number) => (
-                                <div key={date} style={{
-                                  backgroundColor: '#ffffff',
-                                  padding: '24px 20px',
-                                  borderRadius: '16px',
-                                  border: '1px solid #e9ecef',
-                                  textAlign: 'center',
-                                  minWidth: '150px',
-                                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                                  transition: 'all 0.3s ease',
-                                  position: 'relative'
-                                }}>
-                                  <div style={{ 
-                                    fontSize: '16px', 
-                                    color: '#6c757d', 
-                                    marginBottom: '16px', 
-                                    fontWeight: '700',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '1px'
-                                  }}>
-                                    {new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
+                        )}
+                        
+                        {weather.daily_forecast && weather.daily_forecast.time && (
+                          <div>
+                            <button 
+                              onClick={() => toggleForecast(location.id)}
+                              className="flex items-center justify-between w-full p-5 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer text-lg font-semibold text-gray-900 mb-0 transition-all duration-300 hover:bg-gray-100 shadow-sm"
+                              style={{ marginBottom: expandedForecasts[location.id] ? '20px' : '0' }}
+                            >
+                              <span>7-Day Forecast</span>
+                              {expandedForecasts[location.id] ? (
+                                <ChevronUp className="h-5 w-5" />
+                              ) : (
+                                <ChevronDown className="h-5 w-5" />
+                              )}
+                            </button>
+                            
+                            {expandedForecasts[location.id] && (
+                              <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-5 overflow-x-auto pb-3">
+                                {weather.daily_forecast.time.slice(0, 7).map((date: string, index: number) => (
+                                  <div key={date} className="bg-white p-6 rounded-2xl border border-gray-200 text-center min-w-[150px] shadow-sm transition-all duration-300 hover:shadow-md">
+                                    <div className="text-base text-gray-500 mb-4 font-bold uppercase tracking-wider">
+                                      {new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
+                                    </div>
+                                    <div className="text-3xl font-bold text-gray-900 mb-2 leading-none">
+                                      {Math.round(celsiusToFahrenheit(weather.daily_forecast.temperature_2m_max[index]))}°F
+                                    </div>
+                                    <div className="text-lg text-gray-500 mb-4 font-medium">
+                                      {Math.round(celsiusToFahrenheit(weather.daily_forecast.temperature_2m_min[index]))}°F
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs text-gray-500 bg-gray-50 p-2 rounded-lg mt-3">
+                                      {weather.daily_forecast.precipitation_sum && (
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-xs font-bold text-blue-500">RAIN</span>
+                                          <span className="font-semibold">{mmToInches(weather.daily_forecast.precipitation_sum[index] || 0).toFixed(2)} in</span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div style={{ 
-                                    fontSize: '28px', 
-                                    fontWeight: '700', 
-                                    color: '#1a1a1a', 
-                                    marginBottom: '8px',
-                                    lineHeight: '1'
-                                  }}>
-                                    {Math.round(celsiusToFahrenheit(weather.daily_forecast.temperature_2m_max[index]))}°F
-                                  </div>
-                                  <div style={{ 
-                                    fontSize: '18px', 
-                                    color: '#6c757d', 
-                                    marginBottom: '16px',
-                                    fontWeight: '500'
-                                  }}>
-                                    {Math.round(celsiusToFahrenheit(weather.daily_forecast.temperature_2m_min[index]))}°F
-                                  </div>
-                                  <div style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    alignItems: 'center',
-                                    fontSize: '13px',
-                                    color: '#6c757d',
-                                    backgroundColor: '#f8f9fa',
-                                    padding: '8px 12px',
-                                    borderRadius: '8px',
-                                    marginTop: '12px'
-                                  }}>
-                                    {weather.daily_forecast.precipitation_sum && (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#007bff' }}>RAIN</span>
-                                        <span style={{ fontWeight: '600' }}>{mmToInches(weather.daily_forecast.precipitation_sum[index] || 0)} in</span>
-                                      </div>
-                                    )}
-                                    {weather.daily_forecast.uv_index_max && (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#ffc107' }}>UV</span>
-                                        <span style={{ fontWeight: '600' }}>{weather.daily_forecast.uv_index_max[index]?.toFixed(1) || 0}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ 
-                      textAlign: 'center', 
-                      padding: '48px 24px', 
-                      color: '#6c757d',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '16px',
-                      border: '1px solid #e9ecef',
-                      marginTop: '20px'
-                    }}>
-                      <div style={{ 
-                        width: '40px', 
-                        height: '40px', 
-                        border: '3px solid #f3f3f3',
-                        borderTop: '3px solid #007bff',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
-                        margin: '0 auto 20px'
-                      }}></div>
-                      <div style={{ 
-                        fontSize: '18px', 
-                        fontWeight: '600',
-                        color: '#1a1a1a',
-                        marginBottom: '8px'
-                      }}>
-                        Loading weather data
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div style={{ fontSize: '14px', color: '#6c757d' }}>
-                        Fetching current conditions...
+                    ) : (
+                      <div className="text-center py-12 px-6 text-gray-500 bg-gray-50 rounded-2xl border border-gray-200 mt-5">
+                        <Loader2 className="h-10 w-10 animate-spin mx-auto mb-5 text-blue-500" />
+                        <div className="text-lg font-semibold text-gray-900 mb-2">
+                          Loading weather data
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Fetching current conditions...
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </CardContent>
+                </Card>
               );
             })}
           </div>

@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AIInsights from './pages/AIInsights';
 import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 
 // Add CSS animations
 const style = document.createElement('style');
@@ -99,6 +100,11 @@ function App() {
             <Route path="/analytics" element={
               <ProtectedRoute>
                 <Analytics />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             } />
           </Routes>

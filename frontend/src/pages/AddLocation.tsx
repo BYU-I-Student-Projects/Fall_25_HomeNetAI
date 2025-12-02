@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { locationAPI } from "../services/api";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Search, MapPin, ArrowLeft, Loader2, Plus, AlertCircle } from "lucide-react";
 
 interface SearchResult {
   name: string;
@@ -58,191 +61,115 @@ export default function AddLocation() {
   };
 
   return (
-    <div style={{ 
-      padding: '24px', 
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      backgroundColor: '#f8f9fa',
-      minHeight: '100vh'
-    }}>
-      <div style={{
-        maxWidth: '900px',
-        margin: '0 auto',
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '32px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-        border: '1px solid #e9ecef'
-      }}>
-        {/* Header Section */}
-        <div style={{ 
-          marginBottom: '40px',
-          paddingBottom: '24px',
-          borderBottom: '1px solid #e9ecef'
-        }}>
-          <button 
-            onClick={() => navigate("/dashboard")} 
-            style={{ 
-              color: '#007bff', 
-              textDecoration: 'none',
-              fontSize: '16px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              marginBottom: '24px',
-              padding: '8px 0',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            <span>←</span>
-            <span>Back to Dashboard</span>
-          </button>
-          <h1 style={{ 
-            margin: 0, 
-            color: '#1a1a1a', 
-            fontSize: '36px', 
-            fontWeight: '600',
-            letterSpacing: '-0.5px',
-            lineHeight: '1.2',
-            marginBottom: '8px'
-          }}>
-            Add New Location
-          </h1>
-          <p style={{ 
-            color: '#6c757d', 
-            margin: 0, 
-            fontSize: '16px',
-            fontWeight: '400'
-          }}>
-            Search and add locations to track weather data
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-3xl mx-auto">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate("/dashboard")} 
+          className="mb-6 pl-0 hover:bg-transparent hover:text-blue-600"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
 
-        {/* Search Form */}
-        <form onSubmit={handleSearch} style={{ marginBottom: '32px' }}>
-          <div style={{ 
-            display: 'flex', 
-            gap: '12px', 
-            alignItems: 'stretch',
-            backgroundColor: '#f8f9fa',
-            padding: '20px',
-            borderRadius: '12px',
-            border: '1px solid #e9ecef'
-          }}>
-            <input
-              type="text"
-              placeholder="Enter city name (e.g., London, Tokyo, New York)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ 
-                padding: '16px 20px', 
-                border: '1px solid #dee2e6',
-                borderRadius: '8px',
-                flex: 1,
-                fontSize: '16px',
-                outline: 'none',
-                backgroundColor: 'white',
-                transition: 'all 0.2s ease',
-                fontWeight: '400'
-              }}
-              disabled={searching}
-            />
-            <button 
-              type="submit" 
-              disabled={searching || !searchQuery.trim()}
-              style={{
-                backgroundColor: (searching || !searchQuery.trim()) ? '#6c757d' : '#007bff',
-                color: 'white',
-                border: 'none',
-                padding: '16px 28px',
-                borderRadius: '8px',
-                cursor: (searching || !searchQuery.trim()) ? 'not-allowed' : 'pointer',
-                fontSize: '16px',
-                fontWeight: '600',
-                transition: 'all 0.2s ease',
-                boxShadow: (searching || !searchQuery.trim()) ? 'none' : '0 2px 8px rgba(0, 123, 255, 0.25)',
-                minWidth: '120px'
-              }}
-            >
-              {searching ? 'Searching...' : 'Search'}
-            </button>
-          </div>
-        </form>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-slate-900">Add New Location</CardTitle>
+            <CardDescription>
+              Search for a city or region to add to your weather dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSearch} className="mb-8">
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Enter city name (e.g., New York, London, Tokyo)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  disabled={searching || !searchQuery.trim()}
+                  className="min-w-[120px]"
+                >
+                  {searching ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Searching
+                    </>
+                  ) : (
+                    'Search'
+                  )}
+                </Button>
+              </div>
+            </form>
 
-        {error && (
-          <div style={{ 
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            padding: '12px 16px',
-            borderRadius: '6px',
-            marginBottom: '20px',
-            border: '1px solid #f5c6cb'
-          }}>
-            Error: {error}
-          </div>
-        )}
+            {error && (
+              <div className="flex items-center gap-2 p-4 mb-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
-        {searchResults.length > 0 && (
-          <div>
-            <h3 style={{ color: '#2c3e50', marginBottom: '20px' }}>Search Results</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div className="space-y-4">
+              {searchResults.length > 0 && (
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                  Search Results
+                </h3>
+              )}
+              
               {searchResults.map((result, index) => (
-                <div key={index} style={{ 
-                  border: '1px solid #e0e0e0', 
-                  borderRadius: '8px',
-                  padding: '20px', 
-                  backgroundColor: '#fafafa',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 8px 0', color: '#2c3e50', fontSize: '18px' }}>
-                        <strong>{result.name}</strong>
-                      </h4>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '14px', color: '#7f8c8d' }}>
-                        <div><strong>Location:</strong> {result.admin1 && `${result.admin1}, `}{result.country}</div>
-                        <div><strong>Coordinates:</strong> {result.latitude.toFixed(4)}, {result.longitude.toFixed(4)}</div>
-                      </div>
+                <div 
+                  key={index}
+                  className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-blue-100 transition-colors">
+                      <MapPin className="h-5 w-5 text-slate-500 group-hover:text-blue-600" />
                     </div>
-                    <button
-                      onClick={() => handleAddLocation(result)}
-                      disabled={adding === result.latitude}
-                      style={{
-                        backgroundColor: adding === result.latitude ? '#bdc3c7' : '#27ae60',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 20px',
-                        borderRadius: '6px',
-                        cursor: adding === result.latitude ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        marginLeft: '20px'
-                      }}
-                    >
-                      {adding === result.latitude ? 'Adding...' : 'Add Location'}
-                    </button>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">{result.name}</h4>
+                      <p className="text-sm text-slate-500">
+                        {[result.admin1, result.country].filter(Boolean).join(", ")}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1 font-mono">
+                        {result.latitude.toFixed(4)}, {result.longitude.toFixed(4)}
+                      </p>
+                    </div>
                   </div>
+                  
+                  <Button
+                    onClick={() => handleAddLocation(result)}
+                    disabled={adding === result.latitude}
+                    variant="outline"
+                    className="ml-4 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                  >
+                    {adding === result.latitude ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add
+                      </>
+                    )}
+                  </Button>
                 </div>
               ))}
-            </div>
-          </div>
-        )}
 
-        {searchResults.length === 0 && !searching && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '40px', 
-            color: '#7f8c8d',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            border: '1px solid #e0e0e0'
-          }}>
-            <div style={{ fontSize: '18px', marginBottom: '10px' }}>Ready to search</div>
-            <div style={{ fontSize: '14px' }}>Enter a city name above to find and add locations</div>
-          </div>
-        )}
+              {searchResults.length === 0 && searchQuery && !searching && !error && (
+                <div className="text-center py-12 text-slate-500">
+                  <MapPin className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                  <p>No locations found matching "{searchQuery}"</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

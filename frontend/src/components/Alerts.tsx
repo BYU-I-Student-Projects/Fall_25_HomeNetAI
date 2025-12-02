@@ -1,5 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { 
+  AlertTriangle, 
+  CloudRain, 
+  CloudDrizzle, 
+  Snowflake, 
+  Sun, 
+  CloudSun, 
+  Droplets, 
+  Wind, 
+  ThermometerSun, 
+  ThermometerSnowflake,
+  Info,
+  Lightbulb,
+  CheckCircle2,
+  Bell
+} from 'lucide-react';
 
 interface Alert {
   type: string;
@@ -66,68 +82,39 @@ const Alerts: React.FC<AlertsProps> = ({ locationId }) => {
   const getSeverityStyles = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return {
-          bg: '#fee',
-          border: '#dc3545',
-          icon: '#dc3545',
-          text: '#721c24'
-        };
+        return 'bg-red-50 border-red-500 text-red-900';
       case 'warning':
-        return {
-          bg: '#fff3cd',
-          border: '#ffc107',
-          icon: '#ff9800',
-          text: '#856404'
-        };
+        return 'bg-amber-50 border-amber-500 text-amber-900';
       case 'info':
-        return {
-          bg: '#d1ecf1',
-          border: '#17a2b8',
-          icon: '#17a2b8',
-          text: '#0c5460'
-        };
+        return 'bg-blue-50 border-blue-400 text-blue-900';
       case 'recommendation':
-        return {
-          bg: '#d4edda',
-          border: '#28a745',
-          icon: '#28a745',
-          text: '#155724'
-        };
+        return 'bg-green-50 border-green-500 text-green-900';
       default:
-        return {
-          bg: '#f8f9fa',
-          border: '#6c757d',
-          icon: '#6c757d',
-          text: '#383d41'
-        };
+        return 'bg-gray-50 border-gray-400 text-gray-900';
     }
   };
 
-  const getIconComponent = (icon: string) => {
-    const iconMap: { [key: string]: string } = {
-      'cloud-rain': '🌧️',
-      'cloud-drizzle': '🌦️',
-      'thermometer-snow': '🥶',
-      'thermometer-sun': '🌡️',
-      'snowflake': '❄️',
-      'sun': '☀️',
-      'cloud-sun': '🌤️',
-      'droplet': '💧',
-      'alert-triangle': '⚠️',
-      'wind': '💨',
-      'default': '📢'
-    };
+  const getIconComponent = (icon: string, className: string) => {
+    const props = { className };
     
-    return iconMap[icon] || iconMap['default'];
+    switch (icon) {
+      case 'cloud-rain': return <CloudRain {...props} />;
+      case 'cloud-drizzle': return <CloudDrizzle {...props} />;
+      case 'thermometer-snow': return <ThermometerSnowflake {...props} />;
+      case 'thermometer-sun': return <ThermometerSun {...props} />;
+      case 'snowflake': return <Snowflake {...props} />;
+      case 'sun': return <Sun {...props} />;
+      case 'cloud-sun': return <CloudSun {...props} />;
+      case 'droplet': return <Droplets {...props} />;
+      case 'alert-triangle': return <AlertTriangle {...props} />;
+      case 'wind': return <Wind {...props} />;
+      default: return <Info {...props} />;
+    }
   };
 
   if (loading) {
     return (
-      <div style={{ 
-        padding: '20px', 
-        textAlign: 'center',
-        color: '#6c757d'
-      }}>
+      <div className="p-5 text-center text-gray-500 text-sm animate-pulse">
         Loading alerts...
       </div>
     );
@@ -135,14 +122,7 @@ const Alerts: React.FC<AlertsProps> = ({ locationId }) => {
 
   if (error && error !== 'Authentication required') {
     return (
-      <div style={{ 
-        padding: '15px',
-        backgroundColor: '#f8d7da',
-        border: '1px solid #f5c6cb',
-        borderRadius: '8px',
-        color: '#721c24',
-        marginBottom: '20px'
-      }}>
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mb-5 text-sm">
         {error}
       </div>
     );
@@ -155,28 +135,12 @@ const Alerts: React.FC<AlertsProps> = ({ locationId }) => {
 
   if (alerts.length === 0) {
     return (
-      <div style={{ 
-        padding: '20px',
-        backgroundColor: '#d4edda',
-        border: '2px solid #28a745',
-        borderRadius: '12px',
-        textAlign: 'center',
-        marginBottom: '25px'
-      }}>
-        <div style={{ fontSize: '32px', marginBottom: '10px' }}>✅</div>
-        <div style={{ 
-          fontSize: '18px', 
-          fontWeight: '600',
-          color: '#155724',
-          marginBottom: '5px'
-        }}>
+      <div className="p-5 bg-green-50 border border-green-200 rounded-xl text-center mb-6">
+        <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
+        <div className="text-lg font-semibold text-green-800 mb-1">
           All Clear
         </div>
-        <div style={{ 
-          fontSize: '14px',
-          color: '#155724',
-          opacity: '0.8'
-        }}>
+        <div className="text-sm text-green-700 opacity-90">
           No weather alerts or warnings at this time
         </div>
       </div>
@@ -184,120 +148,50 @@ const Alerts: React.FC<AlertsProps> = ({ locationId }) => {
   }
 
   return (
-    <div style={{ marginBottom: '25px' }}>
-      <div style={{ 
-        fontSize: '20px', 
-        fontWeight: '700',
-        color: '#333',
-        marginBottom: '15px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
-      }}>
-        <span>🔔</span>
-        <span>Smart Alerts</span>
-        <span style={{ 
-          fontSize: '14px', 
-          fontWeight: '500',
-          color: '#6c757d',
-          backgroundColor: '#e9ecef',
-          padding: '2px 8px',
-          borderRadius: '12px'
-        }}>
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Bell className="h-5 w-5 text-gray-700" />
+        <span className="text-lg font-bold text-gray-800">Smart Alerts</span>
+        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
           {alerts.length}
         </span>
       </div>
 
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: '12px' 
-      }}>
+      <div className="flex flex-col gap-3">
         {alerts.map((alert, index) => {
-          const styles = getSeverityStyles(alert.severity);
+          const styleClasses = getSeverityStyles(alert.severity);
           
           return (
             <div
               key={index}
-              style={{
-                backgroundColor: styles.bg,
-                border: `2px solid ${styles.border}`,
-                borderRadius: '12px',
-                padding: '16px',
-                transition: 'all 0.2s ease',
-                cursor: 'default'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
+              className={`relative border-l-4 rounded-r-xl p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${styleClasses.replace('border-', 'border-l-').replace('bg-', 'bg-opacity-50 bg-')}`}
             >
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'flex-start',
-                gap: '12px'
-              }}>
-                <div style={{ 
-                  fontSize: '28px',
-                  flexShrink: 0,
-                  marginTop: '2px'
-                }}>
-                  {getIconComponent(alert.icon)}
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  {getIconComponent(alert.icon, "h-6 w-6")}
                 </div>
                 
-                <div style={{ flex: 1 }}>
-                  <div style={{ 
-                    fontSize: '16px', 
-                    fontWeight: '700',
-                    color: styles.text,
-                    marginBottom: '6px'
-                  }}>
+                <div className="flex-1 min-w-0">
+                  <div className="text-base font-bold mb-1 leading-tight">
                     {alert.title}
                   </div>
                   
-                  <div style={{ 
-                    fontSize: '14px',
-                    color: styles.text,
-                    marginBottom: '8px',
-                    lineHeight: '1.5'
-                  }}>
+                  <div className="text-sm opacity-90 mb-2 leading-relaxed">
                     {alert.message}
                   </div>
                   
                   {alert.recommendation && (
-                    <div style={{ 
-                      fontSize: '13px',
-                      color: styles.text,
-                      backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      fontWeight: '500',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}>
-                      <span style={{ fontSize: '14px' }}>💡</span>
+                    <div className="flex items-start gap-2 text-xs bg-white/60 p-2 rounded-lg font-medium">
+                      <Lightbulb className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
                       <span>{alert.recommendation}</span>
                     </div>
                   )}
                 </div>
 
-                <div style={{ 
-                  fontSize: '11px',
-                  color: styles.text,
-                  opacity: '0.7',
-                  textTransform: 'uppercase',
-                  fontWeight: '600',
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {alert.severity}
+                <div className="flex-shrink-0">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-black/5">
+                    {alert.severity}
+                  </span>
                 </div>
               </div>
             </div>

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Lock, User, AlertCircle } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,104 +31,74 @@ export default function Login() {
   };
 
   return (
-    <div style={{ 
-      padding: '20px', 
-      fontFamily: 'Arial, sans-serif',
-      backgroundColor: '#f5f5f5',
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <div style={{
-        maxWidth: '400px',
-        width: '100%',
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        padding: '40px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <h1 style={{ margin: 0, color: '#2c3e50', fontSize: '28px' }}>🔐 Login</h1>
-          <p style={{ color: '#7f8c8d', margin: '10px 0 0 0' }}>Welcome back to HomeNetAI</p>
-        </div>
-        
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <input
-              type="text"
-              placeholder="Username"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              style={{ 
-                width: '100%', 
-                padding: '12px 16px', 
-                border: '2px solid #e0e0e0',
-                borderRadius: '6px',
-                fontSize: '16px',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-              required
-            />
-          </div>
-          
-          <div style={{ marginBottom: '20px' }}>
-            <input
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              style={{ 
-                width: '100%', 
-                padding: '12px 16px', 
-                border: '2px solid #e0e0e0',
-                borderRadius: '6px',
-                fontSize: '16px',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-              required
-            />
-          </div>
-
-          {error && (
-            <div style={{ 
-              backgroundColor: '#f8d7da',
-              color: '#721c24',
-              padding: '12px 16px',
-              borderRadius: '6px',
-              marginBottom: '20px',
-              border: '1px solid #f5c6cb'
-            }}>
-              ❌ {error}
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-2">
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Lock className="h-6 w-6 text-blue-600" />
             </div>
-          )}
+          </div>
+          <CardTitle className="text-2xl font-bold text-slate-900">Welcome back</CardTitle>
+          <CardDescription>
+            Enter your credentials to access your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ 
-              width: '100%', 
-              padding: '12px', 
-              marginBottom: '20px',
-              backgroundColor: loading ? '#bdc3c7' : '#3498db',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {loading ? '⏳ Logging in...' : '🚀 Login'}
-          </button>
-        </form>
+            {error && (
+              <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
-        <div style={{ textAlign: 'center', color: '#7f8c8d' }}>
-          Don't have an account? <Link to="/register" style={{ color: '#3498db', textDecoration: 'none', fontWeight: 'bold' }}>Register here</Link>
-        </div>
-      </div>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="justify-center">
+          <p className="text-sm text-slate-600">
+            Don't have an account?{' '}
+            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
