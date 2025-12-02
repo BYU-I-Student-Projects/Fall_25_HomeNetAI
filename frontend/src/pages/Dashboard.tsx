@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import WeatherCard from "@/components/WeatherCard";
 import DeviceCard from "@/components/DeviceCard";
+import AlertsPanel from "@/components/AlertsPanel";
 import { getLocations, getDevices, updateDevice, saveDevices, saveLocations, clearPresetLocations, SavedLocation, SmartDevice } from "@/lib/storage";
 import { getInitialLocations, getInitialDevices, generateAIInsights } from "@/lib/mockData";
 import { apiGetLocations, apiGetWeather } from "@/services/api";
@@ -284,6 +285,11 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Weather Alerts */}
+      {locations.length > 0 && (
+        <AlertsPanel locationId={locations[0].id} compact={true} />
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">

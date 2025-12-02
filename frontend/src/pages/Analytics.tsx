@@ -1,46 +1,74 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getLocations, getDevices } from "@/lib/storage";
+import { apiGetHistoricalData, apiGetTrends, apiGetForecast, type HistoricalDataPoint, type TrendResponse, type ForecastResponse } from "@/services/api";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { TrendingUp, Droplets, Zap, ThermometerSun } from "lucide-react";
+import { TrendingUp, Droplets, Zap, ThermometerSun, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Analytics = () => {
+  const { toast } = useToast();
   const [locations] = useState(getLocations());
   const [devices] = useState(getDevices());
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("7d");
+  const [historicalData, setHistoricalData] = useState<HistoricalDataPoint[]>([]);
+  const [trends, setTrends] = useState<TrendResponse | null>(null);
+  const [forecast, setForecast] = useState<ForecastResponse | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
 
-  // Generate temperature trend data
-  const temperatureData = useMemo(() => {
-    const days = timeRange === "7d" ? 7 : 30;
-    return Array.from({ length: days }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (days - 1 - i));
-      
-      return {
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        ...locations.reduce((acc, loc) => {
-          const baseTemp = loc.weather.temperature;
-          const variation = Math.sin(i * 0.5) * 8 + (Math.random() * 4 - 2);
-          acc[loc.city.name] = Math.round(baseTemp + variation);
-          return acc;
-        }, {} as Record<string, number>),
-      };
-    });
-  }, [locations, timeRange]);
+  // Set initial location
+  useEffect(() => {
+    if (locations.length > 0 && !selectedLocation) {
+      setSelectedLocation(locations[0].id);
+    }
+  }, [locations, selectedLocation]);
 
-  // Generate precipitation data
-  const precipitationData = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      
-      return {
-        date: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        rainfall: Math.random() * 2.5,
-      };
-    });
-  }, []);
+  // Load analytics data
+  useEffect(() => {
+    const loadAnalyticsData = async () => {
+      if (!selectedLocation) return;
+
+      setLoadingData(true);
+      try {
+        const days = timeRange === "7d" ? 7 : 30;
+        const [histData, tempTrend, forecastData] = await Promise.all([
+          apiGetHistoricalData(selectedLocation, days),
+          apiGetTrends(selectedLocation, "temperature", days),
+          apiGetForecast(selectedLocation, 168) // 7 days forecast
+        ]);
+
+        setHistoricalData(histData);
+        setTrends(tempTrend);
+        setForecast(forecastData);
+      } catch (error) {
+        console.error("Failed to load analytics data:", error);
+        toast({
+          title: "Error loading analytics",
+          description: "Failed to fetch analytics data. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    loadAnalyticsData();
+  }, [selectedLocation, timeRange, toast]);
+
+  // Format historical data for chart
+  const temperatureData = historicalData.map(point => ({map(point => ({
+    date: new Date(point.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    temperature: point.temperature
+  }));
+
+  // Format forecast data for chart
+  const forecastData = forecast?.forecast.slice(0, 7).map(point => ({
+    date: new Date(point.timestamp).toLocaleDateString('en-US', { weekday: 'short' }),
+    temperature: point.temperature
+  })) || [];
 
   // Device energy usage
   const energyData = useMemo(() => {
@@ -125,6 +153,37 @@ const Analytics = () => {
         </Card>
       </div>
 
+      {/* Location Selector */}
+      {locations.length > 0 && (
+        <Card className="glass-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium">Location:</label>
+              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue placeholder="Select a location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map(loc => (
+                    <SelectItem key={loc.id} value={loc.id}>
+                      {loc.city.name}, {loc.city.state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {trends && (
+                <div className="ml-auto text-sm text-muted-foreground">
+                  Trend: <span className={trends.slope > 0 ? "text-red-500" : "text-blue-500"}>
+                    {trends.slope > 0 ? "↑" : "↓"} {Math.abs(trends.slope).toFixed(2)}°F/day
+                  </span>
+                  {" "}(R² = {trends.r_squared.toFixed(3)})
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Charts */}
       <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as "7d" | "30d")}>
         <div className="flex items-center justify-between mb-4">
@@ -144,8 +203,59 @@ const Analytics = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={temperatureData}>
+              {loadingData ? (
+                <div className="flex items-center justify-center h-[300px]">
+                  <Loader2 className="h-8 w-8 animate-spin text-weather-primary" />
+                </div>
+              ) : temperatureData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={temperatureData}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="temperature"
+                      stroke="hsl(var(--weather-primary))"
+                      strokeWidth={2}
+                      dot={{ fill: "hsl(var(--weather-primary))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  No historical data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle>Temperature Forecast</CardTitle>
+            <CardDescription>
+              ML-powered 7-day temperature forecast
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingData ? (
+              <div className="flex items-center justify-center h-[250px]">
+                <Loader2 className="h-8 w-8 animate-spin text-weather-primary" />
+              </div>
+            ) : forecastData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={forecastData}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                   <XAxis dataKey="date" />
                   <YAxis />
@@ -156,48 +266,14 @@ const Analytics = () => {
                       borderRadius: "8px",
                     }}
                   />
-                  <Legend />
-                  {locations.map((location, i) => (
-                    <Line
-                      key={location.id}
-                      type="monotone"
-                      dataKey={location.city.name}
-                      stroke={`hsl(${199 + i * 30}, 89%, 48%)`}
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  ))}
-                </LineChart>
+                  <Bar dataKey="temperature" fill="hsl(var(--weather-primary))" radius={[8, 8, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle>Precipitation Forecast</CardTitle>
-            <CardDescription>
-              Expected rainfall for the next 7 days
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={precipitationData}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Bar dataKey="rainfall" fill="hsl(var(--weather-secondary))" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                No forecast data available
+              </div>
+            )}
           </CardContent>
         </Card>
 

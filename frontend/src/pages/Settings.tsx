@@ -1,23 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { getDarkMode, saveDarkMode, exportData, importData, resetData } from "@/lib/storage";
-import { apiClearUserData } from "@/services/api";
-import { Download, Upload, RotateCcw, Moon } from "lucide-react";
+import { apiClearUserData, apiGetSettings, apiUpdateSettings, type UserSettings } from "@/services/api";
+import { Download, Upload, RotateCcw, Moon, Loader2, Settings as SettingsIcon, Bell } from "lucide-react";
 
 const Settings = () => {
   const [darkMode, setDarkMode] = useState(getDarkMode());
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
 
-  const handleDarkModeToggle = (checked: boolean) => {
+  const handleDarkModeToggle = async (checked: boolean) => {
     setDarkMode(checked);
     saveDarkMode(checked);
-    toast({
-      title: checked ? "Dark mode enabled" : "Light mode enabled",
-      description: "Your preference has been saved",
-    });
+    await handleSettingUpdate({ theme: checked ? "dark" : "light" });
   };
 
   const handleExport = () => {
@@ -108,6 +110,116 @@ const Settings = () => {
           Manage your preferences and data
         </p>
       </div>
+
+      {/* AI/ML Preferences */}
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SettingsIcon className="h-5 w-5" />
+            AI & ML Preferences
+          </CardTitle>
+          <CardDescription>
+            Configure your AI assistant and analytics preferences
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loadingSettings ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : settings ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="temp-unit">Temperature Unit</Label>
+                <Select
+                  value={settings.temperature_unit}
+                  onValueChange={(value) => handleSettingUpdate({ temperature_unit: value as "fahrenheit" | "celsius" })}
+                  disabled={savingSettings}
+                >
+                  <SelectTrigger id="temp-unit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fahrenheit">Fahrenheit (°F)</SelectItem>
+                    <SelectItem value="celsius">Celsius (°C)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="ai-insights">AI Insights</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive AI-powered recommendations
+                  </p>
+                </div>
+                <Switch
+                  id="ai-insights"
+                  checked={settings.enable_ai_insights}
+                  onCheckedChange={(checked) => handleSettingUpdate({ enable_ai_insights: checked })}
+                  disabled={savingSettings}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="weather-alerts">Weather Alerts</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Get notifications for severe weather
+                  </p>
+                </div>
+                <Switch
+                  id="weather-alerts"
+                  checked={settings.enable_weather_alerts}
+                  onCheckedChange={(checked) => handleSettingUpdate({ enable_weather_alerts: checked })}
+                  disabled={savingSettings}
+                />
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Failed to load settings
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Notifications */}
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Notifications
+          </CardTitle>
+          <CardDescription>
+            Manage how you receive alerts and updates
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loadingSettings ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : settings ? (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="anomaly-detection">Anomaly Detection</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Alert for unusual weather patterns
+                  </p>
+                </div>
+                <Switch
+                  id="anomaly-detection"
+                  checked={settings.enable_anomaly_detection}
+                  onCheckedChange={(checked) => handleSettingUpdate({ enable_anomaly_detection: checked })}
+                  disabled={savingSettings}
+                />
+              </div>
+            </>
+          ) : null}
+        </CardContent>
+      </Card>
 
       {/* Appearance */}
       <Card className="glass-card">

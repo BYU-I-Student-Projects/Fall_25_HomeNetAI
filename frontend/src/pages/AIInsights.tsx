@@ -3,9 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getLocations, getDevices } from "@/lib/storage";
-import { generateAIInsights, generateChatResponse } from "@/lib/mockData";
-import { Sparkles, Send, Bot, User } from "lucide-react";
+import { apiGetAIInsights, apiChatWithAI, type AIInsight } from "@/services/api";
+import { Sparkles, Send, Bot, User, Loader2 } from "lucide-react";
 
 interface Message {
   id: string;
@@ -15,25 +14,45 @@ interface Message {
 }
 
 const AIInsights = () => {
-  const [locations] = useState(getLocations());
-  const [devices] = useState(getDevices());
-  const [insights, setInsights] = useState<string[]>([]);
+  const [insights, setInsights] = useState<AIInsight[]>([]);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
-      content: "Hello! I'm your HomeNetAI assistant. I can help you with weather forecasts, smart home automation, and energy optimization. What would you like to know?",
+      content: "Hello! I'm your HomeNetAI assistant powered by Google Gemini. I can help you with weather forecasts, smart home automation, and energy optimization. What would you like to know?",
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
+  const [conversationId, setConversationId] = useState<string>();
+  const [loadingInsights, setLoadingInsights] = useState(true);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
-    setInsights(generateAIInsights(locations, devices));
-  }, [locations, devices]);
+    loadInsights();
+  }, []);
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
+  const loadInsights = async () => {
+    try {
+      setLoadingInsights(true);
+      const response = await apiGetAIInsights();
+      setInsights(response.insights);
+    } catch (error) {
+      console.error("Failed to load AI insights:", error);
+      setInsights([
+        {
+          type: "error",
+          title: "Unable to load insights",
+          message: "Please make sure you have configured your Gemini API key in the backend.",
+        },
+      ]);
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!input.trim() || sendingMessage) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -44,18 +63,34 @@ const AIInsights = () => {
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setSendingMessage(true);
 
-    // Simulate AI response delay
-    setTimeout(() => {
-      const response = generateChatResponse(input);
+    try {
+      const response = await apiChatWithAI(input, conversationId);
+      
+      if (!conversationId) {
+        setConversationId(response.conversation_id);
+      }
+
       const aiMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: response,
-        timestamp: new Date(),
+        content: response.response,
+        timestamp: new Date(response.timestamp),
       };
       setMessages((prev) => [...prev, aiMessage]);
-    }, 500);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      const errorMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: "I'm sorry, I encountered an error processing your request. Please make sure the Gemini API is configured correctly.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   return (
@@ -84,15 +119,26 @@ const AIInsights = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {insights.map((insight, i) => (
-                <div
-                  key={i}
-                  className="p-4 rounded-lg bg-gradient-to-r from-ai-primary/5 to-ai-secondary/5 border border-ai-primary/10 animate-slide-up"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                >
-                  <p className="text-sm">{insight}</p>
+              {loadingInsights ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-ai-primary" />
                 </div>
-              ))}
+              ) : insights.length > 0 ? (
+                insights.map((insight, i) => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-lg bg-gradient-to-r from-ai-primary/5 to-ai-secondary/5 border border-ai-primary/10 animate-slide-up"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  >
+                    <h4 className="font-semibold text-sm mb-1">{insight.title}</h4>
+                    <p className="text-sm text-muted-foreground">{insight.message}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center p-4">
+                  No insights available. Add locations to get AI-powered recommendations.
+                </p>
+              )}
             </CardContent>
           </Card>
 
