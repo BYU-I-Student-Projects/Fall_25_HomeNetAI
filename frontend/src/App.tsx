@@ -6,6 +6,7 @@ import AddLocation from './pages/AddLocation';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AIInsights from './pages/AIInsights';
+import Analytics from './pages/Analytics';
 
 // Add CSS animations
 const style = document.createElement('style');
@@ -93,6 +94,11 @@ function App() {
             <Route path="/ai-insights" element={
               <ProtectedRoute>
                 <AIInsights />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <Analytics />
               </ProtectedRoute>
             } />
           </Routes>

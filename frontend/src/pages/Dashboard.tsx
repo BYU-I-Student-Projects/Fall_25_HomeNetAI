@@ -118,7 +118,27 @@ export default function Dashboard() {
               Monitor weather conditions across your locations
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link to="/analytics" style={{ textDecoration: 'none' }}>
+              <button style={{
+                backgroundColor: '#10b981',
+                color: 'white',
+                border: 'none',
+                padding: '14px 28px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: '500',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>📊</span>
+                <span>Analytics</span>
+              </button>
+            </Link>
             <Link to="/ai-insights" style={{ textDecoration: 'none' }}>
               <button style={{
                 backgroundColor: '#6f42c1',
