@@ -161,6 +161,67 @@ async def get_current_user(username: str = Depends(verify_token)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# User data management endpoint
+@app.delete("/user/data")
+async def clear_user_data(username: str = Depends(verify_token)):
+    """
+    Clear all user data including locations and weather data
+    Note: Does not delete the user account itself
+    """
+    try:
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        
+        # Get user ID
+        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        user_result = cursor.fetchone()
+        
+        if not user_result:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result[0]
+        
+        # Delete user locations (cascades to weather_data and daily_weather)
+        cursor.execute("DELETE FROM user_locations WHERE user_id = %s", (user_id,))
+        locations_deleted = cursor.rowcount
+        
+        # Reset user preferences to defaults
+        cursor.execute("""
+            UPDATE user_preferences 
+            SET unit_system = 'imperial',
+                theme = 'light',
+                alerts_enabled = TRUE,
+                temperature_alerts = TRUE,
+                precipitation_alerts = TRUE,
+                wind_alerts = TRUE,
+                anomaly_alerts = TRUE,
+                email_notifications = FALSE,
+                updated_at = NOW()
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "User data cleared successfully",
+            "locations_deleted": locations_deleted
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Error clearing user data: {str(e)}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 # Location search endpoint
 @app.get("/locations/search")
 async def search_locations(query: str):

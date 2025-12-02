@@ -35,13 +35,16 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         print(f"Authentication error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
-@router.get("/{location_id}")
+@router.get("")
 async def get_alerts(
-    location_id: int,
+    location_id: int = None,
     current_user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Get all active alerts and recommendations for a location
+    
+    Query Parameters:
+    - location_id: Optional location ID to filter alerts
     
     Returns alerts categorized by type and severity:
     - critical: Immediate attention required
@@ -51,6 +54,10 @@ async def get_alerts(
     """
     try:
         user_id = current_user.get("user_id")
+        
+        if not location_id:
+            raise HTTPException(status_code=400, detail="location_id query parameter is required")
+        
         alerts_service = AlertsService()
         alerts = alerts_service.get_active_alerts(location_id, user_id)
         
@@ -61,6 +68,8 @@ async def get_alerts(
             "alert_count": len(alerts),
             "alerts": alerts
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching alerts: {str(e)}")
 
@@ -118,3 +127,73 @@ async def get_critical_alerts(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching critical alerts: {str(e)}")
+
+
+@router.post("/generate/{location_id}")
+async def generate_alerts(
+    location_id: int,
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Manually trigger alert generation for a location
+    
+    Useful for refreshing alerts on-demand
+    """
+    try:
+        user_id = current_user.get("user_id")
+        alerts_service = AlertsService()
+        alerts = alerts_service.get_active_alerts(location_id, user_id)
+        
+        return {
+            "success": True,
+            "message": "Alerts generated successfully",
+            "location_id": location_id,
+            "alert_count": len(alerts),
+            "alerts": alerts
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating alerts: {str(e)}")
+
+
+@router.patch("/{alert_id}/read")
+async def mark_alert_as_read(
+    alert_id: int,
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Mark an alert as read (for future database-persisted alerts)
+    
+    Currently returns success as alerts are generated dynamically
+    """
+    try:
+        # Note: Since alerts are currently generated dynamically,
+        # this endpoint is prepared for future database persistence
+        return {
+            "success": True,
+            "message": f"Alert {alert_id} marked as read",
+            "alert_id": alert_id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error marking alert as read: {str(e)}")
+
+
+@router.delete("/{alert_id}")
+async def delete_alert(
+    alert_id: int,
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Delete/dismiss an alert (for future database-persisted alerts)
+    
+    Currently returns success as alerts are generated dynamically
+    """
+    try:
+        # Note: Since alerts are currently generated dynamically,
+        # this endpoint is prepared for future database persistence
+        return {
+            "success": True,
+            "message": f"Alert {alert_id} deleted",
+            "alert_id": alert_id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting alert: {str(e)}")
