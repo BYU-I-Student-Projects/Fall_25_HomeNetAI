@@ -74,6 +74,7 @@ const Dashboard = () => {
   const [locations, setLocations] = useState<SavedLocation[]>([]);
   const [devices, setDevices] = useState<SmartDevice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedForecasts, setExpandedForecasts] = useState<{ [key: number]: boolean }>({});
   // Memoize expensive calculations
   const insights = useMemo(() => generateAIInsights(locations, devices), [locations, devices]);
   const activeDevices = useMemo(() => devices.filter(d => d.status === "on").length, [devices]);

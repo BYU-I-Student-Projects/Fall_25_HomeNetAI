@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,12 +35,12 @@ const Analytics = () => {
       try {
         const days = timeRange === "7d" ? 7 : 30;
         const [histData, tempTrend, forecastData] = await Promise.all([
-          apiGetHistoricalData(selectedLocation, days),
-          apiGetTrends(selectedLocation, "temperature", days),
-          apiGetForecast(selectedLocation, 168) // 7 days forecast
+          apiGetHistoricalData(Number(selectedLocation), days),
+          apiGetTrends(Number(selectedLocation), "temperature", days),
+          apiGetForecast(Number(selectedLocation), 168) // 7 days forecast
         ]);
 
-        setHistoricalData(histData);
+        setHistoricalData(histData.data);
         setTrends(tempTrend);
         setForecast(forecastData);
       } catch (error) {
@@ -59,16 +59,23 @@ const Analytics = () => {
   }, [selectedLocation, timeRange, toast]);
 
   // Format historical data for chart
-  const temperatureData = historicalData.map(point => ({map(point => ({
+  const temperatureData = historicalData.map(point => ({
     date: new Date(point.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     temperature: point.temperature
   }));
 
   // Format forecast data for chart
-  const forecastData = forecast?.forecast.slice(0, 7).map(point => ({
-    date: new Date(point.timestamp).toLocaleDateString('en-US', { weekday: 'short' }),
-    temperature: point.temperature
-  })) || [];
+  // Format forecast data - convert object to array for chart
+  const forecastData = forecast?.forecasts.temperature ? [
+    {
+      date: 'Current',
+      temperature: forecast.forecasts.temperature.current || 0
+    },
+    {
+      date: 'Predicted',
+      temperature: forecast.forecasts.temperature.predicted || 0
+    }
+  ] : [];
 
   // Device energy usage
   const energyData = useMemo(() => {
@@ -166,7 +173,7 @@ const Analytics = () => {
                 <SelectContent>
                   {locations.map(loc => (
                     <SelectItem key={loc.id} value={loc.id}>
-                      {loc.city.name}, {loc.city.state}
+                      {loc.city.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -174,9 +181,9 @@ const Analytics = () => {
               {trends && (
                 <div className="ml-auto text-sm text-muted-foreground">
                   Trend: <span className={trends.slope > 0 ? "text-red-500" : "text-blue-500"}>
-                    {trends.slope > 0 ? "↑" : "↓"} {Math.abs(trends.slope).toFixed(2)}°F/day
+                    {trends.slope > 0 ? "↑" : "↓"} {Math.abs(trends.slope_per_day).toFixed(2)}°F/day
                   </span>
-                  {" "}(R² = {trends.r_squared.toFixed(3)})
+                  {" "}(Confidence: {(trends.confidence * 100).toFixed(1)}%)
                 </div>
               )}
             </div>

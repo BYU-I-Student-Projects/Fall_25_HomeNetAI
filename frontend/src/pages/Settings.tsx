@@ -16,6 +16,50 @@ const Settings = () => {
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
 
+  const handleSettingUpdate = async (updates: Partial<UserSettings>) => {
+    if (!settings) return;
+
+    setSavingSettings(true);
+    try {
+      const updatedSettings = { ...settings, ...updates };
+      await apiUpdateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      toast({
+        title: "Settings saved",
+        description: "Your preferences have been updated.",
+      });
+    } catch (error) {
+      console.error("Failed to update settings:", error);
+      toast({
+        title: "Error saving settings",
+        description: "Failed to save your preferences. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const userSettings = await apiGetSettings();
+        setSettings(userSettings);
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+        toast({
+          title: "Error loading settings",
+          description: "Could not load your preferences from the server.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingSettings(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
   const handleDarkModeToggle = async (checked: boolean) => {
     setDarkMode(checked);
     saveDarkMode(checked);
@@ -133,7 +177,7 @@ const Settings = () => {
                 <Label htmlFor="temp-unit">Temperature Unit</Label>
                 <Select
                   value={settings.temperature_unit}
-                  onValueChange={(value) => handleSettingUpdate({ temperature_unit: value as "fahrenheit" | "celsius" })}
+                  onValueChange={(value) => handleSettingUpdate({ temperature_unit: value })}
                   disabled={savingSettings}
                 >
                   <SelectTrigger id="temp-unit">
@@ -148,30 +192,30 @@ const Settings = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="ai-insights">AI Insights</Label>
+                  <Label htmlFor="notifications">Notifications</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive AI-powered recommendations
+                    Enable push notifications
                   </p>
                 </div>
                 <Switch
-                  id="ai-insights"
-                  checked={settings.enable_ai_insights}
-                  onCheckedChange={(checked) => handleSettingUpdate({ enable_ai_insights: checked })}
+                  id="notifications"
+                  checked={settings.notifications_enabled}
+                  onCheckedChange={(checked) => handleSettingUpdate({ notifications_enabled: checked })}
                   disabled={savingSettings}
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="weather-alerts">Weather Alerts</Label>
+                  <Label htmlFor="email-alerts">Email Alerts</Label>
                   <p className="text-sm text-muted-foreground">
-                    Get notifications for severe weather
+                    Receive alerts via email
                   </p>
                 </div>
                 <Switch
-                  id="weather-alerts"
-                  checked={settings.enable_weather_alerts}
-                  onCheckedChange={(checked) => handleSettingUpdate({ enable_weather_alerts: checked })}
+                  id="email-alerts"
+                  checked={settings.alert_email_enabled}
+                  onCheckedChange={(checked) => handleSettingUpdate({ alert_email_enabled: checked })}
                   disabled={savingSettings}
                 />
               </div>
@@ -204,15 +248,15 @@ const Settings = () => {
             <>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="anomaly-detection">Anomaly Detection</Label>
+                  <Label htmlFor="push-alerts">Push Alerts</Label>
                   <p className="text-sm text-muted-foreground">
-                    Alert for unusual weather patterns
+                    Receive push notifications for alerts
                   </p>
                 </div>
                 <Switch
-                  id="anomaly-detection"
-                  checked={settings.enable_anomaly_detection}
-                  onCheckedChange={(checked) => handleSettingUpdate({ enable_anomaly_detection: checked })}
+                  id="push-alerts"
+                  checked={settings.alert_push_enabled}
+                  onCheckedChange={(checked) => handleSettingUpdate({ alert_push_enabled: checked })}
                   disabled={savingSettings}
                 />
               </div>

@@ -263,3 +263,22 @@ export async function apiUpdateSettings(settings: Partial<UserSettings>) {
   const res = await api.put("/settings", settings);
   return res.data as UserSettings;
 }
+
+// Legacy exports for backward compatibility
+export const aiAPI = {
+  chat: apiChatWithAI,
+  getInsights: apiGetAIInsights
+};
+
+export const locationAPI = {
+  getAll: apiGetLocations,
+  getById: apiGetLocation,
+  create: apiAddLocation,
+  addLocation: apiAddLocation,
+  delete: apiDeleteLocation,
+  search: async (query: string) => {
+    // Placeholder for search functionality - can be implemented later
+    const res = await api.get("/locations/search", { params: { q: query } });
+    return res.data;
+  }
+};

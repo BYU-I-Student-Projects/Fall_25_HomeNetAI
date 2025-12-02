@@ -22,8 +22,8 @@ const AlertsPanel = ({ locationId, compact = false }: AlertsPanelProps) => {
 
     setLoading(true);
     try {
-      const data = await apiGetAlerts(locationId);
-      setAlerts(data);
+      const data = await apiGetAlerts(Number(locationId));
+      setAlerts(data.alerts);
     } catch (error) {
       console.error("Failed to load alerts:", error);
     } finally {
@@ -36,7 +36,7 @@ const AlertsPanel = ({ locationId, compact = false }: AlertsPanelProps) => {
 
     setGenerating(true);
     try {
-      await apiGenerateAlerts(locationId);
+      await apiGenerateAlerts(Number(locationId));
       await loadAlerts();
       toast({
         title: "Alerts generated",
@@ -54,7 +54,7 @@ const AlertsPanel = ({ locationId, compact = false }: AlertsPanelProps) => {
     }
   };
 
-  const handleMarkAsRead = async (alertId: string) => {
+  const handleMarkAsRead = async (alertId: number) => {
     try {
       await apiMarkAlertAsRead(alertId);
       setAlerts(prev => prev.filter(a => a.id !== alertId));
