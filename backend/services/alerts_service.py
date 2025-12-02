@@ -316,10 +316,16 @@ class AlertsService:
                 return alerts
             
             current_time = current.get('timestamp')
+            # Parse timestamp if it's a string
+            if isinstance(current_time, str):
+                current_time = datetime.fromisoformat(current_time.replace('Z', '+00:00'))
             
             # Check if current weather is anomalous
             for anomaly in anomalies.get('anomalies', []):
                 anomaly_time = anomaly.get('timestamp')
+                # Parse timestamp if it's a string
+                if isinstance(anomaly_time, str):
+                    anomaly_time = datetime.fromisoformat(anomaly_time.replace('Z', '+00:00'))
                 
                 # Check if anomaly is within last hour
                 if anomaly_time and current_time:
@@ -352,7 +358,7 @@ class AlertsService:
         if not current:
             return alerts
         
-        windspeed = current.get('windspeed', 0)
+        windspeed = current.get('wind_speed', 0) or current.get('windspeed', 0)
         
         # High wind warning (>50 km/h / 30 mph)
         if windspeed > 50:
@@ -367,7 +373,7 @@ class AlertsService:
             })
         
         # Check for increasing winds
-        future_winds = [f.get('windspeed', 0) for f in forecast_data[:6] if f]
+        future_winds = [f.get('wind_speed', 0) or f.get('windspeed', 0) for f in forecast_data[:6] if f]
         if future_winds and max(future_winds) > 60:
             alerts.append({
                 'type': 'wind',
