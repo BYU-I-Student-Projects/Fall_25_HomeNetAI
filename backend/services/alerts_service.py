@@ -5,12 +5,12 @@ Provides actionable insights based on weather predictions and patterns
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 import statistics
-from database.database import Database
+from database.database import HomeNetDatabase
 from services.analytics_service import AnalyticsService
 
 class AlertsService:
     def __init__(self):
-        self.db = Database()
+        self.db = HomeNetDatabase()
         self.analytics = AnalyticsService()
     
     def get_active_alerts(self, location_id: int, user_id: int) -> List[Dict[str, Any]]:
