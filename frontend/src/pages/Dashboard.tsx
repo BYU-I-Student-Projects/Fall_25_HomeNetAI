@@ -22,6 +22,19 @@ export default function Dashboard() {
   const [weatherData, setWeatherData] = useState<{[key: number]: WeatherData}>({});
   const [expandedForecasts, setExpandedForecasts] = useState<{[key: number]: boolean}>({});
 
+  // Conversion functions for US units
+  const celsiusToFahrenheit = (celsius: number): number => {
+    return (celsius * 9/5) + 32;
+  };
+
+  const mmToInches = (mm: number): number => {
+    return mm / 25.4;
+  };
+
+  const kmhToMph = (kmh: number): number => {
+    return kmh * 0.621371;
+  };
+
   const loadLocations = async () => {
     try {
       const response = await locationAPI.getUserLocations();
@@ -360,14 +373,14 @@ export default function Dashboard() {
                                 lineHeight: '1',
                                 marginBottom: '8px'
                               }}>
-                                {Math.round(weather.current_weather.temperature)}°
+                                {Math.round(celsiusToFahrenheit(weather.current_weather.temperature))}°
                               </div>
                               <div style={{ 
                                 fontSize: '18px', 
                                 opacity: '0.9',
-                                fontWeight: '400'
+                                marginTop: '8px'
                               }}>
-                                Feels like {Math.round(weather.current_weather.apparent_temperature || weather.current_weather.temperature)}°
+                                Feels like {Math.round(celsiusToFahrenheit(weather.current_weather.apparent_temperature || weather.current_weather.temperature))}°
                               </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
@@ -428,7 +441,7 @@ export default function Dashboard() {
                                   fontSize: '18px', 
                                   fontWeight: '600'
                                 }}>
-                                  {weather.current_weather.windspeed} km/h
+                                  {kmhToMph(weather.current_weather.windspeed)} mph
                                 </div>
                               </div>
                             </div>
@@ -534,7 +547,7 @@ export default function Dashboard() {
                                     marginBottom: '8px',
                                     lineHeight: '1'
                                   }}>
-                                    {Math.round(weather.daily_forecast.temperature_2m_max[index])}°
+                                    {Math.round(celsiusToFahrenheit(weather.daily_forecast.temperature_2m_max[index]))}°F
                                   </div>
                                   <div style={{ 
                                     fontSize: '18px', 
@@ -542,7 +555,7 @@ export default function Dashboard() {
                                     marginBottom: '16px',
                                     fontWeight: '500'
                                   }}>
-                                    {Math.round(weather.daily_forecast.temperature_2m_min[index])}°
+                                    {Math.round(celsiusToFahrenheit(weather.daily_forecast.temperature_2m_min[index]))}°F
                                   </div>
                                   <div style={{ 
                                     display: 'flex', 
@@ -558,7 +571,7 @@ export default function Dashboard() {
                                     {weather.daily_forecast.precipitation_sum && (
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <span style={{ fontSize: '12px', fontWeight: '700', color: '#007bff' }}>RAIN</span>
-                                        <span style={{ fontWeight: '600' }}>{weather.daily_forecast.precipitation_sum[index]?.toFixed(1) || 0}mm</span>
+                                        <span style={{ fontWeight: '600' }}>{mmToInches(weather.daily_forecast.precipitation_sum[index] || 0)} in</span>
                                       </div>
                                     )}
                                     {weather.daily_forecast.uv_index_max && (
