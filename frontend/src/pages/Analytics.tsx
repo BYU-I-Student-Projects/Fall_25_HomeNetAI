@@ -57,6 +57,22 @@ const Analytics: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeMetric, setActiveMetric] = useState<string>('temperature');
 
+  // Conversion functions for US units
+  const celsiusToFahrenheit = (celsius: number | null): number | null => {
+    if (celsius === null) return null;
+    return (celsius * 9/5) + 32;
+  };
+
+  const mmToInches = (mm: number | null): number | null => {
+    if (mm === null) return null;
+    return mm / 25.4;
+  };
+
+  const kmhToMph = (kmh: number | null): number | null => {
+    if (kmh === null) return null;
+    return kmh * 0.621371;
+  };
+
   useEffect(() => {
     fetchLocations();
   }, []);
@@ -131,10 +147,10 @@ const Analytics: React.FC = () => {
   const formatChartData = (data: HistoricalData[]) => {
     return data.map(item => ({
       time: new Date(item.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      temperature: item.temperature,
+      temperature: celsiusToFahrenheit(item.temperature),
       humidity: item.humidity,
-      precipitation: item.precipitation,
-      wind_speed: item.wind_speed
+      precipitation: mmToInches(item.precipitation),
+      wind_speed: kmhToMph(item.wind_speed)
     }));
   };
 
@@ -323,7 +339,7 @@ const Analytics: React.FC = () => {
                   <div>
                     <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Temperature</p>
                     <p style={{ fontSize: '28px', fontWeight: '700', color: '#1e293b' }}>
-                      {summary.statistics.temperature.mean?.toFixed(1)}°C
+                      {celsiusToFahrenheit(summary.statistics.temperature.mean)?.toFixed(1)}°F
                     </p>
                   </div>
                   <span style={{ fontSize: '32px' }}>🌡️</span>
@@ -335,12 +351,12 @@ const Analytics: React.FC = () => {
                     color: getTrendColor(trends.temperature?.direction),
                     fontWeight: '500'
                   }}>
-                    {trends.temperature?.slope_per_day?.toFixed(2)}°C/day
+                    {(trends.temperature?.slope_per_day * 1.8)?.toFixed(2)}°F/day
                   </span>
                 </div>
                 <div style={{ marginTop: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                  Min: {summary.statistics.temperature.min?.toFixed(1)}°C | 
-                  Max: {summary.statistics.temperature.max?.toFixed(1)}°C
+                  Min: {celsiusToFahrenheit(summary.statistics.temperature.min)?.toFixed(1)}°F | 
+                  Max: {celsiusToFahrenheit(summary.statistics.temperature.max)?.toFixed(1)}°F
                 </div>
               </div>
 
@@ -387,7 +403,7 @@ const Analytics: React.FC = () => {
                   <div>
                     <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Precipitation</p>
                     <p style={{ fontSize: '28px', fontWeight: '700', color: '#1e293b' }}>
-                      {summary.statistics.precipitation.mean?.toFixed(1)} mm
+                      {mmToInches(summary.statistics.precipitation.mean)?.toFixed(1)} in
                     </p>
                   </div>
                   <span style={{ fontSize: '32px' }}>🌧️</span>
@@ -403,7 +419,7 @@ const Analytics: React.FC = () => {
                   </span>
                 </div>
                 <div style={{ marginTop: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                  Total: {summary.statistics.precipitation.max?.toFixed(1)} mm
+                  Total: {mmToInches(summary.statistics.precipitation.max)?.toFixed(1)} in
                 </div>
               </div>
 
@@ -418,7 +434,7 @@ const Analytics: React.FC = () => {
                   <div>
                     <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Wind Speed</p>
                     <p style={{ fontSize: '28px', fontWeight: '700', color: '#1e293b' }}>
-                      {summary.statistics.wind_speed.mean?.toFixed(1)} km/h
+                      {kmhToMph(summary.statistics.wind_speed.mean)?.toFixed(1)} mph
                     </p>
                   </div>
                   <span style={{ fontSize: '32px' }}>💨</span>
@@ -434,7 +450,7 @@ const Analytics: React.FC = () => {
                   </span>
                 </div>
                 <div style={{ marginTop: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                  Max: {summary.statistics.wind_speed.max?.toFixed(1)} km/h
+                  Max: {kmhToMph(summary.statistics.wind_speed.max)?.toFixed(1)} mph
                 </div>
               </div>
             </div>
