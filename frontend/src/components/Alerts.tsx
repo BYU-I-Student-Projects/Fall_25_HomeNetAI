@@ -30,6 +30,13 @@ const Alerts: React.FC<AlertsProps> = ({ locationId }) => {
   const fetchAlerts = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authentication required');
+        setLoading(false);
+        return;
+      }
+      
       const response = await axios.get(
         `http://localhost:8000/alerts/${locationId}`,
         {
@@ -41,9 +48,17 @@ const Alerts: React.FC<AlertsProps> = ({ locationId }) => {
         setAlerts(response.data.alerts || []);
       }
       setLoading(false);
+      setError(null); // Clear any previous errors
     } catch (err: any) {
       console.error('Error fetching alerts:', err);
-      setError(err.response?.data?.detail || 'Failed to load alerts');
+      
+      // Don't show error for authentication issues - just hide alerts
+      if (err.response?.status === 401) {
+        setAlerts([]);
+        setError(null);
+      } else {
+        setError(err.response?.data?.detail || 'Failed to load alerts');
+      }
       setLoading(false);
     }
   };
@@ -118,7 +133,7 @@ const Alerts: React.FC<AlertsProps> = ({ locationId }) => {
     );
   }
 
-  if (error) {
+  if (error && error !== 'Authentication required') {
     return (
       <div style={{ 
         padding: '15px',
@@ -131,6 +146,11 @@ const Alerts: React.FC<AlertsProps> = ({ locationId }) => {
         {error}
       </div>
     );
+  }
+  
+  // Don't show anything if authentication is required (user not logged in)
+  if (error === 'Authentication required') {
+    return null;
   }
 
   if (alerts.length === 0) {
