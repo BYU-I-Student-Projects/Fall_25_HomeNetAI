@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { locationAPI } from '../services/api';
 
 interface Location {
@@ -27,6 +27,7 @@ interface Statistics {
 interface TrendData {
   metric: string;
   trend: string;
+  direction: string;
   slope_per_day: number;
   confidence: number;
   current_value: number | null;
@@ -55,7 +56,6 @@ const Analytics: React.FC = () => {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [trends, setTrends] = useState<{ [key: string]: TrendData }>({});
   const [loading, setLoading] = useState(false);
-  const [activeMetric, setActiveMetric] = useState<string>('temperature');
 
   // Conversion functions for US units
   const celsiusToFahrenheit = (celsius: number | null): number | null => {
