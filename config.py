@@ -37,12 +37,9 @@ class Config:
     # Weather Collection
     COLLECTION_INTERVAL_MINUTES: int = int(os.getenv("COLLECTION_INTERVAL_MINUTES", "30"))
     
-    # Unsplash API
-    UNSPLASH_ACCESS_KEY: str = os.getenv("UNSPLASH_ACCESS_KEY", "l-q9TGf8JD2VxO9Zt83kRpTLVlVjM_gEh3sWwyc88q0")
-    UNSPLASH_SECRET_KEY: str = os.getenv("UNSPLASH_SECRET_KEY", "A3HnRlGHGJaAWwi2dQNcvPO6A3J271h3g3WL3dWvGn4")
     
     # Google Gemini AI Configuration
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "AIzaSyA3rJLEXpWN0EWujwBYDdK2xTSbwjbkUGU")
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")  # Updated to available model
     GEMINI_TEMPERATURE: float = float(os.getenv("GEMINI_TEMPERATURE", "0.7"))
 
