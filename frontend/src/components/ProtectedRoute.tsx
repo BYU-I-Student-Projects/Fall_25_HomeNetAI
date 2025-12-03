@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Development bypass - set to true to skip authentication
-  const BYPASS_AUTH = true; // Set to false to enable authentication
+  const BYPASS_AUTH = false; // Set to false to enable authentication
   
   // Check if user has auth token
   const token = localStorage.getItem('auth_token');

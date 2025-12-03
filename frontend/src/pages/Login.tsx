@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,11 +8,24 @@ import { toast } from "@/hooks/use-toast";
 import { authAPI } from "@/services/api";
 import { CloudRain } from "lucide-react";
 
+// Development bypass - set to true to skip login
+const BYPASS_AUTH = false; // Set to false to enable authentication
+
 const Login = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Auto-redirect to dashboard if bypass is enabled
+  if (BYPASS_AUTH) {
+    // Set a dummy token if none exists
+    if (!localStorage.getItem('auth_token')) {
+      localStorage.setItem('auth_token', 'dev-bypass-token');
+    }
+    // Redirect to dashboard immediately
+    return <Navigate to="/" replace />;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +89,7 @@ const Login = () => {
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
+                name="username"
                 type="text"
                 placeholder="yourusername"
                 value={username}
@@ -88,6 +102,7 @@ const Login = () => {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}

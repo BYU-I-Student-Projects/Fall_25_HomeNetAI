@@ -17,7 +17,7 @@ def get_weather_data(latitude: float, longitude: float) -> Dict[str, Any]:
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "hourly": "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,rain,snowfall,precipitation_probability,wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,visibility,uv_index",
+        "hourly": "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,rain,snowfall,precipitation_probability,wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,visibility,uv_index,weathercode",
         "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,rain_sum,snowfall_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max",
         "current_weather": True,
         "timezone": "auto",

@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    --primary: 217 91% 60%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 15% 95%;
@@ -26,7 +26,7 @@ All colors MUST be HSL.
     --muted: 220 15% 95%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 217 91% 60%;
+    --accent: 25 95% 53%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -34,24 +34,24 @@ All colors MUST be HSL.
 
     --border: 220 13% 90%;
     --input: 220 13% 90%;
-    --ring: 217 91% 60%;
+    --ring: 25 95% 53%;
 
     --radius: 0.5rem;
 
-    /* Weather theme - Professional blue */
-    --weather-primary: 217 91% 60%;
-    --weather-secondary: 217 78% 55%;
-    --weather-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 78% 55%));
+    /* Weather theme - Vibrant orange */
+    --weather-primary: 25 95% 53%;
+    --weather-secondary: 25 90% 48%;
+    --weather-gradient: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 90% 48%));
 
-    /* Smart home theme - Professional blue variant */
-    --smart-primary: 217 91% 60%;
-    --smart-secondary: 217 78% 55%;
-    --smart-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 78% 55%));
+    /* Smart home theme - Vibrant orange variant */
+    --smart-primary: 25 95% 53%;
+    --smart-secondary: 25 90% 48%;
+    --smart-gradient: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 90% 48%));
 
-    /* AI theme - Professional blue variant */
-    --ai-primary: 217 91% 60%;
-    --ai-secondary: 217 78% 55%;
-    --ai-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 78% 55%));
+    /* AI theme - Vibrant orange variant */
+    --ai-primary: 25 95% 53%;
+    --ai-secondary: 25 90% 48%;
+    --ai-gradient: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 90% 48%));
 
     /* Glass effects */
     --glass-bg: 0 0% 100% / 0.7;
@@ -59,12 +59,12 @@ All colors MUST be HSL.
 
     --sidebar-background: 220 25% 98%;
     --sidebar-foreground: 220 15% 15%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 15% 95%;
     --sidebar-accent-foreground: 220 15% 15%;
     --sidebar-border: 220 13% 90%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 25 95% 53%;
   }
 
 }

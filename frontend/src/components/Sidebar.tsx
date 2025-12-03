@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   MapPin,
-  Home,
   BarChart3,
   Settings,
   LogOut,
   Menu,
   X,
   ChevronLeft,
+  Sparkles,
 } from "lucide-react";
 import { authAPI } from "@/services/api";
 import { cn } from "@/lib/utils";
@@ -65,14 +65,14 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }: SidebarProps) => {
       title: "HOME",
       items: [
         { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-        { path: "/locations", icon: MapPin, label: "Locations" },
-        { path: "/smart-home", icon: Home, label: "Smart Home" },
+        { path: "/locations", icon: MapPin, label: "Locations & Smart Home" },
       ],
     },
     {
       title: "ANALYTICS",
       items: [
         { path: "/analytics", icon: BarChart3, label: "Analytics" },
+        { path: "/ai-insights", icon: Sparkles, label: "AI Insights" },
       ],
     },
     {

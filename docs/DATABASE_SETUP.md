@@ -8,7 +8,7 @@ This guide will walk you through setting up the entire backend from scratch.
 1. Go to https://www.postgresql.org/download/windows/
 2. Click "Download the installer"
 3. Run the installer
-4. **Important:** Remember the password you set for the `postgres` user - you'll need it later!
+4. **Important:** Remember the password you set for the `postgres` user
 5. Keep all default settings (port 5432, etc.)
 6. Click "Finish" when done
 
@@ -16,12 +16,6 @@ This guide will walk you through setting up the entire backend from scratch.
 1. Go to https://www.postgresql.org/download/macosx/
 2. Download and install PostgreSQL
 3. Remember the password you set for the `postgres` user
-
-### Linux:
-```bash
-sudo apt-get update
-sudo apt-get install postgresql postgresql-contrib
-```
 
 ## Step 2: Install pgAdmin (Optional but Recommended)
 
@@ -60,14 +54,7 @@ pgAdmin is a visual tool to manage your database.
    ```
 6. Type `\q` to exit
 
-## Step 4: Install Python
-
-1. Go to https://www.python.org/downloads/
-2. Download Python 3.8 or higher
-3. **Important:** Check the box "Add Python to PATH" during installation
-4. Click "Install Now"
-
-## Step 5: Install Python Dependencies
+## Step 4 Install Python Dependencies
 
 1. Open Command Prompt (Windows) or Terminal (Mac/Linux)
 2. Navigate to your project folder:
@@ -84,7 +71,7 @@ If you get an error, try:
 python -m pip install -r requirements.txt
 ```
 
-## Step 6: Configure Database Connection
+## Step 5: Configure Database Connection
 
 1. Open the file `config.py` in your project root
 2. Find this line:

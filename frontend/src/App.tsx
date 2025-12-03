@@ -10,8 +10,10 @@ import Dashboard from "./pages/Dashboard";
 import Locations from "./pages/Locations";
 import LocationDetail from "./pages/LocationDetail";
 import SmartHome from "./pages/SmartHome";
+import LocationsSmartHome from "./pages/LocationsSmartHome";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import AIInsights from "./pages/AIInsights";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
@@ -36,6 +38,7 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
+            {/* Default redirect - if someone goes to root, go to dashboard */}
             <Route
               path="/"
               element={
@@ -81,6 +84,17 @@ const App = () => {
             />
             
             <Route
+              path="/locations-smart-home"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <LocationsSmartHome />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
               path="/analytics"
               element={
                 <ProtectedRoute>
@@ -97,6 +111,17 @@ const App = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Settings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/ai-insights"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <AIInsights />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

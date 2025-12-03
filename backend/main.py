@@ -14,7 +14,7 @@ sys.path.insert(0, parent_dir)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import config
-from routes import auth, locations, weather, devices
+from routes import auth, locations, weather, devices, images, ai
 
 # FastAPI App
 app = FastAPI(title="HomeNetAI Weather API", version="1.0.0")
@@ -33,6 +33,30 @@ app.include_router(auth.router)
 app.include_router(locations.router)
 app.include_router(weather.router)
 app.include_router(devices.router)
+app.include_router(images.router)
+app.include_router(ai.router)
+
+# Add middleware to log all requests (must be after CORS)
+@app.middleware("http")
+async def log_requests(request, call_next):
+    import time
+    start_time = time.time()
+    print(f"REQUEST: {request.method} {request.url.path}", flush=True)
+    import sys
+    sys.stdout.flush()
+    try:
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        print(f"RESPONSE: {request.method} {request.url.path} - {response.status_code} - {process_time:.2f}s", flush=True)
+        sys.stdout.flush()
+        return response
+    except Exception as e:
+        process_time = time.time() - start_time
+        print(f"ERROR: {request.method} {request.url.path} - {str(e)} - {process_time:.2f}s", flush=True)
+        import traceback
+        traceback.print_exc()
+        sys.stdout.flush()
+        raise
 
 
 @app.get("/")

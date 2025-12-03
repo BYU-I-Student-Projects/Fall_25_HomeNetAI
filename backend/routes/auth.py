@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime
 from database.database import HomeNetDatabase
 from models.schemas import UserCreate, UserLogin
-from auth.helpers import create_access_token, hash_password, verify_token
+from auth.helpers import create_access_token, hash_password, verify_token, BYPASS_AUTH
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 db = HomeNetDatabase()
@@ -82,6 +82,15 @@ async def login(user: UserLogin):
 @router.get("/me")
 async def get_current_user(username: str = Depends(verify_token)):
     """Get current authenticated user information."""
+    # In bypass mode, return a mock user for dev_user
+    if BYPASS_AUTH and username == "dev_user":
+        return {
+            "id": 0,
+            "username": "dev_user",
+            "email": "dev@homenet.ai",
+            "created_at": datetime.utcnow().isoformat()
+        }
+    
     conn = None
     cursor = None
     try:

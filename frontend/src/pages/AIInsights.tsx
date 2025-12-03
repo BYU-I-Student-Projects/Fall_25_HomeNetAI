@@ -1,56 +1,213 @@
-import { Search, Bell, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from 'react';
+import { ChatInterface } from '../components/ChatInterface';
+import { aiAPI } from '../services/api';
 
-const AIInsights = () => {
+interface Insight {
+  type: 'info' | 'warning' | 'tip' | 'error';
+  title: string;
+  message: string;
+}
+
+export const AIInsights: React.FC = () => {
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [conversationId, setConversationId] = useState('');
+
+  useEffect(() => {
+    fetchInsights();
+  }, []);
+
+  const fetchInsights = async () => {
+    setIsLoadingInsights(true);
+    try {
+      const data = await aiAPI.getInsights();
+      // Type assertion to ensure type safety
+      setInsights(data as Insight[]);
+    } catch (error) {
+      console.error('Error fetching insights:', error);
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  };
+
+  const getInsightIcon = (type: string) => {
+    switch (type) {
+      case 'warning':
+        return (
+          <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        );
+      case 'tip':
+        return (
+          <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        );
+      case 'error':
+        return (
+          <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+    }
+  };
+
+  const getInsightColor = (type: string) => {
+    switch (type) {
+      case 'warning':
+        return 'bg-orange-50 border-orange-200';
+      case 'tip':
+        return 'bg-green-50 border-green-200';
+      case 'error':
+        return 'bg-red-50 border-red-200';
+      default:
+        return 'bg-blue-50 border-blue-200';
+    }
+  };
+
   return (
-    <div className="h-screen bg-gray-100 overflow-hidden flex flex-col relative" style={{ height: '100vh', overflow: 'hidden' }}>
-      {/* Fixed Header Bar */}
-      <div className="fixed top-0 left-0 right-0 h-20 bg-gray-100 z-50 flex items-center" style={{ position: 'fixed', zIndex: 50 }}>
-        {/* HomeNetAI - Top left */}
-        <div className="absolute left-6">
-          <h1 className="text-xl font-bold text-[#0F4C5C]">HomeNetAI</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Insights</h1>
+          <p className="text-gray-600 text-lg">
+            Get intelligent insights and chat with AI about your weather and home data
+          </p>
         </div>
-        
-        {/* Centered Page Title */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <h2 className="text-xl font-semibold text-[#0F4C5C]">AI Insights</h2>
-        </div>
-        
-        {/* Search and Icons - Top right */}
-        <div className="absolute right-6 flex items-center gap-3">
-          {/* Search Input */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0F4C5C]" />
-            <Input
-              type="text"
-              placeholder="Search for any Weather info....."
-              className="pl-11 pr-4 h-12 w-72 rounded-full bg-white shadow-sm border-0 focus-visible:ring-2 focus-visible:ring-[#0F4C5C]/20"
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Insights Panel */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Smart Insights Card */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Smart Insights</h2>
+                <button
+                  onClick={fetchInsights}
+                  disabled={isLoadingInsights}
+                  className="p-2 hover:bg-orange-50 rounded-full transition-colors"
+                  title="Refresh insights"
+                >
+                  <svg
+                    className={`w-5 h-5 text-orange-600 ${isLoadingInsights ? 'animate-spin' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {isLoadingInsights ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-20 bg-gray-200 rounded-lg"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : insights.length > 0 ? (
+                <div className="space-y-3">
+                  {insights.map((insight, index) => (
+                    <div
+                      key={index}
+                      className={`border-2 rounded-lg p-4 transition-all hover:shadow-md ${getInsightColor(insight.type)}`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 mt-0.5">{getInsightIcon(insight.type)}</div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                            {insight.title}
+                          </h3>
+                          <p className="text-sm text-gray-700 leading-relaxed">{insight.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <svg
+                    className="w-12 h-12 text-gray-300 mx-auto mb-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
+                  <p className="text-gray-500 text-sm">No insights available</p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Add locations to get personalized insights
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Tips Card */}
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg p-6 border border-orange-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Ask Me About
+              </h3>
+              <div className="space-y-2.5">
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Current weather conditions</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>7-day weather forecast</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Energy saving tips</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Weather patterns</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Home optimization</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Smart device recommendations</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Panel */}
+          <div className="lg:col-span-2 h-[700px]">
+            <ChatInterface
+              conversationId={conversationId}
+              onConversationIdChange={setConversationId}
             />
           </div>
-          
-          {/* Notification Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-12 w-12 rounded-full bg-white shadow-sm hover:bg-slate-50 border-0"
-          >
-            <Bell className="h-6 w-6 text-[#0F4C5C]" />
-          </Button>
-          
-          {/* Menu Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-12 w-12 rounded-full bg-white shadow-sm hover:bg-slate-50 border-0"
-          >
-            <Menu className="h-6 w-6 text-[#0F4C5C]" />
-          </Button>
         </div>
-      </div>
-      
-      <div className="flex-1 overflow-hidden flex flex-col pt-20 pb-6 px-6" style={{ height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
-        {/* Page content goes here */}
       </div>
     </div>
   );
