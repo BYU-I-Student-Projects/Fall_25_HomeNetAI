@@ -11,10 +11,12 @@ backend_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(backend_dir)
 sys.path.insert(0, parent_dir)
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from config import config
 from routes import auth, locations, weather, devices, images, ai
+from auth.helpers import verify_token
+from database.database import HomeNetDatabase
 
 # FastAPI App
 app = FastAPI(title="HomeNetAI Weather API", version="1.0.0")
@@ -75,9 +77,13 @@ async def health():
     return {"status": "healthy", "message": "Backend is running"}
 
 # User data management endpoints
+db = HomeNetDatabase()
+
 @app.delete("/user/data")
 async def clear_user_data(username: str = Depends(verify_token)):
-    # Clear all user data (locations, weather data, etc.)
+    """Clear all user data (locations, weather data, etc.)"""
+    conn = None
+    cursor = None
     try:
         conn = db.get_connection()
         cursor = conn.cursor()
@@ -91,19 +97,19 @@ async def clear_user_data(username: str = Depends(verify_token)):
         user_id = user_result[0]
         
         # Delete all user locations and associated weather data
-        cursor.execute("DELETE FROM weather_data WHERE user_id = %s", (user_id,))
-        cursor.execute("DELETE FROM daily_weather WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM weather_data WHERE location_id IN (SELECT id FROM user_locations WHERE user_id = %s)", (user_id,))
+        cursor.execute("DELETE FROM daily_weather WHERE location_id IN (SELECT id FROM user_locations WHERE user_id = %s)", (user_id,))
         cursor.execute("DELETE FROM user_locations WHERE user_id = %s", (user_id,))
         
         conn.commit()
-        cursor.close()
-        conn.close()
         
         return {"message": "All user data has been cleared successfully"}
         
     except HTTPException:
         raise
     except Exception as e:
+        if conn:
+            conn.rollback()
         print(f"Error clearing user data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:

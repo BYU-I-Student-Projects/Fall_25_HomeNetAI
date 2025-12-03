@@ -30,8 +30,8 @@ const apiRequest = async <T>(
   }
 
   try {
-    console.log(`[API] Making request to: ${API_BASE_URL}${endpoint}`);
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    console.log(`[API] Making request to: ${BASE_URL}${endpoint}`);
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
       headers,
     });
@@ -57,9 +57,16 @@ const apiRequest = async <T>(
     return data;
   } catch (error: any) {
     console.error(`[API] Request error:`, error);
-    // Handle network errors (like "Failed to fetch")
-    if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
-      throw new Error('Cannot connect to backend server. Make sure the backend is running at http://localhost:8000');
+    // Handle network errors (like "Failed to fetch" or connection refused)
+    if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+      throw new Error(
+        'Cannot connect to backend server.\n\n' +
+        'Please make sure the backend is running:\n' +
+        '1. Open a terminal in the project root\n' +
+        '2. Run: cd backend && python start_backend.py\n' +
+        '3. Wait for "Backend available at: http://localhost:8000"\n' +
+        '4. Then try again'
+      );
     }
     // Handle abort errors
     if (error.name === 'AbortError') {
@@ -107,7 +114,7 @@ export const authAPI = {
 export const imagesAPI = {
   getLocationImage: (locationName: string): string => {
     // Use backend proxy to avoid CORS issues
-    return `${API_BASE_URL}/images/location/${encodeURIComponent(locationName)}`;
+    return `${BASE_URL}/images/location/${encodeURIComponent(locationName)}`;
   },
 };
 
