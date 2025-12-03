@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 -- User locations table
 CREATE TABLE IF NOT EXISTS user_locations (
     id SERIAL PRIMARY KEY,
@@ -57,9 +56,28 @@ CREATE TABLE IF NOT EXISTS daily_weather (
     UNIQUE(location_id, date)
 );
 
+-- Devices table (smart home devices)
+CREATE TABLE IF NOT EXISTS devices (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('thermostat', 'light', 'plug', 'lock', 'blind', 'camera')),
+    status VARCHAR(10) NOT NULL CHECK (status IN ('on', 'off')),
+    room VARCHAR(100),
+    value DECIMAL(8, 2),
+    color VARCHAR(7),
+    locked BOOLEAN,
+    position INTEGER CHECK (position >= 0 AND position <= 100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_weather_location_time ON weather_data(location_id, timestamp);
 CREATE INDEX IF NOT EXISTS idx_daily_location_date ON daily_weather(location_id, date);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_locations_user_id ON user_locations(user_id);
+CREATE INDEX IF NOT EXISTS idx_devices_user_id ON devices(user_id);
+CREATE INDEX IF NOT EXISTS idx_devices_type ON devices(type);

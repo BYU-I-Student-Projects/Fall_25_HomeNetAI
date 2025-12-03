@@ -1,30 +1,66 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { saveUser, setToken } from "@/lib/storage";
-import { apiLogin, apiMe } from "@/services/api";
-import { Cloud, CloudRain } from "lucide-react";
+import { authAPI } from "@/services/api";
+import { CloudRain } from "lucide-react";
+
+// Development bypass - set to true to skip login
+const BYPASS_AUTH = false; // Set to false to enable authentication
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Auto-redirect to dashboard if bypass is enabled
+  if (BYPASS_AUTH) {
+    // Set a dummy token if none exists
+    if (!localStorage.getItem('auth_token')) {
+      localStorage.setItem('auth_token', 'dev-bypass-token');
+    }
+    // Redirect to dashboard immediately
+    return <Navigate to="/" replace />;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!username || !password) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
         variant: "destructive",
       });
       return;
+    }
+
+    setLoading(true);
+    
+    try {
+      await authAPI.login(username, password);
+      
+      // Get user info
+      const user = await authAPI.getCurrentUser();
+      
+      toast({
+        title: "Welcome back!",
+        description: `Logged in as ${user.username}`,
+      });
+      
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid credentials",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
 
     setLoading(true);
@@ -55,16 +91,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-weather-primary/10 via-background to-ai-primary/10 p-4">
-      <Card className="w-full max-w-md border bg-card shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md glass-card animate-fade-in">
         <CardHeader className="space-y-4 text-center">
-          <div className="flex justify-center">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-weather-primary to-weather-secondary shadow-lg">
-              <CloudRain className="h-8 w-8 text-white" />
+          <div className="flex justify-center gap-2">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <CloudRain className="h-8 w-8 text-primary" />
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-weather-primary to-ai-primary bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold text-foreground">
               HomeNetAI
             </CardTitle>
             <CardDescription className="mt-2">
@@ -76,13 +112,14 @@ const Login = () => {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                name="username"
+                type="text"
+                placeholder="yourusername"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
@@ -91,6 +128,7 @@ const Login = () => {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
@@ -103,7 +141,7 @@ const Login = () => {
           <CardFooter className="flex flex-col gap-4">
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-weather-primary to-weather-secondary hover:opacity-90 transition-opacity"
+              className="w-full bg-primary hover:bg-primary/90 transition-colors"
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign In"}
@@ -123,3 +161,4 @@ const Login = () => {
 };
 
 export default Login;
+

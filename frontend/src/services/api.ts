@@ -1,104 +1,263 @@
-import axios from "axios";
-import { getAuthToken } from "@/lib/storage";
+/**
+ * API Service - Clean integration with backend
+ * Connects frontend to Fall_25_HomeNetAI backend API
+ */
 
 const BASE_URL = "http://localhost:8000";
 
-export const api = axios.create({
-  baseURL: BASE_URL,
-});
+// Development bypass - set to true to skip authentication redirects
+const BYPASS_AUTH = false; // Set to false to enable authentication
 
-api.interceptors.request.use((config) => {
-  const token = getAuthToken();
+// Helper to get auth token
+const getToken = (): string | null => {
+  return localStorage.getItem('auth_token');
+};
+
+// Helper to make API requests
+const apiRequest = async <T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> => {
+  const token = getToken();
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  
   if (token) {
-    config.headers = config.headers ?? {};
-    config.headers["Authorization"] = `Bearer ${token}`;
-  } else {
-    console.warn("No auth token found for request:", config.url);
+    headers['Authorization'] = `Bearer ${token}`;
   }
-  return config;
-});
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.error("Authentication failed:", error.response.data);
-      // Clear invalid token
-      localStorage.removeItem('homenet_jwt_token');
+  try {
+    console.log(`[API] Making request to: ${API_BASE_URL}${endpoint}`);
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+    console.log(`[API] Response status: ${response.status}`);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Only redirect to login if bypass is disabled
+        if (!BYPASS_AUTH) {
+          localStorage.removeItem('auth_token');
+          window.location.href = '/login';
+          throw new Error('Unauthorized - Please login again');
+        }
+        // In bypass mode, just throw the error without redirecting
+        throw new Error('Unauthorized - Authentication bypass is enabled');
+      }
+      const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+      throw new Error(error.detail || `Request failed with status ${response.status}`);
     }
-    return Promise.reject(error);
+
+    const data = await response.json();
+    console.log(`[API] Response data received`);
+    return data;
+  } catch (error: any) {
+    console.error(`[API] Request error:`, error);
+    // Handle network errors (like "Failed to fetch")
+    if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+      throw new Error('Cannot connect to backend server. Make sure the backend is running at http://localhost:8000');
+    }
+    // Handle abort errors
+    if (error.name === 'AbortError') {
+      throw new Error('Request was cancelled or timed out');
+    }
+    // Re-throw other errors
+    throw error;
   }
-);
-
-// Auth
-export async function apiLogin(username: string, password: string) {
-  const res = await api.post("/auth/login", { username, password });
-  return res.data as { access_token: string; token_type: string; user_id: number };
-}
-
-export async function apiRegister(username: string, email: string, password: string) {
-  const res = await api.post("/auth/register", { username, email, password });
-  return res.data as { access_token: string; token_type: string; user_id: number };
-}
-
-export async function apiMe() {
-  const res = await api.get("/auth/me");
-  return res.data as { id: number; username: string; email: string; created_at: string };
-}
-
-// Locations
-export type SearchLocationResult = {
-  name: string;
-  country: string;
-  admin1: string;
-  latitude: number;
-  longitude: number;
-  display_name: string;
 };
 
-export async function apiSearchLocations(query: string) {
-  const res = await api.get("/locations/search", { params: { query } });
-  return (res.data.results ?? []) as SearchLocationResult[];
-}
+// Auth API
+export const authAPI = {
+  register: async (username: string, email: string, password: string) => {
+    const data = await apiRequest<{ access_token: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password }),
+    });
+    if (data.access_token) {
+      localStorage.setItem('auth_token', data.access_token);
+    }
+    return data;
+  },
 
-export type UserLocation = {
-  id: number;
-  name: string;
-  latitude: number;
-  longitude: number;
-  created_at: string;
+  login: async (username: string, password: string) => {
+    const data = await apiRequest<{ access_token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    if (data.access_token) {
+      localStorage.setItem('auth_token', data.access_token);
+    }
+    return data;
+  },
+
+  getCurrentUser: async () => {
+    return apiRequest<{ id: number; username: string; email: string; created_at: string }>('/auth/me');
+  },
+
+  logout: () => {
+    localStorage.removeItem('auth_token');
+  },
 };
 
-export async function apiGetLocations() {
-  const res = await api.get("/locations");
-  return (res.data.locations ?? []) as UserLocation[];
-}
-
-export async function apiAddLocation(payload: { name: string; latitude: number; longitude: number }) {
-  const res = await api.post("/locations", payload);
-  return res.data as { id: number; message: string };
-}
-
-export async function apiDeleteLocation(id: number) {
-  const res = await api.delete(`/locations/${id}`);
-  return res.data as { message: string };
-}
-
-// Weather
-export type WeatherResponse = {
-  location: string | { id: number; name: string; latitude?: number; longitude?: number };
-  current_weather?: Record<string, unknown>;
-  hourly?: Record<string, unknown>;
-  daily?: Record<string, unknown>;
+// Images API
+export const imagesAPI = {
+  getLocationImage: (locationName: string): string => {
+    // Use backend proxy to avoid CORS issues
+    return `${API_BASE_URL}/images/location/${encodeURIComponent(locationName)}`;
+  },
 };
 
-export async function apiGetWeather(locationId: number) {
-  const res = await api.get(`/weather/${locationId}`);
-  return res.data as WeatherResponse;
-}
+// Locations API
+export const locationsAPI = {
+  getAll: async () => {
+    return apiRequest<{ locations: Array<{ id: number; name: string; latitude: number; longitude: number; created_at: string }> }>('/locations');
+  },
 
-// User data management
-export async function apiClearUserData() {
-  const res = await api.delete("/user/data");
-  return res.data as { message: string };
-}
+  search: async (query: string) => {
+    return apiRequest<{ results: Array<{ name: string; country: string; admin1: string; latitude: number; longitude: number; display_name: string }> }>(`/locations/search?query=${encodeURIComponent(query)}`);
+  },
+
+  add: async (name: string, latitude: number, longitude: number) => {
+    return apiRequest<{ id: number; message: string }>('/locations', {
+      method: 'POST',
+      body: JSON.stringify({ name, latitude, longitude }),
+    });
+  },
+
+  delete: async (locationId: number) => {
+    return apiRequest<{ message: string }>(`/locations/${locationId}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Weather API
+export const weatherAPI = {
+  getForLocation: async (locationId: number) => {
+    return apiRequest<{
+      location: string;
+      current_weather: {
+        temperature: number;
+        windspeed: number;
+        winddirection: number;
+        weathercode: number;
+        time: string;
+      };
+      daily_forecast: {
+        time: string[];
+        temperature_2m_max: number[];
+        temperature_2m_min: number[];
+        precipitation_sum: number[];
+        precipitation_probability_max: number[];
+        wind_speed_10m_max: number[];
+        uv_index_max: number[];
+      };
+      hourly_forecast: {
+        time: string[];
+        temperature_2m: number[];
+        apparent_temperature: number[];
+        relative_humidity_2m: number[];
+        precipitation: number[];
+        precipitation_probability: number[];
+        wind_speed_10m: number[];
+        wind_direction_10m: number[];
+        cloud_cover: number[];
+        uv_index: number[];
+      };
+    }>(`/weather/${locationId}`);
+  },
+};
+
+// Devices API
+export const devicesAPI = {
+  getAll: async () => {
+    return apiRequest<Array<{
+      id: number;
+      name: string;
+      type: string;
+      status: string;
+      room: string | null;
+      value: number | null;
+      color: string | null;
+      locked: boolean | null;
+      position: number | null;
+      created_at: string;
+      updated_at: string;
+    }>>('/devices');
+  },
+
+  update: async (deviceId: number, updates: {
+    status?: string;
+    value?: number;
+    room?: string;
+    name?: string;
+    color?: string;
+    locked?: boolean;
+    position?: number;
+  }) => {
+    return apiRequest<{
+      id: number;
+      name: string;
+      type: string;
+      status: string;
+      room: string | null;
+      value: number | null;
+      color: string | null;
+      locked: boolean | null;
+      position: number | null;
+      created_at: string;
+      updated_at: string;
+    }>(`/devices/${deviceId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  },
+};
+
+// AI API
+export const aiAPI = {
+  chat: async (message: string, conversationId?: string) => {
+    console.log('[AI API] Sending chat message:', message.substring(0, 50));
+    // Add timeout to prevent hanging (120 seconds - Gemini can be slow)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.warn('[AI API] Request timeout after 120 seconds');
+      controller.abort();
+    }, 120000);
+    
+    try {
+      const result = await apiRequest<{
+        response: string;
+        conversation_id: string;
+        timestamp: string;
+      }>('/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message, conversation_id: conversationId }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      console.log('[AI API] Chat response received');
+      return result;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.error('[AI API] Error:', error);
+      if (error.name === 'AbortError' || error.message?.includes('abort')) {
+        throw new Error('Request timed out. The AI service may be taking too long to respond.');
+      }
+      throw error;
+    }
+  },
+
+  getInsights: async () => {
+    return apiRequest<Array<{
+      type: string;
+      title: string;
+      message: string;
+    }>>('/ai/insights');
+  },
+};
+

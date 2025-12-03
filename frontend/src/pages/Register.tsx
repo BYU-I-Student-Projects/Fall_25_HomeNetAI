@@ -6,13 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
-import { saveUser, setToken } from "@/lib/storage";
-import { apiRegister, apiMe } from "@/services/api";
-import { CloudRain, Check } from "lucide-react";
+import { authAPI } from "@/services/api";
+import { CloudRain } from "lucide-react";
 
 const Register = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,13 +31,37 @@ const Register = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !password) {
+    if (!username || !email || !password) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
         variant: "destructive",
       });
       return;
+    }
+
+    setLoading(true);
+    
+    try {
+      await authAPI.register(username, email, password);
+      
+      // Get user info
+      const user = await authAPI.getCurrentUser();
+      
+      toast({
+        title: "Account created!",
+        description: `Welcome to HomeNetAI, ${user.username}!`,
+      });
+      
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Registration failed",
+        description: error.message || "Could not create account",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
 
     setLoading(true);
@@ -69,16 +92,16 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-weather-primary/10 via-background to-ai-primary/10 p-4">
-      <Card className="w-full max-w-md border bg-card shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md glass-card animate-fade-in">
         <CardHeader className="space-y-4 text-center">
-          <div className="flex justify-center">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-weather-primary to-weather-secondary shadow-lg">
-              <CloudRain className="h-8 w-8 text-white" />
+          <div className="flex justify-center gap-2">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <CloudRain className="h-8 w-8 text-primary" />
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-weather-primary to-ai-primary bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold text-foreground">
               Join HomeNetAI
             </CardTitle>
             <CardDescription className="mt-2">
@@ -90,13 +113,14 @@ const Register = () => {
         <form onSubmit={handleRegister}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="name"
+                id="username"
+                name="username"
                 type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                placeholder="yourusername"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
@@ -105,6 +129,7 @@ const Register = () => {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="you@example.com"
                 value={email}
@@ -117,6 +142,7 @@ const Register = () => {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
@@ -144,7 +170,7 @@ const Register = () => {
           <CardFooter className="flex flex-col gap-4">
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-weather-primary to-weather-secondary hover:opacity-90 transition-opacity"
+              className="w-full bg-primary hover:bg-primary/90 transition-colors"
               disabled={loading}
             >
               {loading ? "Creating account..." : "Create Account"}
@@ -164,3 +190,4 @@ const Register = () => {
 };
 
 export default Register;
+

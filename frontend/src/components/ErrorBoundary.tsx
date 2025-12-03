@@ -6,12 +6,13 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error?: Error;
+  error: Error | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false
+    hasError: false,
+    error: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
@@ -19,23 +20,26 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('Uncaught error:', error, errorInfo);
   }
 
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center p-8">
-            <h1 className="text-2xl font-bold text-destructive mb-4">Something went wrong</h1>
-            <p className="text-muted-foreground mb-4">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="text-center space-y-4">
+            <h1 className="text-2xl font-bold text-destructive">Something went wrong</h1>
+            <p className="text-muted-foreground">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
-            <button 
-              onClick={() => window.location.reload()}
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                window.location.href = '/';
+              }}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
             >
-              Reload Page
+              Go Home
             </button>
           </div>
         </div>
@@ -47,3 +51,4 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export default ErrorBoundary;
+

@@ -1,53 +1,50 @@
-import { useEffect, Suspense, lazy } from "react";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { initializeDarkMode } from "@/lib/storage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Locations from "./pages/Locations";
+import LocationDetail from "./pages/LocationDetail";
+import SmartHome from "./pages/SmartHome";
+import LocationsSmartHome from "./pages/LocationsSmartHome";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
+import AIInsights from "./pages/AIInsights";
+import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
-import LoadingSpinner from "./components/LoadingSpinner";
 import ErrorBoundary from "./components/ErrorBoundary";
-
-// Lazy load heavy components
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Locations = lazy(() => import("./pages/Locations"));
-const LocationDetail = lazy(() => import("./pages/LocationDetail"));
-const SmartHome = lazy(() => import("./pages/SmartHome"));
-const AIInsights = lazy(() => import("./pages/AIInsights"));
-const Analytics = lazy(() => import("./pages/Analytics"));
-const Settings = lazy(() => import("./pages/Settings"));
-const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  useEffect(() => {
-    initializeDarkMode();
-  }, []);
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
+          <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
+            {/* Default redirect - if someone goes to root, go to dashboard */}
             <Route
               path="/"
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <Dashboard />
-                    </Suspense>
+                    <Dashboard />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -58,9 +55,7 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <Locations />
-                    </Suspense>
+                    <Locations />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -71,9 +66,7 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <LocationDetail />
-                    </Suspense>
+                    <LocationDetail />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -84,22 +77,18 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <SmartHome />
-                    </Suspense>
+                    <SmartHome />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
             />
             
             <Route
-              path="/ai-insights"
+              path="/locations-smart-home"
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <AIInsights />
-                    </Suspense>
+                    <LocationsSmartHome />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -110,9 +99,7 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <Analytics />
-                    </Suspense>
+                    <Analytics />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -123,26 +110,32 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <Settings />
-                    </Suspense>
+                    <Settings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/ai-insights"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <AIInsights />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
             />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <NotFound />
-              </Suspense>
-            } />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
     </ErrorBoundary>
   );
 };
 
 export default App;
+

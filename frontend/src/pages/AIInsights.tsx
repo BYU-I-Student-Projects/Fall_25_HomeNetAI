@@ -1,194 +1,213 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { getLocations, getDevices } from "@/lib/storage";
-import { generateAIInsights, generateChatResponse } from "@/lib/mockData";
-import { Sparkles, Send, Bot, User } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { ChatInterface } from '../components/ChatInterface';
+import { aiAPI } from '../services/api';
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
+interface Insight {
+  type: 'info' | 'warning' | 'tip' | 'error';
+  title: string;
+  message: string;
 }
 
-const AIInsights = () => {
-  const [locations] = useState(getLocations());
-  const [devices] = useState(getDevices());
-  const [insights, setInsights] = useState<string[]>([]);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: "Hello! I'm your HomeNetAI assistant. I can help you with weather forecasts, smart home automation, and energy optimization. What would you like to know?",
-      timestamp: new Date(),
-    },
-  ]);
-  const [input, setInput] = useState("");
+export const AIInsights: React.FC = () => {
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [conversationId, setConversationId] = useState('');
 
   useEffect(() => {
-    setInsights(generateAIInsights(locations, devices));
-  }, [locations, devices]);
+    fetchInsights();
+  }, []);
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
+  const fetchInsights = async () => {
+    setIsLoadingInsights(true);
+    try {
+      const data = await aiAPI.getInsights();
+      // Type assertion to ensure type safety
+      setInsights(data as Insight[]);
+    } catch (error) {
+      console.error('Error fetching insights:', error);
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  };
 
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: input,
-      timestamp: new Date(),
-    };
+  const getInsightIcon = (type: string) => {
+    switch (type) {
+      case 'warning':
+        return (
+          <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        );
+      case 'tip':
+        return (
+          <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        );
+      case 'error':
+        return (
+          <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+    }
+  };
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-
-    // Simulate AI response delay
-    setTimeout(() => {
-      const response = generateChatResponse(input);
-      const aiMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: response,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 500);
+  const getInsightColor = (type: string) => {
+    switch (type) {
+      case 'warning':
+        return 'bg-orange-50 border-orange-200';
+      case 'tip':
+        return 'bg-green-50 border-green-200';
+      case 'error':
+        return 'bg-red-50 border-red-200';
+      default:
+        return 'bg-blue-50 border-blue-200';
+    }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-ai-primary to-ai-secondary bg-clip-text text-transparent">
-          AI Insights
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Intelligent recommendations and chat assistant
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Insights Panel */}
-        <div className="space-y-4">
-          <Card className="glass-card border-ai-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-ai-primary" />
-                Current Insights
-              </CardTitle>
-              <CardDescription>
-                AI-generated recommendations based on your data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {insights.map((insight, i) => (
-                <div
-                  key={i}
-                  className="p-4 rounded-lg bg-gradient-to-r from-ai-primary/5 to-ai-secondary/5 border border-ai-primary/10 animate-slide-up"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                >
-                  <p className="text-sm">{insight}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle>Energy Optimization Tips</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="p-3 rounded-lg bg-smart-primary/10 border border-smart-primary/20">
-                <p className="text-sm">💡 Turn off lights when not in use to save up to 15% on energy costs</p>
-              </div>
-              <div className="p-3 rounded-lg bg-smart-primary/10 border border-smart-primary/20">
-                <p className="text-sm">🌡️ Lower thermostat by 2°F in winter to reduce heating costs by 10%</p>
-              </div>
-              <div className="p-3 rounded-lg bg-smart-primary/10 border border-smart-primary/20">
-                <p className="text-sm">🔌 Unplug devices when not in use to eliminate phantom power draw</p>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Insights</h1>
+          <p className="text-gray-600 text-lg">
+            Get intelligent insights and chat with AI about your weather and home data
+          </p>
         </div>
 
-        {/* Chat Assistant */}
-        <Card className="glass-card flex flex-col h-[600px]">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5 text-ai-primary" />
-              AI Assistant
-            </CardTitle>
-            <CardDescription>
-              Ask me anything about weather, devices, or automation
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="flex-1 flex flex-col p-0">
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-3 ${
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    {message.role === "assistant" && (
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-ai-primary to-ai-secondary flex items-center justify-center flex-shrink-0">
-                        <Bot className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                    
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        message.role === "user"
-                          ? "bg-gradient-to-r from-weather-primary to-weather-secondary text-white"
-                          : "bg-muted"
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {message.timestamp.toLocaleTimeString()}
-                      </p>
-                    </div>
-
-                    {message.role === "user" && (
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-weather-primary to-weather-secondary flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-
-            <div className="p-4 border-t">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSendMessage();
-                }}
-                className="flex gap-2"
-              >
-                <Input
-                  placeholder="Ask a question..."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="bg-gradient-to-r from-ai-primary to-ai-secondary hover:opacity-90"
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Insights Panel */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Smart Insights Card */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Smart Insights</h2>
+                <button
+                  onClick={fetchInsights}
+                  disabled={isLoadingInsights}
+                  className="p-2 hover:bg-orange-50 rounded-full transition-colors"
+                  title="Refresh insights"
                 >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
+                  <svg
+                    className={`w-5 h-5 text-orange-600 ${isLoadingInsights ? 'animate-spin' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {isLoadingInsights ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-20 bg-gray-200 rounded-lg"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : insights.length > 0 ? (
+                <div className="space-y-3">
+                  {insights.map((insight, index) => (
+                    <div
+                      key={index}
+                      className={`border-2 rounded-lg p-4 transition-all hover:shadow-md ${getInsightColor(insight.type)}`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 mt-0.5">{getInsightIcon(insight.type)}</div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                            {insight.title}
+                          </h3>
+                          <p className="text-sm text-gray-700 leading-relaxed">{insight.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <svg
+                    className="w-12 h-12 text-gray-300 mx-auto mb-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
+                  <p className="text-gray-500 text-sm">No insights available</p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Add locations to get personalized insights
+                  </p>
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Quick Tips Card */}
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg p-6 border border-orange-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Ask Me About
+              </h3>
+              <div className="space-y-2.5">
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Current weather conditions</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>7-day weather forecast</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Energy saving tips</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Weather patterns</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Home optimization</span>
+                </div>
+                <div className="text-sm text-gray-700 flex items-center space-x-2">
+                  <span className="text-orange-600 font-bold">•</span>
+                  <span>Smart device recommendations</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Panel */}
+          <div className="lg:col-span-2 h-[700px]">
+            <ChatInterface
+              conversationId={conversationId}
+              onConversationIdChange={setConversationId}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
