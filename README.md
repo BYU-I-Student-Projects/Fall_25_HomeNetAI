@@ -22,6 +22,7 @@ Quick version:
 
 ### Step 2: Install Backend Dependencies
 
+### Setup
 ```bash
 # Navigate to project folder
 cd Fall_25_HomeNetAI
@@ -43,7 +44,6 @@ pip install -r requirements.txt
 ```bash
 cd backend
 python start_backend.py
-```
 
 Backend will run at: **http://localhost:8000**
 - API Docs: http://localhost:8000/docs

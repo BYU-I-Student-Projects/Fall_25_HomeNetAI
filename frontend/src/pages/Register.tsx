@@ -63,6 +63,32 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
+
+    setLoading(true);
+    
+    try {
+      const result = await apiRegister(name, email, password);
+      setToken(result.access_token);
+      const me = await apiMe();
+      saveUser({
+        id: String(me.id),
+        email: me.email,
+        name: me.username,
+        createdAt: me.created_at,
+      });
+    } catch (err: any) {
+      setLoading(false);
+      toast({ title: "Registration failed", description: err?.response?.data?.detail ?? "Try different credentials", variant: "destructive" });
+      return;
+    }
+    
+    toast({
+      title: "Account created!",
+      description: `Welcome to HomeNetAI, ${name}!`,
+    });
+    
+    setLoading(false);
+    navigate('/');
   };
 
   return (

@@ -26,6 +26,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers
@@ -72,6 +73,44 @@ async def root():
 async def health():
     """Health check endpoint"""
     return {"status": "healthy", "message": "Backend is running"}
+
+# User data management endpoints
+@app.delete("/user/data")
+async def clear_user_data(username: str = Depends(verify_token)):
+    # Clear all user data (locations, weather data, etc.)
+    try:
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        
+        # Get user ID
+        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        user_result = cursor.fetchone()
+        if not user_result:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result[0]
+        
+        # Delete all user locations and associated weather data
+        cursor.execute("DELETE FROM weather_data WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM daily_weather WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM user_locations WHERE user_id = %s", (user_id,))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {"message": "All user data has been cleared successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error clearing user data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 if __name__ == "__main__":

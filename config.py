@@ -20,7 +20,7 @@ else:
 
 class Config:
     
-    # Database
+    # Database (CHANGE THIS TO YOUR OWN CREDENTIALS)
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:nathan-7108@localhost/homenet")
     
     # API

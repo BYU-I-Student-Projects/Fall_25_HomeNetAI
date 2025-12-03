@@ -62,6 +62,32 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+
+    setLoading(true);
+    
+    try {
+      const result = await apiLogin(email, password);
+      setToken(result.access_token);
+      const me = await apiMe();
+      saveUser({
+        id: String(me.id),
+        email: me.email,
+        name: me.username,
+        createdAt: me.created_at,
+      });
+    } catch (err: any) {
+      setLoading(false);
+      toast({ title: "Login failed", description: err?.response?.data?.detail ?? "Invalid credentials", variant: "destructive" });
+      return;
+    }
+    
+    toast({
+      title: "Welcome back!",
+      description: `Logged in successfully`,
+    });
+    
+    setLoading(false);
+    navigate('/');
   };
 
   return (
