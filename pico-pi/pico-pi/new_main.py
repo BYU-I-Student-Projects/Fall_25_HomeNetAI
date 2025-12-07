@@ -754,7 +754,26 @@ def Phase3_Operation():
                             off_time = params.get('off_time', 0.2)
                             print(f"   🔵 Executing: Blink LED {n} times")
                             print(f"      On: {on_time}s, Off: {off_time}s")
-                            # Add LED blink code here
+                            blink_led(n, on_time, off_time)
+                            led.on()  # Turn back on after blinking
+                        elif command_name == 'CHANGE_WIFI':
+                            params = cmd.get('params', {})
+                            new_ssid = params.get('ssid', '')
+                            new_password = params.get('password', '')
+                            if new_ssid and new_password:
+                                print(f"   📶 Executing: Change WiFi to '{new_ssid}'")
+                                # Update config with new credentials
+                                config['ssid'] = new_ssid
+                                config['password'] = new_password
+                                if SaveConfig(config):
+                                    print(f"      ✓ WiFi credentials updated in config")
+                                    print(f"      🔄 Restarting to apply new WiFi...")
+                                    time.sleep(2)
+                                    machine.reset()
+                                else:
+                                    print(f"      ✗ Failed to save new credentials")
+                            else:
+                                print(f"   ⚠️  Missing ssid or password in CHANGE_WIFI command")
                         else:
                             print(f"   ⚠️  Unknown command: {command_name}")
                 else:
@@ -795,5 +814,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 

@@ -39,6 +39,15 @@ func (r *deviceDataPgRepository) GetByDeviceID(deviceID string) ([]entities.Devi
 	return data, err
 }
 
+func (r *deviceDataPgRepository) GetLatestByModuleID(moduleID string) (*entities.DeviceData, error) {
+	var data entities.DeviceData
+	err := r.db.GetDB().Where("device_module_id = ?", moduleID).Order("created_at DESC").First(&data).Error
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+
 func (r *deviceDataPgRepository) Update(data *entities.DeviceData) error {
 	data.UpdatedAt = time.Now().Format(time.RFC3339)
 	return r.db.GetDB().Save(data).Error

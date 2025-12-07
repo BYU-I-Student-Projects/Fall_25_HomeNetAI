@@ -10,7 +10,7 @@ import (
 type DeviceModule struct {
 	ID        string         `gorm:"primaryKey" json:"id"`
 	DeviceID  string         `gorm:"index" json:"device_id"`
-	UserID    string         `gorm:"index" json:"user_id"`
+	UserID    string         `json:"user_id"`
 	Name      string         `json:"name"`
 	Status    string         `json:"status"` //
 	CreatedAt string         `json:"created_at"`

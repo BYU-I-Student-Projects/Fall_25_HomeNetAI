@@ -16,6 +16,7 @@ type DeviceDataRepository interface {
 	GetByID(id string) (*entities.DeviceData, error)
 	GetAll() ([]entities.DeviceData, error)
 	GetByDeviceID(deviceID string) ([]entities.DeviceData, error)
+	GetLatestByModuleID(moduleID string) (*entities.DeviceData, error)
 	Update(data *entities.DeviceData) error
 	Delete(id string) error
 }

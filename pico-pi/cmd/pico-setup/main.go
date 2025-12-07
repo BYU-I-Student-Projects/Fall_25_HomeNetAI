@@ -56,12 +56,14 @@ var (
 type step int
 
 const (
-	stepListingPicos step = iota
+	stepEnteringUsername step = iota
+	stepEnteringLoginPassword
+	stepLoggingIn
+	stepListingPicos
 	stepSelectingPico
 	stepConnectingToPico
 	stepEnteringSSID
 	stepEnteringPassword
-	stepEnteringUserID
 	stepSendingCredentials
 	stepComplete
 )
@@ -78,9 +80,12 @@ type model struct {
 	picoNetworks []network
 	cursor       int
 	selectedPico *network
+	username     string
+	loginPass    string
+	userID       string
+	authToken    string
 	homeSSID     string
 	homePassword string
-	userID       string
 	currentInput string
 	message      string
 	quitting     bool
@@ -91,13 +96,17 @@ type networksFoundMsg []network
 type connectionSuccessMsg struct{}
 type sendSuccessMsg struct{}
 type scanTickMsg struct{}
+type loginSuccessMsg struct {
+	userID string
+	token  string
+}
 type errMsg struct{ err error }
 
 func (e errMsg) Error() string { return e.err.Error() }
 
 func initialModel() model {
 	return model{
-		step:         stepListingPicos,
+		step:         stepEnteringUsername,
 		networks:     []network{},
 		picoNetworks: []network{},
 		cursor:       0,
@@ -106,13 +115,61 @@ func initialModel() model {
 }
 
 func (m model) Init() tea.Cmd {
-	return listNetworks
+	return nil
 }
 
 func tickScan() tea.Cmd {
 	return tea.Tick(3*time.Second, func(t time.Time) tea.Msg {
 		return scanTickMsg{}
 	})
+}
+
+func loginUser(username, password string) tea.Cmd {
+	return func() tea.Msg {
+		client := &http.Client{Timeout: 10 * time.Second}
+
+		payload := map[string]string{
+			"username": username,
+			"password": password,
+		}
+
+		jsonData, _ := json.Marshal(payload)
+		loginURL := "https://iot-picopi-module.onrender.com/api/v1/auth/login"
+
+		req, _ := http.NewRequest("POST", loginURL, bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+		}
+
+		var result map[string]interface{}
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+		}
+
+		// Check if response has success field
+		success, _ := result["success"].(bool)
+		if !success {
+			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+		}
+
+		userID, ok := result["user_id"].(string)
+		if !ok || userID == "" {
+			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+		}
+
+		// Token is optional, use empty string if not provided
+		token, _ := result["token"].(string)
+
+		return loginSuccessMsg{userID: userID, token: token}
+	}
 }
 
 func listNetworks() tea.Msg {
@@ -273,8 +330,33 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor++
 			}
 
+		case "backspace":
+			if len(m.currentInput) > 0 {
+				m.currentInput = m.currentInput[:len(m.currentInput)-1]
+			}
+
+		default:
+			if m.step == stepEnteringUsername || m.step == stepEnteringLoginPassword || m.step == stepEnteringSSID || m.step == stepEnteringPassword {
+				m.currentInput += msg.String()
+			}
+
 		case "enter":
 			switch m.step {
+			case stepEnteringUsername:
+				if m.currentInput != "" {
+					m.username = m.currentInput
+					m.currentInput = ""
+					m.step = stepEnteringLoginPassword
+				}
+
+			case stepEnteringLoginPassword:
+				if m.currentInput != "" {
+					m.loginPass = m.currentInput
+					m.currentInput = ""
+					m.step = stepLoggingIn
+					m.message = "Logging in..."
+					return m, loginUser(m.username, m.loginPass)
+				}
 
 			case stepSelectingPico:
 				if len(m.picoNetworks) > 0 {
@@ -295,24 +377,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.currentInput != "" {
 					m.homePassword = m.currentInput
 					m.currentInput = ""
-					m.step = stepEnteringUserID
+					m.step = stepSendingCredentials
+					m.message = "Sending credentials..."
+					return m, sendCredentials(m.homeSSID, m.homePassword, m.userID)
 				}
-
-			case stepEnteringUserID:
-				if m.currentInput == "" {
-					m.userID = "default_user"
-				} else {
-					m.userID = m.currentInput
-				}
-				m.step = stepSendingCredentials
-				m.message = "Sending credentials..."
-				return m, sendCredentials(m.homeSSID, m.homePassword, m.userID)
 
 			case stepComplete:
 				m.quitting = true
 				return m, tea.Quit
 			}
 		}
+
+	case loginSuccessMsg:
+		m.userID = msg.userID
+		m.authToken = msg.token
+		m.step = stepListingPicos
+		m.message = successStyle.Render("✓ Logged in as " + m.username)
+		return m, listNetworks
 
 	case networksFoundMsg:
 		m.networks = []network(msg)
@@ -361,6 +442,19 @@ func (m model) View() string {
 	s.WriteString(titleStyle.Render("🔧 Pico WiFi Setup Tool\n\n"))
 
 	switch m.step {
+	case stepEnteringUsername:
+		s.WriteString(promptStyle.Render("Enter your username:\n"))
+		s.WriteString(inputStyle.Render("> " + m.currentInput))
+		s.WriteString("\n\nPress Enter\n")
+
+	case stepEnteringLoginPassword:
+		s.WriteString(promptStyle.Render("Enter your password:\n"))
+		s.WriteString(inputStyle.Render("> " + strings.Repeat("•", len(m.currentInput))))
+		s.WriteString("\n\nPress Enter\n")
+
+	case stepLoggingIn:
+		s.WriteString(m.message + "\n")
+
 	case stepListingPicos:
 		if m.message != "" {
 			s.WriteString(m.message + "\n\n")
@@ -395,11 +489,6 @@ func (m model) View() string {
 	case stepEnteringPassword:
 		s.WriteString(promptStyle.Render("Enter WiFi password:\n"))
 		s.WriteString(inputStyle.Render("> " + strings.Repeat("•", len(m.currentInput))))
-		s.WriteString("\n\nPress Enter\n")
-
-	case stepEnteringUserID:
-		s.WriteString(promptStyle.Render("Enter User ID (optional):\n"))
-		s.WriteString(inputStyle.Render("> " + m.currentInput))
 		s.WriteString("\n\nPress Enter\n")
 
 	case stepSendingCredentials:

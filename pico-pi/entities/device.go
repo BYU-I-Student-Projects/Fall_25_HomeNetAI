@@ -11,7 +11,7 @@ type Device struct {
 	ID        string         `gorm:"primaryKey" json:"id"`
 	Name      string         `json:"name"`
 	Type      string         `json:"type"`
-	UserID    string         `gorm:"index" json:"user_id"`
+	UserID    string         `json:"user_id"`
 	CreatedAt string         `json:"created_at"`
 	UpdatedAt string         `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`

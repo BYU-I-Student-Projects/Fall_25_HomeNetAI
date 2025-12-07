@@ -9,6 +9,7 @@ import (
 	"iot-server/usecases"
 	"iot-server/ws"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,6 +26,13 @@ func NewServer(database db.Database) *Server {
 }
 
 func (s *Server) Start() {
+	// Setup CORS middleware
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true // Allow all origins for development
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	s.app.Use(cors.New(config))
+
 	// Setup healthcheck route
 	s.app.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -54,6 +62,7 @@ func (s *Server) Start() {
 
 	cmdHandler := httpHandler.NewCommandHandler(manager, commandsUseCase)
 	cacheHandler := handlers.NewCacheHandler(processor)
+	loginHandler := httpHandler.NewLoginHandler(s.db.GetDB())
 
 	// Setup API routes
 	api := s.app.Group("/api/v1")
@@ -65,7 +74,8 @@ func (s *Server) Start() {
 			devices.GET("", deviceHandler.GetAllDevices)
 			devices.GET("/:id/data", deviceHandler.GetDeviceDataByDeviceID)
 			devices.GET("/:id/modules", deviceModuleHandler.GetDeviceModulesByDeviceID)
-			devices.GET("/:id/commands", cmdHandler.GetDeviceCommands) // Get pending commands for device
+			devices.GET("/:id/commands", cmdHandler.GetDeviceCommands)         // Get pending commands for device
+			devices.POST("/:id/change-wifi", cmdHandler.ChangeWiFiCredentials) // Change WiFi credentials
 			devices.GET("/:id", deviceHandler.GetDevice)
 			devices.PUT("/:id", deviceHandler.UpdateDevice)
 			devices.DELETE("/:id", deviceHandler.DeleteDevice)
@@ -84,11 +94,12 @@ func (s *Server) Start() {
 		// Device module routes
 		deviceModules := api.Group("/device-modules")
 		{
-			deviceModules.POST("", deviceModuleHandler.CreateDeviceModule)       // Create device module
-			deviceModules.GET("", deviceModuleHandler.GetAllDeviceModules)       // Get all device modules
-			deviceModules.GET("/:id", deviceModuleHandler.GetDeviceModule)       // Get device module by ID
-			deviceModules.PUT("/:id", deviceModuleHandler.UpdateDeviceModule)    // Update device module
-			deviceModules.DELETE("/:id", deviceModuleHandler.DeleteDeviceModule) // Delete device module
+			deviceModules.POST("", deviceModuleHandler.CreateDeviceModule)         // Create device module
+			deviceModules.GET("", deviceModuleHandler.GetAllDeviceModules)         // Get all device modules
+			deviceModules.GET("/:id", deviceModuleHandler.GetDeviceModule)         // Get device module by ID
+			deviceModules.GET("/:id/latest", deviceModuleHandler.GetLatestReading) // Get latest reading for module
+			deviceModules.PUT("/:id", deviceModuleHandler.UpdateDeviceModule)      // Update device module
+			deviceModules.DELETE("/:id", deviceModuleHandler.DeleteDeviceModule)   // Delete device module
 		}
 
 		// User-specific routes
@@ -96,6 +107,12 @@ func (s *Server) Start() {
 		{
 			users.GET("/:user_id/devices", deviceModuleHandler.GetDevicesByUserID)              // Get all devices by user_id
 			users.GET("/:user_id/device-modules", deviceModuleHandler.GetDeviceModulesByUserID) // Get all device modules by user_id
+		}
+
+		// Auth routes
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", loginHandler.Login) // Login endpoint for pico.exe
 		}
 
 		// Cache management endpoints

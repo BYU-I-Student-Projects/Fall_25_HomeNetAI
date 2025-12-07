@@ -188,3 +188,61 @@ func (h *CommandHandler) Ack(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
+
+type changeWiFiReq struct {
+	DeviceID string `json:"device_id" binding:"required"`
+	SSID     string `json:"ssid" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// POST /api/v1/devices/:id/change-wifi
+// Send command to device to change WiFi credentials
+func (h *CommandHandler) ChangeWiFiCredentials(c *gin.Context) {
+	deviceID := c.Param("id")
+
+	var req changeWiFiReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		return
+	}
+
+	// Override deviceID from URL param
+	req.DeviceID = deviceID
+
+	// Create command params
+	params := map[string]interface{}{
+		"ssid":     req.SSID,
+		"password": req.Password,
+	}
+
+	// Enqueue CHANGE_WIFI command
+	cmd, err := h.cmdUC.Enqueue(req.DeviceID, "", "CHANGE_WIFI", params)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	status := "queued"
+	// Try to send via WS if connected
+	if h.wsMgr != nil && h.wsMgr.IsConnected(req.DeviceID) {
+		env := map[string]interface{}{
+			"type":             "command",
+			"command_id":       cmd.ID,
+			"device_module_id": cmd.DeviceModuleID,
+			"command":          cmd.Command,
+			"params":           params,
+			"timestamp":        time.Now().UTC().Format(time.RFC3339Nano),
+		}
+		b, _ := json.Marshal(env)
+		if err := h.wsMgr.SendToDevice(req.DeviceID, b); err == nil {
+			_ = h.cmdUC.MarkSent([]string{cmd.ID})
+			status = "sent"
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "WiFi change command sent",
+		"command_id": cmd.ID,
+		"status":     status,
+	})
+}

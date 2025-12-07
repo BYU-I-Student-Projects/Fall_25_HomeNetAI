@@ -173,3 +173,20 @@ func (h *DeviceModuleHandler) GetDevicesByUserID(c *gin.Context) {
 		"count": len(devices),
 	})
 }
+
+// GetLatestReading handles GET /api/v1/device-modules/:id/latest
+func (h *DeviceModuleHandler) GetLatestReading(c *gin.Context) {
+	moduleID := c.Param("id")
+
+	data, err := h.useCase.GetLatestDeviceDataByModuleID(moduleID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "No data found for this module",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": data,
+	})
+}

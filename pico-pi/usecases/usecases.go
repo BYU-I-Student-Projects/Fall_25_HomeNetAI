@@ -110,6 +110,13 @@ func (uc *DeviceUseCase) GetDeviceDataByDeviceID(deviceID string) ([]entities.De
 	return uc.DeviceDataRepo.GetByDeviceID(deviceID)
 }
 
+func (uc *DeviceUseCase) GetLatestDeviceDataByModuleID(moduleID string) (*entities.DeviceData, error) {
+	if moduleID == "" {
+		return nil, errors.New("module_id is required")
+	}
+	return uc.DeviceDataRepo.GetLatestByModuleID(moduleID)
+}
+
 func (uc *DeviceUseCase) UpdateDeviceData(data *entities.DeviceData) error {
 	if data.ID == "" {
 		return errors.New("data id is required")
