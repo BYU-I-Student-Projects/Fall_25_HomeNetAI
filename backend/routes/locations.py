@@ -111,7 +111,7 @@ async def add_user_location(location: LocationCreate, username: str = Depends(ve
 
 
 @router.delete("/{location_id}")
-async def delete_user_location(location_id: int, username: str = Depends(verify_token)):
+async def delete_user_location(location_id: str, username: str = Depends(verify_token)):
     """Delete a location owned by the authenticated user."""
     conn = None
     cursor = None

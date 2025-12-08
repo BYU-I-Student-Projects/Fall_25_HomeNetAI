@@ -10,7 +10,7 @@ db = HomeNetDatabase()
 
 
 @router.get("/{location_id}")
-async def get_weather_for_location(location_id: int, username: str = Depends(verify_token)):
+async def get_weather_for_location(location_id: str, username: str = Depends(verify_token)):
     """Get current weather and forecast for a user's location."""
     try:
         conn = db.get_connection()
