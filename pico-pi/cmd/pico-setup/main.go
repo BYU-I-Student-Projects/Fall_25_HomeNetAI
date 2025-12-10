@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	PICO_PASSWORD = "12345678" // Default Pico AP password
+	PICO_PASSWORD = "12345678"
 	PICO_IP       = "192.168.4.1"
 	PICO_PORT     = "80"
 )
@@ -66,6 +66,9 @@ const (
 	stepEnteringPassword
 	stepSendingCredentials
 	stepComplete
+
+	stepRetryLogin step = 100
+	stepRetryPico  step = 101
 )
 
 type network struct {
@@ -114,9 +117,7 @@ func initialModel() model {
 	}
 }
 
-func (m model) Init() tea.Cmd {
-	return nil
-}
+func (m model) Init() tea.Cmd { return nil }
 
 func tickScan() tea.Cmd {
 	return tea.Tick(3*time.Second, func(t time.Time) tea.Msg {
@@ -141,31 +142,29 @@ func loginUser(username, password string) tea.Cmd {
 
 		resp, err := client.Do(req)
 		if err != nil {
-			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+			return errMsg{fmt.Errorf("login failed: %v", err)}
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+			return errMsg{fmt.Errorf("login failed: server returned %d", resp.StatusCode)}
 		}
 
 		var result map[string]interface{}
 		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+			return errMsg{fmt.Errorf("login failed: invalid response")}
 		}
 
-		// Check if response has success field
 		success, _ := result["success"].(bool)
 		if !success {
-			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+			return errMsg{fmt.Errorf("login failed: incorrect credentials")}
 		}
 
 		userID, ok := result["user_id"].(string)
 		if !ok || userID == "" {
-			return errMsg{fmt.Errorf("authentication required - create an account at our website to proceed")}
+			return errMsg{fmt.Errorf("login failed: missing user ID")}
 		}
 
-		// Token is optional, use empty string if not provided
 		token, _ := result["token"].(string)
 
 		return loginSuccessMsg{userID: userID, token: token}
@@ -176,7 +175,8 @@ func listNetworks() tea.Msg {
 	cmd := exec.Command("netsh", "wlan", "show", "networks", "mode=bssid")
 	output, err := cmd.Output()
 	if err != nil {
-		return errMsg{fmt.Errorf("failed to list networks: %w", err)}
+		// Return empty networks instead of error to keep scanning
+		return networksFoundMsg([]network{})
 	}
 
 	networks := parseNetworks(string(output))
@@ -278,13 +278,6 @@ func sendCredentials(ssid, password, userID string) tea.Cmd {
 	return func() tea.Msg {
 		client := &http.Client{Timeout: 15 * time.Second}
 
-		checkURL := fmt.Sprintf("http://%s:%s/", PICO_IP, PICO_PORT)
-		resp, err := client.Get(checkURL)
-		if err != nil {
-			return errMsg{fmt.Errorf("Pico not reachable: %w", err)}
-		}
-		resp.Body.Close()
-
 		payload := map[string]string{
 			"ssid":     ssid,
 			"password": password,
@@ -292,28 +285,41 @@ func sendCredentials(ssid, password, userID string) tea.Cmd {
 		}
 
 		jsonData, _ := json.Marshal(payload)
-
 		credURL := fmt.Sprintf("http://%s:%s/credentials", PICO_IP, PICO_PORT)
-		req, _ := http.NewRequest("POST", credURL, bytes.NewBuffer(jsonData))
-		req.Header.Set("Content-Type", "application/json")
 
-		resp, err = client.Do(req)
-		if err != nil {
-			return errMsg{fmt.Errorf("failed to send: %w", err)}
+		// Try multiple times in case of temporary connection issues
+		var lastErr error
+		for attempt := 0; attempt < 5; attempt++ {
+			if attempt > 0 {
+				time.Sleep(1 * time.Second)
+			}
+
+			req, _ := http.NewRequest("POST", credURL, bytes.NewBuffer(jsonData))
+			req.Header.Set("Content-Type", "application/json")
+
+			resp, err := client.Do(req)
+			if err != nil {
+				lastErr = err
+				continue
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(resp.Body)
+				lastErr = fmt.Errorf("Pico returned %d: %s", resp.StatusCode, string(body))
+				continue
+			}
+
+			return sendSuccessMsg{}
 		}
-		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			body, _ := io.ReadAll(resp.Body)
-			return errMsg{fmt.Errorf("Pico returned %d: %s", resp.StatusCode, string(body))}
-		}
-
-		return sendSuccessMsg{}
+		return errMsg{fmt.Errorf("failed to send after 5 attempts: %w", lastErr)}
 	}
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -333,11 +339,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "backspace":
 			if len(m.currentInput) > 0 {
 				m.currentInput = m.currentInput[:len(m.currentInput)-1]
-			}
-
-		default:
-			if m.step == stepEnteringUsername || m.step == stepEnteringLoginPassword || m.step == stepEnteringSSID || m.step == stepEnteringPassword {
-				m.currentInput += msg.String()
 			}
 
 		case "enter":
@@ -386,6 +387,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.quitting = true
 				return m, tea.Quit
 			}
+
+		default:
+			// Handle regular character input
+			if m.step == stepEnteringUsername || m.step == stepEnteringSSID || m.step == stepEnteringPassword || m.step == stepEnteringLoginPassword {
+				if len(msg.String()) == 1 {
+					m.currentInput += msg.String()
+				}
+			}
+			// Retry options
+			if m.step == stepRetryLogin || m.step == stepRetryPico {
+				if msg.String() == "y" || msg.String() == "Y" {
+					if m.step == stepRetryLogin {
+						m.step = stepEnteringUsername
+						m.currentInput = ""
+					} else if m.step == stepRetryPico && m.selectedPico != nil {
+						m.step = stepConnectingToPico
+						m.message = fmt.Sprintf("Retrying connection to %s...", m.selectedPico.SSID)
+						return m, connectToNetwork(m.selectedPico.SSID, PICO_PASSWORD)
+					}
+				} else if msg.String() == "n" || msg.String() == "N" {
+					m.quitting = true
+					return m, tea.Quit
+				}
+			}
 		}
 
 	case loginSuccessMsg:
@@ -393,7 +418,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.authToken = msg.token
 		m.step = stepListingPicos
 		m.message = successStyle.Render("✓ Logged in as " + m.username)
-		return m, listNetworks
+
+		return m, tea.Batch(
+			listNetworks,
+			tickScan(),
+		)
 
 	case networksFoundMsg:
 		m.networks = []network(msg)
@@ -406,14 +435,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		if len(m.picoNetworks) == 0 {
-			return m, tickScan()
-		} else {
-			m.step = stepSelectingPico
+		// Only update step if we're still in the scanning/selection phase
+		if m.step == stepListingPicos || m.step == stepSelectingPico {
+			if len(m.picoNetworks) == 0 {
+				m.step = stepListingPicos
+			} else {
+				m.step = stepSelectingPico
+			}
 		}
 
 	case scanTickMsg:
-		return m, listNetworks
+		// Only continue scanning if we're still looking for Picos
+		if m.step == stepListingPicos || m.step == stepSelectingPico {
+			return m, tea.Batch(
+				listNetworks,
+				tickScan(),
+			)
+		}
 
 	case connectionSuccessMsg:
 		m.step = stepEnteringSSID
@@ -424,9 +462,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.message = successStyle.Render("✓ Credentials sent!\nPico is connecting...")
 
 	case errMsg:
-		m.message = errorStyle.Render("✗ " + msg.err.Error())
-		m.step = stepListingPicos
-		return m, tea.Tick(2*time.Second, func(time.Time) tea.Msg { return scanTickMsg{} })
+		if m.step == stepLoggingIn {
+			m.step = stepRetryLogin
+			m.message = errorStyle.Render("✗ Login failed. Try again? (y/n)")
+		} else if m.step == stepConnectingToPico {
+			m.step = stepRetryPico
+			m.message = errorStyle.Render("✗ Pico connection failed. Try again? (y/n)")
+		} else {
+			m.message = errorStyle.Render("✗ " + msg.err.Error())
+			m.step = stepListingPicos
+			return m, tea.Batch(
+				listNetworks,
+				tickScan(),
+			)
+		}
 	}
 
 	return m, nil
@@ -454,6 +503,10 @@ func (m model) View() string {
 
 	case stepLoggingIn:
 		s.WriteString(m.message + "\n")
+
+	case stepRetryLogin, stepRetryPico:
+		s.WriteString(m.message + "\n")
+		s.WriteString("\nPress 'y' to retry or 'n' to quit\n")
 
 	case stepListingPicos:
 		if m.message != "" {
