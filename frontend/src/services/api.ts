@@ -261,3 +261,93 @@ export const aiAPI = {
   },
 };
 
+// Analytics API
+export const analyticsAPI = {
+  getHistoricalData: async (locationId: number, days: number = 7) => {
+    return apiRequest<{
+      location_id: number;
+      data: Array<{
+        timestamp: string;
+        temperature: number;
+        humidity: number;
+        precipitation: number;
+        wind_speed: number;
+      }>;
+    }>(`/analytics/historical/${locationId}?days=${days}`);
+  },
+
+  getTrends: async (locationId: number) => {
+    return apiRequest<{
+      location_id: number;
+      trends: {
+        temperature: { trend: string; change: number };
+        humidity: { trend: string; change: number };
+        precipitation: { trend: string; change: number };
+      };
+    }>(`/analytics/trends/${locationId}`);
+  },
+
+  getForecastAccuracy: async (locationId: number) => {
+    return apiRequest<{
+      location_id: number;
+      accuracy: number;
+      metrics: any;
+    }>(`/analytics/forecast-accuracy/${locationId}`);
+  },
+};
+
+// Alerts API
+export const alertsAPI = {
+  getAlerts: async () => {
+    return apiRequest<{
+      alerts: Array<{
+        id: string;
+        location_id: number;
+        location_name: string;
+        type: string;
+        severity: string;
+        title: string;
+        message: string;
+        timestamp: string;
+      }>;
+    }>('/alerts');
+  },
+
+  dismissAlert: async (alertId: string) => {
+    return apiRequest<{ message: string }>(`/alerts/${alertId}/dismiss`, {
+      method: 'POST',
+    });
+  },
+};
+
+// Settings API
+export const settingsAPI = {
+  getSettings: async () => {
+    return apiRequest<{
+      user_id: number;
+      temperature_unit: string;
+      wind_speed_unit: string;
+      precipitation_unit: string;
+      time_format: string;
+      theme: string;
+      notifications_enabled: boolean;
+      alert_types: string[];
+    }>('/settings');
+  },
+
+  updateSettings: async (settings: {
+    temperature_unit?: string;
+    wind_speed_unit?: string;
+    precipitation_unit?: string;
+    time_format?: string;
+    theme?: string;
+    notifications_enabled?: boolean;
+    alert_types?: string[];
+  }) => {
+    return apiRequest<{ message: string }>('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  },
+};
+

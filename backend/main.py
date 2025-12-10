@@ -14,7 +14,7 @@ sys.path.insert(0, parent_dir)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import config
-from routes import auth, locations, weather, devices, images, ai
+from routes import auth, locations, weather, devices, images, ai, alerts, analytics, settings
 
 # FastAPI App
 app = FastAPI(title="HomeNetAI Weather API", version="1.0.0")
@@ -36,6 +36,9 @@ app.include_router(weather.router)
 app.include_router(devices.router)
 app.include_router(images.router)
 app.include_router(ai.router)
+app.include_router(alerts.router)
+app.include_router(analytics.router)
+app.include_router(settings.router)
 
 # Add middleware to log all requests (must be after CORS)
 @app.middleware("http")
