@@ -21,12 +21,11 @@ type incomingMessage struct {
 }
 
 type sensorDataPayload struct {
-	Type           string  `json:"type"`
-	DeviceID       string  `json:"device_id"`
-	DeviceModuleID string  `json:"device_module_id"`
-	Timestamp      string  `json:"timestamp"`
-	Temperature    float64 `json:"temperature"`
-	Humidity       float64 `json:"humidity"`
+	Type           string `json:"type"`
+	DeviceID       string `json:"device_id"`
+	DeviceModuleID string `json:"device_module_id"`
+	Timestamp      string `json:"timestamp"`
+	Data           string `json:"data"` // JSON string containing sensor data
 }
 
 type commandRequest struct {
@@ -107,8 +106,7 @@ func (h *WSHandler) HandleDeviceWS(c *gin.Context) {
 				DeviceID:       payload.DeviceID,
 				DeviceModuleID: payload.DeviceModuleID,
 				Timestamp:      payload.Timestamp,
-				Temperature:    payload.Temperature,
-				Humidity:       payload.Humidity,
+				Data:           payload.Data,
 			}
 			// Always store into cache for batch processing with threshold rules
 			if h.processor != nil {

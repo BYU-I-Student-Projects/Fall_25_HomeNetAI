@@ -35,8 +35,7 @@ func (h *CacheHandler) GetAllCachedData(c *gin.Context) {
 			deviceData = append(deviceData, gin.H{
 				"device_id":        point.Data.DeviceID,
 				"device_module_id": point.Data.DeviceModuleID,
-				"temperature":      point.Data.Temperature,
-				"humidity":         point.Data.Humidity,
+				"data":             point.Data.Data,
 				"timestamp":        point.Data.Timestamp,
 				"cached_at":        point.Timestamp.Format("2006-01-02T15:04:05Z07:00"),
 			})

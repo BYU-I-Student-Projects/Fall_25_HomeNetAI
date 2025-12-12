@@ -127,11 +127,8 @@ func (uc *DeviceUseCase) UpdateDeviceData(data *entities.DeviceData) error {
 		return errors.New("device data not found")
 	}
 
-	if data.Temperature != 0 {
-		existing.Temperature = data.Temperature
-	}
-	if data.Humidity != 0 {
-		existing.Humidity = data.Humidity
+	if data.Data != "" {
+		existing.Data = data.Data
 	}
 	if data.Timestamp != "" {
 		existing.Timestamp = data.Timestamp
