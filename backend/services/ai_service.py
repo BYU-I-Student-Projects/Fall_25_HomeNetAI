@@ -216,51 +216,64 @@ Always provide accurate information based on the user's data when available."""
             if context.get("current_weather"):
                 weather = context["current_weather"]
                 
-                # Temperature insights
+                # Temperature insights (data is in Fahrenheit)
                 temp = weather.get("temperature", 0)
-                if temp > 30:
-                    insights.append({
-                        "type": "warning",
-                        "title": "High Temperature Alert",
-                        "message": f"Temperature is {temp}°C. Consider staying hydrated and using cooling systems."
-                    })
-                elif temp < 0:
-                    insights.append({
-                        "type": "warning",
-                        "title": "Freezing Temperature Alert",
-                        "message": f"Temperature is {temp}°C. Protect pipes and ensure heating is adequate."
-                    })
+                if temp is not None:
+                    if temp > 95:  # ~35°C - Hot weather alert
+                        insights.append({
+                            "type": "warning",
+                            "title": "High Temperature Alert",
+                            "message": f"Temperature is {temp:.0f}°F. Consider staying hydrated and using cooling systems."
+                        })
+                    elif temp < 32:  # 0°C - Freezing
+                        insights.append({
+                            "type": "warning",
+                            "title": "Freezing Temperature Alert",
+                            "message": f"Temperature is {temp:.0f}°F. Protect pipes and ensure heating is adequate."
+                        })
+                    elif temp < 50:  # ~10°C - Cold weather
+                        insights.append({
+                            "type": "info",
+                            "title": "Cold Weather",
+                            "message": f"Temperature is {temp:.0f}°F. Dress warmly if going outside."
+                        })
                 
                 # Weather condition insights
                 weather_code = weather.get("weather_code", 0)
-                if weather_code >= 61:  # Rain or worse
+                if weather_code is not None and weather_code >= 61:  # Rain or worse
                     insights.append({
                         "type": "info",
                         "title": "Rain Expected",
                         "message": "Don't forget your umbrella! Rain is in the forecast."
                     })
                 
-                # Wind insights
+                # Wind insights (data is in mph)
                 wind_speed = weather.get("wind_speed", 0)
-                if wind_speed > 50:
+                if wind_speed is not None and wind_speed > 30:  # ~50 km/h
                     insights.append({
                         "type": "warning",
                         "title": "High Wind Alert",
-                        "message": f"Wind speed is {wind_speed} km/h. Secure outdoor items and be cautious."
+                        "message": f"Wind speed is {wind_speed:.0f} mph. Secure outdoor items and be cautious."
                     })
             
-            # Energy saving opportunities
+            # Energy saving opportunities (temp_max is in Fahrenheit)
             if context.get("forecast"):
                 forecast = context["forecast"]
                 if len(forecast) > 0:
                     tomorrow = forecast[0]
-                    temp_max = tomorrow.get("temp_max", 20)
+                    temp_max = tomorrow.get("temp_max")
                     
-                    if temp_max > 25:
+                    if temp_max is not None and temp_max > 80:  # ~27°C - warm day
                         insights.append({
                             "type": "tip",
                             "title": "Energy Saving Tip",
-                            "message": "Tomorrow will be warm. Consider pre-cooling your home during off-peak hours."
+                            "message": f"Tomorrow will be warm ({temp_max:.0f}°F). Consider pre-cooling your home during off-peak hours."
+                        })
+                    elif temp_max is not None and temp_max < 40:  # ~4°C - cold day
+                        insights.append({
+                            "type": "tip", 
+                            "title": "Heating Tip",
+                            "message": f"Tomorrow will be cold ({temp_max:.0f}°F). Consider programming your thermostat to save energy."
                         })
             
             # Add a general insight if no specific insights

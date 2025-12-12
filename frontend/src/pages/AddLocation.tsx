@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 
 const AddLocation = () => {
   return (
-    <div className="h-screen bg-gray-100 overflow-hidden flex flex-col relative" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="min-h-screen bg-gray-100 flex flex-col relative">
       {/* Fixed Header Bar */}
       <div className="fixed top-0 left-0 right-0 h-20 bg-gray-100 z-50 flex items-center" style={{ position: 'fixed', zIndex: 50 }}>
         {/* HomeNetAI - Top left */}
@@ -51,7 +51,7 @@ const AddLocation = () => {
         </div>
       </div>
       
-      <div className="flex-1 overflow-hidden flex flex-col pt-20 pb-6 px-6" style={{ height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
+      <div className="flex-1 overflow-auto flex flex-col pt-20 pb-6 px-6">
         {/* Page content goes here */}
       </div>
     </div>

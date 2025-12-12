@@ -390,11 +390,8 @@ const TemperatureTrendChart = ({ data, locationIndex }: TemperatureTrendChartPro
     );
   }
   
-  // Convert temperatures to Fahrenheit
-  const tempData: TemperatureDataPoint[] = data.map(d => ({
-    ...d,
-    temperature: celsiusToFahrenheit(d.temperature),
-  }));
+  // Data is already in Fahrenheit from API
+  const tempData: TemperatureDataPoint[] = data;
 
   // Use responsive dimensions - even padding on all sides
   const padding = { top: 20, right: 20, bottom: 20, left: 35 };
@@ -885,7 +882,7 @@ const WeatherMetricsCard = ({ weather, locationName }: WeatherMetricsCardProps) 
         <div className="grid grid-cols-2 gap-2.5 flex-1 items-center justify-items-center px-1 min-h-0">
           {/* Temperature Gauge */}
           <Gauge
-            value={temp ? celsiusToFahrenheit(temp) : undefined}
+            value={temp}
             max={120}
             label="Temperature"
             unit="°F"
@@ -1324,8 +1321,8 @@ const Dashboard = () => {
         noonDate.setHours(12, 0, 0, 0);
         return {
           icon: getWeatherEmoji(weatherCode, noonDate),
-          high: Math.round(celsiusToFahrenheit(currentWeather.daily_forecast.temperature_2m_max[idx])),
-          low: Math.round(celsiusToFahrenheit(currentWeather.daily_forecast.temperature_2m_min[idx])),
+          high: Math.round(currentWeather.daily_forecast.temperature_2m_max[idx]),
+          low: Math.round(currentWeather.daily_forecast.temperature_2m_min[idx]),
           date: format(date, 'd MMM'),
           day: dayShort,
         };
@@ -1333,10 +1330,10 @@ const Dashboard = () => {
     : [];
 
   return (
-    <div className="h-screen bg-gray-100 overflow-hidden flex flex-col relative" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="min-h-screen bg-gray-100 flex flex-col relative">
       <PageHeader title="Overview Dashboard" />
       
-      <div className="flex-1 overflow-hidden flex flex-col pt-20 px-6" style={{ height: 'calc(100vh - 80px)' }}>
+      <div className="flex-1 overflow-auto flex flex-col pt-20 px-6 pb-6">
       {/* Top Header Row - Date/Time/Location | Chat */}
       <div className="mb-4 flex-shrink-0">
         <div className="flex w-full h-[80px] items-center justify-between gap-6">
@@ -1409,7 +1406,7 @@ const Dashboard = () => {
               <div className="mt-2">
                 {/* Temperature Text */}
                 <div className="text-[42px] font-bold text-black leading-none">
-                  {displayWeather ? `${Math.round(celsiusToFahrenheit(displayWeather.temperature))}°F` : "--°F"}
+                  {displayWeather ? `${Math.round(displayWeather.temperature)}°F` : "--°F"}
                 </div>
                 
                 {/* Condition Row */}
@@ -1452,7 +1449,7 @@ const Dashboard = () => {
             <CardContent className="p-5 flex flex-col flex-1">
                 <WindChart 
                 windData={windData} 
-                currentTempF={displayWeather ? celsiusToFahrenheit(displayWeather.temperature) : undefined}
+                currentTempF={displayWeather?.temperature}
                 currentWindSpeed={displayWeather?.windspeed}
                 locationIndex={currentLocationIndex}
               />
