@@ -14,7 +14,7 @@ sys.path.insert(0, parent_dir)
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from config import config
-from routes import auth, locations, weather, devices, images, ai, alerts, analytics, settings
+from routes import auth, locations, weather, devices, images, ai, alerts, analytics, settings, pico, pico_proxy
 from auth.helpers import verify_token
 
 # FastAPI App
@@ -40,6 +40,8 @@ app.include_router(ai.router)
 app.include_router(alerts.router)
 app.include_router(analytics.router)
 app.include_router(settings.router)
+app.include_router(pico.router)
+app.include_router(pico_proxy.router)
 
 # Add middleware to log all requests (must be after CORS)
 @app.middleware("http")
