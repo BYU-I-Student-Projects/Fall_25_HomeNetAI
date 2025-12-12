@@ -1,237 +1,216 @@
-# HomeNetAI - Smart Home Weather Dashboard
+# HomeNetAI
 
-A full-stack smart home dashboard with weather monitoring, device management, and AI insights.
+A smart home dashboard that combines real-time weather monitoring, intelligent device management, and AI-powered insights. HomeNetAI provides users with weather data for multiple locations, smart home device control, and personalized recommendations through a web interface.
 
-## What You Need First
+## Overview
 
-Before you start, you need:
-1. **PostgreSQL** - Database (see [Database Setup Guide](docs/DATABASE_SETUP.md))
-2. **Python** 3.8+ - For the backend
-3. **Node.js** 18+ - For the frontend
+HomeNetAI is a web application designed to centralize smart home management and weather monitoring in one seamless platform. Users can register accounts, add multiple geographic locations to track weather conditions, manage smart home devices, and receive AI-generated insights based on their data.
+
+### Key Features
+
+- **Multi-Location Weather Tracking**: Search and add any city worldwide with real-time weather updates and 7-day forecasts
+- **User Authentication**: Secure registration and login system with JWT token-based authentication
+- **Smart Device Management**: Add, configure, and control various smart home devices (lights, thermostats, sensors)
+- **AI-Powered Insights**: Integration with Google Gemini AI for personalized weather and device recommendations
+- **Interactive Dashboard**: Clean, modern interface with weather cards, device controls, and data visualizations
+- **Automated Data Collection**: Background scheduler that collects weather data every 30 minutes for historical analysis
+- **Image Management**: Upload and store device images for better visual organization
+- **Responsive Design**: Mobile-friendly interface built with Tailwind CSS and Radix UI components
+
+### How to Use
+
+1. **Register an Account**: Create your account on the registration page with username, email, and password
+2. **Add Locations**: Search for cities worldwide and add them to track weather conditions
+3. **Manage Devices**: Add your smart home devices (thermostats, lights, sensors) with custom configurations
+4. **View Dashboard**: Monitor all your locations and devices from a centralized dashboard
+5. **Explore AI Insights**: Get personalized recommendations based on weather patterns and device usage
+6. **Check Weather Details**: View detailed forecasts, temperature trends, and weather alerts
+
+
+## Development Environment
+
+### Tools & Technologies
+
+**Backend Development**
+- **FastAPI** - Modern Python web framework for building REST APIs
+- **PostgreSQL** - Robust relational database for data persistence
+- **Uvicorn** - Lightning-fast ASGI server for running the FastAPI application
+- **DBeaver/pgAdmin** - Database management and visualization tools
+
+**Frontend Development**
+- **Vite** - Next-generation frontend build tool for fast development
+- **React Developer Tools** - Browser extension for debugging React components
+- **VS Code** - Primary code editor with extensions for Python, TypeScript, and React
+
+**Version Control & Collaboration**
+- **Git** - Distributed version control system
+- **GitHub** - Code hosting and collaboration platform
+- **GitHub Actions** - CI/CD automation (planned for future deployment)
+
+### Programming Languages & Libraries
+
+**Backend (Python 3.8+)**
+- `fastapi` (0.104.1) - Web framework and API routing
+- `uvicorn` (0.24.0) - ASGI server implementation
+- `psycopg2-binary` (2.9.10) - PostgreSQL database adapter
+- `python-jose` (3.3.0) - JWT token creation and verification
+- `pyJWT` (2.10.1) - JSON Web Token implementation
+- `google-generativeai` (0.3.1+) - Google Gemini AI integration
+- `requests` (2.32.5) - HTTP library for external API calls
+- `aiohttp` (3.9.1) - Async HTTP client/server framework
+- `python-dotenv` (1.0.0) - Environment variable management
+
+**Frontend (TypeScript + React 18)**
+- `react` (18.3.1) - UI library for building component-based interfaces
+- `react-router-dom` (6.30.1) - Client-side routing
+- `axios` - HTTP client for API communication (via api.ts service layer)
+- `@tanstack/react-query` (5.83.0) - Server state management and caching
+- `@radix-ui/*` - Accessible UI component primitives (30+ components)
+- `tailwindcss` - Utility-first CSS framework
+- `lucide-react` (0.462.0) - Icon library with 1000+ icons
+- `recharts` (2.15.4) - Composable charting library for data visualization
+- `react-hook-form` (7.61.1) - Form validation and management
+- `date-fns` (3.6.0) - Date utility library
+- `sonner` (1.7.4) - Toast notification system
+
+**External APIs**
+- **Open-Meteo API** - Free weather data and geocoding services
+- **Google Gemini API** - AI model for generating insights and recommendations
 
 ## Quick Start
 
-### Step 1: Install PostgreSQL and Create Database
+### Prerequisites
+- PostgreSQL 12+
+- Python 3.8+
+- Node.js 18+
 
-**Follow the complete guide:** [Database Setup Guide](docs/DATABASE_SETUP.md)
+### Installation
 
-Quick version:
-1. Install PostgreSQL from https://www.postgresql.org/download/
-2. Create a database named `homenet`
-3. Update your password in `config.py`
-
-### Step 2: Install Backend Dependencies
-
-### Setup
 ```bash
-# Navigate to project folder
+# Clone repository
+git clone https://github.com/BYU-I-Student-Projects/Fall_25_HomeNetAI.git
 cd Fall_25_HomeNetAI
 
-# Install Python packages
+# Create PostgreSQL database
+createdb homenet
+
+# Install Python dependencies
 pip install -r requirements.txt
-```
 
-### Step 3: Configure Database
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
 
-1. Open `config.py`
-2. Change this line with your PostgreSQL password:
-   ```python
-   DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:YOUR_PASSWORD@localhost/homenet")
-   ```
+# Configure database (edit config.py with your PostgreSQL password)
+# DATABASE_URL: str = "postgresql://postgres:YOUR_PASSWORD@localhost/homenet"
 
-### Step 4: Start Backend
-
-```bash
+# Start backend
 cd backend
 python start_backend.py
 
-Backend will run at: **http://localhost:8000**
-- API Docs: http://localhost:8000/docs
-
-### Step 5: Start Frontend
-
-Open a **new terminal window**:
-
-```bash
+# Start frontend (in new terminal)
 cd frontend
-npm install
 npm run dev
 ```
 
-Frontend will run at: **http://localhost:8080**
-
-## Raspberry Pi Pico Setup
-
-### Prerequisites
-- Raspberry Pi Pico W (with WiFi)
-- USB cable
-- `pico-setup.exe` tool (from TeamProject/iot-device/cmd/pico-setup)
-
-### Step-by-Step Pico Setup
-
-1. **Run the Pico Setup Tool**
-   ```bash
-   # Navigate to pico-setup directory
-   cd ./pico-pi/cmd/pico-setup
-   
-   # Run the executable
-   ./pico-setup.exe
-   ```
-
-2. **Login with Your Credentials**
-   - Enter your HomeNetAI username
-   - Enter your password
-   - The tool will authenticate against the cloud Pico API
-
-3. **Connect Your Pico Device**
-   - Pico will broadcast an Access Point (AP)
-   - Connect to the Pico's WiFi network from your computer
-   - The setup tool will send:
-     - Your WiFi credentials (SSID and password)
-     - Your user ID
-
-4. **Automatic Device Registration**
-   - Pico receives credentials and restarts
-   - Connects to your WiFi network
-   - Automatically registers itself with the Pico API
-   - Registers its sensor modules (thermostat, weather sensors)
-   - Starts sending sensor data every 5 seconds
-
-5. **View Your Pico Devices**
-   - Go to http://localhost:8080/pico-devices
-   - Your registered Pico devices will appear automatically
-   - Each device shows:
-     - Device name and ID
-     - Creation and last update timestamps
-     - Send Command button
-     - Get Last Reading button (⚡)
-     - WiFi Change button (at the top)
-
-### Using Pico Devices on the Dashboard
-
-**Send Commands:**
-- Click "Send Command" on any device
-- Available commands:
-  - `BLINK_PICO1` - Blink the onboard LED (configurable repetitions and timing)
-  - Custom commands can be added
-
-**Change WiFi Settings:**
-- Click "Change WiFi" button at the top
-- Enter new SSID and password
-- Command is sent to all Pico devices
-- Devices will restart and connect to the new network
-
-**View Sensor Readings:**
-- Click the ⚡ (lightning) button on any device
-- Latest sensor data displays below the device card:
-  - Temperature (°F)
-  - Humidity (%)
-  - Pressure (hPa)
-  - Last reading timestamp
-
-### Pico Device Architecture
-
-```
-User → pico-setup.exe → Login (Cloud Pico API)
-                      ↓
-       Pico Device ← WiFi Credentials + User ID
-                      ↓
-       Connect to WiFi → Register Device (Cloud API)
-                      ↓
-       Register Modules → Start Sending Data
-                      ↓
-Dashboard ← Fetch Devices by user_id ← Cloud Pico API
-       ↓
-Send Commands / View Readings
-```
-
-**Cloud Pico API:** https://iot-picopi-module.onrender.com/api/v1
-
-## Features
-
-- ✅ **User Authentication** - Register and login
-- ✅ **Location Management** - Add and manage weather locations
-- ✅ **Real-Time Weather** - Current weather and forecasts
-- ✅ **Smart Home Devices** - Add and control smart devices
-- ✅ **Raspberry Pi Pico Integration** - Connect and manage Pico devices
-- ✅ **Device Commands** - Send commands to Pico devices (blink LED, change WiFi)
-- ✅ **Sensor Readings** - View real-time temperature, humidity, and pressure data
-- ✅ **Weather Scheduler** - Automatic weather data collection
+Access the application at `http://localhost:5173` (frontend) and `http://localhost:8000` (backend API).
 
 ## Project Structure
 
 ```
 Fall_25_HomeNetAI/
-├── backend/              # Python FastAPI backend
-│   ├── main.py          # Main API server
-│   ├── start_backend.py # Start script
-│   ├── routes/          # API endpoints
-│   ├── database/        # Database setup
-│   └── weather/         # Weather API integration
-├── frontend/            # React TypeScript frontend
+├── backend/
+│   ├── main.py              # FastAPI application and route registration
+│   ├── start_backend.py     # Backend startup script
+│   ├── config.py            # Configuration and environment variables
+│   ├── routes/              # API endpoint modules
+│   │   ├── auth.py          # Authentication endpoints
+│   │   ├── locations.py     # Location management
+│   │   ├── weather.py       # Weather data endpoints
+│   │   ├── devices.py       # Smart device CRUD operations
+│   │   ├── images.py        # Image upload and retrieval
+│   │   └── ai.py            # AI insights generation
+│   ├── database/
+│   │   ├── database.py      # Database connection and queries
+│   │   └── schema.sql       # PostgreSQL schema definitions
+│   └── weather/
+│       ├── weather_api.py   # Open-Meteo API integration
+│       └── scheduler.py     # Background weather data collection
+├── frontend/
 │   ├── src/
-│   │   ├── pages/       # Page components
-│   │   ├── components/ # UI components
-│   │   └── services/    # API services
-│   └── package.json
-├── docs/                # Documentation
-└── config.py           # Configuration file
+│   │   ├── App.tsx          # Root component and routing
+│   │   ├── main.tsx         # Application entry point
+│   │   ├── pages/           # Page components
+│   │   │   ├── Login.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Locations.tsx
+│   │   │   ├── AddLocation.tsx
+│   │   │   └── SmartHome.tsx
+│   │   ├── components/      # Reusable UI components
+│   │   │   └── ui/          # Radix UI component wrappers
+│   │   ├── services/
+│   │   │   └── api.ts       # Axios API client
+│   │   └── contexts/
+│   │       └── AuthContext.tsx  # Authentication state management
+│   ├── package.json
+│   └── vite.config.ts
+├── docs/                    # Project documentation
+└── requirements.txt         # Python dependencies
 ```
 
-## API Endpoints
+## Collaborators
 
-### Authentication
-- `POST /auth/register` - Create account
-- `POST /auth/login` - Login
-- `GET /auth/me` - Get current user
+- Ethan
+- Josh
+- Moroni
+- Nathan
+- Tyler Burdett
 
-### Locations
-- `GET /locations/search?query={city}` - Search cities
-- `GET /locations` - Get your locations
-- `POST /locations` - Add location
-- `DELETE /locations/{id}` - Delete location
+## Useful Websites
 
-### Weather
-- `GET /weather/{location_id}` - Get weather data
+- [FastAPI Documentation](https://fastapi.tiangolo.com/) - Comprehensive guide for building APIs with FastAPI
+- [React Documentation](https://react.dev/) - Official React documentation and tutorials
+- [Tailwind CSS](https://tailwindcss.com/docs) - Utility-first CSS framework documentation
+- [PostgreSQL Tutorial](https://www.postgresql.org/docs/) - Official PostgreSQL documentation
+- [Open-Meteo API](https://open-meteo.com/en/docs) - Free weather API documentation
+- [Radix UI](https://www.radix-ui.com/) - Accessible component library documentation
+- [Vite Guide](https://vitejs.dev/guide/) - Vite build tool documentation
+- [Google AI Studio](https://ai.google.dev/) - Google Gemini API documentation and playground
+- [JWT.io](https://jwt.io/) - JSON Web Token introduction and debugger
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/) - TypeScript language reference
 
-### Devices
-- `GET /devices` - Get your devices
-- `POST /devices` - Add device
-- `PUT /devices/{id}` - Update device
-- `DELETE /devices/{id}` - Delete device
+## Future Work
 
-### Pico Devices (via Proxy)
-- `GET /proxy/pico/users/{user_id}/device-modules` - Get all Pico devices
-- `POST /proxy/pico/commands` - Send command to Pico device
-- `GET /proxy/pico/device-modules/{module_id}/latest` - Get latest sensor reading
+**Core Features**
+- Add real-time weather alerts and push notifications for severe weather conditions
+- Implement device automation rules (e.g., "turn on lights when sunset" or "adjust thermostat based on weather")
+- Create historical weather data analytics with trend visualization and predictions
+- Develop mobile applications for iOS and Android using React Native
 
-## Troubleshooting
+**AI Enhancements**
+- Expand AI insights to provide energy-saving recommendations based on device usage patterns
+- Implement natural language chat interface for controlling devices via voice/text commands
+- Add predictive maintenance alerts for devices based on usage data
 
-### Backend won't start
-- Check PostgreSQL is running
-- Verify database `homenet` exists
-- Check password in `config.py` is correct
-- See [Database Setup Guide](docs/DATABASE_SETUP.md) for details
+**Smart Home Integration**
+- Integrate with popular smart home platforms (Google Home, Amazon Alexa, Apple HomeKit)
+- Add support for Raspberry Pi Pico W for DIY device integration
+- Implement device grouping and scene management (e.g., "Movie Mode", "Away Mode")
+- Add support for more device types (security cameras, door locks, garage doors)
 
-### Frontend won't start
-- Run `npm install` in the frontend folder
-- Make sure Node.js is installed
+**User Experience**
+- Implement dark mode theme toggle throughout the application
+- Add customizable dashboard layouts with drag-and-drop widgets
+- Create shareable weather reports and device status summaries
+- Implement user preferences for temperature units (Celsius/Fahrenheit) and measurement systems
 
-### "Cannot connect to backend"
-- Make sure backend is running (Step 4)
-- Check backend is at http://localhost:8000
-
-## Documentation
-
-- **[Database Setup Guide](docs/DATABASE_SETUP.md)** - Complete step-by-step database setup
-- **[Quick Commands](docs/QUICK_COMMANDS.md)** - Common commands reference
-- **[Next Steps](docs/NEXT_STEPS.md)** - What to work on next
-- **[Project Plan](docs/GroupProjectPlan.md)** - Project overview
-
-## Team
-
-CSE 310 - Fall 2025 Group Project
-
----
-
-**Need help?** Check the [Database Setup Guide](docs/DATABASE_SETUP.md) for detailed step-by-step instructions.
+**Technical Improvements**
+- Add comprehensive unit and integration testing (pytest for backend, Jest for frontend)
+- Implement CI/CD pipeline with GitHub Actions for automated testing and deployment
+- Add Docker containerization for easier deployment and development setup
+- Implement real-time updates using WebSockets for live device status changes
+- Optimize database queries with indexing and caching strategies
+- Add API rate limiting and enhanced security measures
+- Implement data backup and recovery mechanisms
