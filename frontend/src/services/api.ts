@@ -30,8 +30,8 @@ const apiRequest = async <T>(
   }
 
   try {
-    console.log(`[API] Making request to: ${API_BASE_URL}${endpoint}`);
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    console.log(`[API] Making request to: ${BASE_URL}${endpoint}`);
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
       headers,
     });
@@ -107,7 +107,7 @@ export const authAPI = {
 export const imagesAPI = {
   getLocationImage: (locationName: string): string => {
     // Use backend proxy to avoid CORS issues
-    return `${API_BASE_URL}/images/location/${encodeURIComponent(locationName)}`;
+    return `${BASE_URL}/images/location/${encodeURIComponent(locationName)}`;
   },
 };
 
