@@ -1,216 +1,200 @@
-# HomeNetAI
+# Overview
 
-A smart home dashboard that combines real-time weather monitoring, intelligent device management, and AI-powered insights. HomeNetAI provides users with weather data for multiple locations, smart home device control, and personalized recommendations through a web interface.
+HomeNetAI is a full-stack smart home dashboard that combines real-time weather monitoring, smart device management, Raspberry Pi Pico IoT integration, and AI insights into a unified platform.
 
-## Overview
+**What HomeNetAI Does:**
+- **Monitor Weather** - Track real-time weather data and forecasts for multiple locations
+- **Control Smart Devices** - Manage thermostats, lights, sensors, and other smart home devices
+- **Connect IoT Hardware** - Integrate Raspberry Pi Pico devices for real sensor data (temperature, humidity, pressure)
+- **Get AI Insights** - Chat with an AI assistant powered by Google Gemini that understands your home's data
+- **Analyze Trends** - View ML-powered analytics with trend detection and anomaly alerts
 
-HomeNetAI is a web application designed to centralize smart home management and weather monitoring in one seamless platform. Users can register accounts, add multiple geographic locations to track weather conditions, manage smart home devices, and receive AI-generated insights based on their data.
+## How to Use
 
-### Key Features
+### Quick Start
 
-- **Multi-Location Weather Tracking**: Search and add any city worldwide with real-time weather updates and 7-day forecasts
-- **User Authentication**: Secure registration and login system with JWT token-based authentication
-- **Smart Device Management**: Add, configure, and control various smart home devices (lights, thermostats, sensors)
-- **AI-Powered Insights**: Integration with Google Gemini AI for personalized weather and device recommendations
-- **Interactive Dashboard**: Clean, modern interface with weather cards, device controls, and data visualizations
-- **Automated Data Collection**: Background scheduler that collects weather data every 30 minutes for historical analysis
-- **Image Management**: Upload and store device images for better visual organization
-- **Responsive Design**: Mobile-friendly interface built with Tailwind CSS and Radix UI components
+1. **Install Prerequisites**
+   - PostgreSQL database
+   - Python 3.8+
+   - Node.js 18+
 
-### How to Use
+2. **Setup Backend**
+   ```bash
+   cd Fall_25_HomeNetAI
+   pip install -r requirements.txt
+   cd backend
+   python start_backend.py
+   ```
+   Backend runs at: http://localhost:8000
 
-1. **Register an Account**: Create your account on the registration page with username, email, and password
-2. **Add Locations**: Search for cities worldwide and add them to track weather conditions
-3. **Manage Devices**: Add your smart home devices (thermostats, lights, sensors) with custom configurations
-4. **View Dashboard**: Monitor all your locations and devices from a centralized dashboard
-5. **Explore AI Insights**: Get personalized recommendations based on weather patterns and device usage
-6. **Check Weather Details**: View detailed forecasts, temperature trends, and weather alerts
+3. **Setup Frontend**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   Frontend runs at: http://localhost:8080
 
+### Raspberry Pi Pico Setup
 
-## Development Environment
+**Prerequisites:**
+- Raspberry Pi Pico W (with WiFi)
+- USB cable
+- `pico-setup.exe` tool (from `pico-pi/cmd/pico-setup`)
 
-### Tools & Technologies
+**Step-by-Step Setup:**
 
-**Backend Development**
-- **FastAPI** - Modern Python web framework for building REST APIs
-- **PostgreSQL** - Robust relational database for data persistence
-- **Uvicorn** - Lightning-fast ASGI server for running the FastAPI application
-- **DBeaver/pgAdmin** - Database management and visualization tools
+1. **Run the Pico Setup Tool**
+   ```bash
+   cd ./pico-pi/cmd/pico-setup
+   ./pico-setup.exe
+   ```
 
-**Frontend Development**
-- **Vite** - Next-generation frontend build tool for fast development
-- **React Developer Tools** - Browser extension for debugging React components
-- **VS Code** - Primary code editor with extensions for Python, TypeScript, and React
+2. **Login with Your Credentials**
+   - Enter your HomeNetAI username and password
+   - The tool authenticates against the cloud Pico API
 
-**Version Control & Collaboration**
-- **Git** - Distributed version control system
-- **GitHub** - Code hosting and collaboration platform
-- **GitHub Actions** - CI/CD automation (planned for future deployment)
+3. **Connect Your Pico Device**
+   - Pico broadcasts an Access Point (AP)
+   - Connect to the Pico's WiFi network from your computer
+   - The setup tool sends your WiFi credentials and user ID
 
-### Programming Languages & Libraries
+4. **Automatic Device Registration**
+   - Pico receives credentials and restarts
+   - Connects to your WiFi network
+   - Automatically registers with the Pico API
+   - Registers sensor modules (thermostat, weather sensors)
+   - Starts sending sensor data every 5 seconds
 
-**Backend (Python 3.8+)**
-- `fastapi` (0.104.1) - Web framework and API routing
-- `uvicorn` (0.24.0) - ASGI server implementation
-- `psycopg2-binary` (2.9.10) - PostgreSQL database adapter
-- `python-jose` (3.3.0) - JWT token creation and verification
-- `pyJWT` (2.10.1) - JSON Web Token implementation
-- `google-generativeai` (0.3.1+) - Google Gemini AI integration
-- `requests` (2.32.5) - HTTP library for external API calls
-- `aiohttp` (3.9.1) - Async HTTP client/server framework
-- `python-dotenv` (1.0.0) - Environment variable management
+5. **View Your Pico Devices**
+   - Navigate to http://localhost:8080/pico-devices
+   - Your registered Pico devices appear automatically
 
-**Frontend (TypeScript + React 18)**
-- `react` (18.3.1) - UI library for building component-based interfaces
-- `react-router-dom` (6.30.1) - Client-side routing
-- `axios` - HTTP client for API communication (via api.ts service layer)
-- `@tanstack/react-query` (5.83.0) - Server state management and caching
-- `@radix-ui/*` - Accessible UI component primitives (30+ components)
-- `tailwindcss` - Utility-first CSS framework
-- `lucide-react` (0.462.0) - Icon library with 1000+ icons
-- `recharts` (2.15.4) - Composable charting library for data visualization
-- `react-hook-form` (7.61.1) - Form validation and management
-- `date-fns` (3.6.0) - Date utility library
-- `sonner` (1.7.4) - Toast notification system
+**Using Pico Devices:**
+- **Send Commands** - Click "Send Command" to run `BLINK_PICO1` (blinks onboard LED)
+- **Change WiFi** - Click "Change WiFi" to update network settings for all devices
+- **View Readings** - Click ⚡ to see temperature, humidity, and pressure data
 
-**External APIs**
-- **Open-Meteo API** - Free weather data and geocoding services
-- **Google Gemini API** - AI model for generating insights and recommendations
-
-## Quick Start
-
-### Prerequisites
-- PostgreSQL 12+
-- Python 3.8+
-- Node.js 18+
-
-### Installation
-
-```bash
-# Clone repository
-git clone https://github.com/BYU-I-Student-Projects/Fall_25_HomeNetAI.git
-cd Fall_25_HomeNetAI
-
-# Create PostgreSQL database
-createdb homenet
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Install frontend dependencies
-cd frontend
-npm install
-cd ..
-
-# Configure database (edit config.py with your PostgreSQL password)
-# DATABASE_URL: str = "postgresql://postgres:YOUR_PASSWORD@localhost/homenet"
-
-# Start backend
-cd backend
-python start_backend.py
-
-# Start frontend (in new terminal)
-cd frontend
-npm run dev
+**Pico Architecture:**
+```
+User → pico-setup.exe → Login (Cloud Pico API)
+                      ↓
+       Pico Device ← WiFi Credentials + User ID
+                      ↓
+       Connect to WiFi → Register Device (Cloud API)
+                      ↓
+       Register Modules → Start Sending Data
+                      ↓
+Dashboard ← Fetch Devices by user_id ← Cloud Pico API
 ```
 
-Access the application at `http://localhost:5173` (frontend) and `http://localhost:8000` (backend API).
+**Cloud Pico API:** https://iot-picopi-module.onrender.com/api/v1
 
-## Project Structure
+### Features
 
-```
-Fall_25_HomeNetAI/
-├── backend/
-│   ├── main.py              # FastAPI application and route registration
-│   ├── start_backend.py     # Backend startup script
-│   ├── config.py            # Configuration and environment variables
-│   ├── routes/              # API endpoint modules
-│   │   ├── auth.py          # Authentication endpoints
-│   │   ├── locations.py     # Location management
-│   │   ├── weather.py       # Weather data endpoints
-│   │   ├── devices.py       # Smart device CRUD operations
-│   │   ├── images.py        # Image upload and retrieval
-│   │   └── ai.py            # AI insights generation
-│   ├── database/
-│   │   ├── database.py      # Database connection and queries
-│   │   └── schema.sql       # PostgreSQL schema definitions
-│   └── weather/
-│       ├── weather_api.py   # Open-Meteo API integration
-│       └── scheduler.py     # Background weather data collection
-├── frontend/
-│   ├── src/
-│   │   ├── App.tsx          # Root component and routing
-│   │   ├── main.tsx         # Application entry point
-│   │   ├── pages/           # Page components
-│   │   │   ├── Login.tsx
-│   │   │   ├── Register.tsx
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── Locations.tsx
-│   │   │   ├── AddLocation.tsx
-│   │   │   └── SmartHome.tsx
-│   │   ├── components/      # Reusable UI components
-│   │   │   └── ui/          # Radix UI component wrappers
-│   │   ├── services/
-│   │   │   └── api.ts       # Axios API client
-│   │   └── contexts/
-│   │       └── AuthContext.tsx  # Authentication state management
-│   ├── package.json
-│   └── vite.config.ts
-├── docs/                    # Project documentation
-└── requirements.txt         # Python dependencies
-```
+- **User Authentication** - Register and login with JWT tokens
+- **Location Management** - Add and manage weather locations
+- **Real-Time Weather** - Current weather and 7-day forecasts
+- **Smart Home Devices** - Add and control smart devices
+- **Raspberry Pi Pico Integration** - Connect and manage Pico devices
+- **Device Commands** - Send commands to Pico devices (blink LED, change WiFi)
+- **Sensor Readings** - View real-time temperature, humidity, and pressure data
+- **AI Chatbot** - Context-aware AI assistant using Google Gemini
+- **ML Analytics** - Trend analysis and anomaly detection with scikit-learn
+- **Weather Scheduler** - Automatic weather data collection
 
-## Collaborators
+### API Endpoints
 
-- Ethan
-- Josh
-- Moroni
-- Nathan
-- Tyler Burdett
+**Authentication:**
+- `POST /auth/register` - Create account
+- `POST /auth/login` - Login
+- `GET /auth/me` - Get current user
 
-## Useful Websites
+**Locations:**
+- `GET /locations/search?query={city}` - Search cities
+- `GET /locations` - Get your locations
+- `POST /locations` - Add location
+- `DELETE /locations/{id}` - Delete location
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/) - Comprehensive guide for building APIs with FastAPI
-- [React Documentation](https://react.dev/) - Official React documentation and tutorials
-- [Tailwind CSS](https://tailwindcss.com/docs) - Utility-first CSS framework documentation
-- [PostgreSQL Tutorial](https://www.postgresql.org/docs/) - Official PostgreSQL documentation
-- [Open-Meteo API](https://open-meteo.com/en/docs) - Free weather API documentation
-- [Radix UI](https://www.radix-ui.com/) - Accessible component library documentation
-- [Vite Guide](https://vitejs.dev/guide/) - Vite build tool documentation
-- [Google AI Studio](https://ai.google.dev/) - Google Gemini API documentation and playground
-- [JWT.io](https://jwt.io/) - JSON Web Token introduction and debugger
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/) - TypeScript language reference
+**Weather:**
+- `GET /weather/{location_id}` - Get weather data
 
-## Future Work
+**Devices:**
+- `GET /devices` - Get your devices
+- `POST /devices` - Add device
+- `PUT /devices/{id}` - Update device
+- `DELETE /devices/{id}` - Delete device
 
-**Core Features**
-- Add real-time weather alerts and push notifications for severe weather conditions
-- Implement device automation rules (e.g., "turn on lights when sunset" or "adjust thermostat based on weather")
-- Create historical weather data analytics with trend visualization and predictions
-- Develop mobile applications for iOS and Android using React Native
+**Pico Devices (via Proxy):**
+- `GET /proxy/pico/users/{user_id}/device-modules` - Get all Pico devices
+- `POST /proxy/pico/commands` - Send command to Pico device
+- `GET /proxy/pico/device-modules/{module_id}/latest` - Get latest sensor reading
 
-**AI Enhancements**
-- Expand AI insights to provide energy-saving recommendations based on device usage patterns
-- Implement natural language chat interface for controlling devices via voice/text commands
-- Add predictive maintenance alerts for devices based on usage data
+**AI & Analytics:**
+- `POST /ai/chat` - Chat with AI assistant
+- `GET /ai/insights` - Get AI-generated insights
+- `GET /analytics/trends/{location_id}` - Get trend analysis
+- `GET /analytics/anomalies/{location_id}` - Get anomaly detection
 
-**Smart Home Integration**
-- Integrate with popular smart home platforms (Google Home, Amazon Alexa, Apple HomeKit)
-- Add support for Raspberry Pi Pico W for DIY device integration
-- Implement device grouping and scene management (e.g., "Movie Mode", "Away Mode")
-- Add support for more device types (security cameras, door locks, garage doors)
+[Software Demo Video](http://youtube.link.goes.here)
 
-**User Experience**
-- Implement dark mode theme toggle throughout the application
-- Add customizable dashboard layouts with drag-and-drop widgets
-- Create shareable weather reports and device status summaries
-- Implement user preferences for temperature units (Celsius/Fahrenheit) and measurement systems
+# Development Environment
 
-**Technical Improvements**
-- Add comprehensive unit and integration testing (pytest for backend, Jest for frontend)
-- Implement CI/CD pipeline with GitHub Actions for automated testing and deployment
-- Add Docker containerization for easier deployment and development setup
-- Implement real-time updates using WebSockets for live device status changes
-- Optimize database queries with indexing and caching strategies
-- Add API rate limiting and enhanced security measures
-- Implement data backup and recovery mechanisms
+**Tools Used:**
+- VS Code - Primary IDE
+- Git/GitHub - Version control and collaboration
+- PostgreSQL - Relational database
+- Postman - API testing
+
+**Backend (Python):**
+- FastAPI - Web framework
+- Pydantic - Data validation
+- google-generativeai - Gemini AI integration
+- pandas, numpy, scikit-learn - ML/Analytics
+- psycopg2 - PostgreSQL driver
+- python-jose - JWT authentication
+
+**Frontend (TypeScript/React):**
+- React 18 - UI framework
+- Vite - Build tool
+- Tailwind CSS - Styling
+- shadcn/ui - Component library
+- React Router - Navigation
+
+**IoT (Go/MicroPython):**
+- Raspberry Pi Pico W
+- MicroPython firmware
+- Go - Pico setup tool
+
+# Collaborators
+
+| Name | Role | Contributions |
+|------|------|---------------|
+| Ethan | Developer | AI/ML integration, Analytics, Dashboard charts, Chatbot |
+| Nathan Luckock | Developer | Dashboard redesign, Login system, Documentation |
+| Ian McMaster | Developer | Repository setup, GitHub project board, License |
+| Moroni Motta | Developer | Pico module, Devices page, Dashboard weather |
+| Joshua Chapman | Developer | Branch merging, Dev integration |
+| Tyler Burdett | Developer | Settings page, Backend routes |
+
+# Useful Websites
+
+* [FastAPI Documentation](https://fastapi.tiangolo.com/)
+* [React Documentation](https://react.dev/)
+* [Open-Meteo Weather API](https://open-meteo.com/)
+* [Google Gemini AI](https://ai.google.dev/)
+* [Tailwind CSS](https://tailwindcss.com/)
+* [shadcn/ui Components](https://ui.shadcn.com/)
+* [Raspberry Pi Pico Documentation](https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html)
+* [scikit-learn Documentation](https://scikit-learn.org/)
+
+# Future Work
+
+* Real Sensor Integration - Connect more physical IoT sensors beyond Pico
+* Mobile App - React Native version for iOS/Android
+* Energy Usage Predictions - ML model for predicting energy consumption
+* Multi-user Household - Share devices and locations with family members
+* Alert Notifications - Push notifications via ntfy.sh for weather alerts
+* Historical Data Export - Download weather/sensor data as CSV
+* Voice Control - Integration with Alexa or Google Assistant
+* Automated Routines - "If temperature drops below X, turn on heater"

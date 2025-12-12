@@ -2,10 +2,10 @@ import { PageHeader } from "@/components/PageHeader";
 
 const Settings = () => {
   return (
-    <div className="h-screen bg-gray-100 overflow-hidden flex flex-col relative" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="min-h-screen bg-gray-100 flex flex-col relative">
       <PageHeader title="Settings" />
       
-      <div className="flex-1 overflow-hidden flex flex-col pt-20 pb-6 px-6" style={{ height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
+      <div className="flex-1 overflow-auto flex flex-col pt-20 pb-6 px-6">
         {/* Page content goes here */}
       </div>
     </div>

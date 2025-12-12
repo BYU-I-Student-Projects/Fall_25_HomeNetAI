@@ -77,18 +77,15 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground font-sans antialiased;
     transition: background-color 0.3s ease, color 0.3s ease;
-    overflow: hidden;
-    height: 100vh;
+    min-height: 100vh;
   }
 
   html {
-    overflow: hidden;
-    height: 100vh;
+    min-height: 100vh;
   }
 
   #root {
-    overflow: hidden;
-    height: 100vh;
+    min-height: 100vh;
   }
 }
 
