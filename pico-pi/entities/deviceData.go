@@ -12,8 +12,7 @@ type DeviceData struct {
 	DeviceID       string         `gorm:"index" json:"device_id"`
 	DeviceModuleID string         `gorm:"index" json:"device_module_id"`
 	Timestamp      string         `json:"timestamp"`
-	Temperature    float64        `json:"temperature"`
-	Humidity       float64        `json:"humidity"`
+	Data           string         `gorm:"type:jsonb" json:"data"` // JSON column for flexible sensor data
 	CreatedAt      string         `json:"created_at"`
 	UpdatedAt      string         `json:"updated_at"`
 	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`

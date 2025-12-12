@@ -442,15 +442,20 @@ def Phase2_RegisterDevice():
     
     modules = {}
     
-    # Register thermostat module
-    thermostat_id = RegisterModuleHTTPS(device_id, config["user_id"], "THERMOSTAT", "Living Room Thermostat")
-    if thermostat_id:
-        modules["thermostat_id"] = thermostat_id
+    # Register door module
+    door_id = RegisterModuleHTTPS(device_id, config["user_id"], "DOOR", "Main Door Sensor")
+    if door_id:
+        modules["door_id"] = door_id
     
-    # Register weather sensor module
-    weather_id = RegisterModuleHTTPS(device_id, config["user_id"], "WEATHER_SENSOR", "Outdoor Weather Station")
-    if weather_id:
-        modules["weather_sensor_id"] = weather_id
+    # Register window module
+    window_id = RegisterModuleHTTPS(device_id, config["user_id"], "WINDOW", "Living Room Window")
+    if window_id:
+        modules["window_id"] = window_id
+    
+    # Register light bulb module
+    light_id = RegisterModuleHTTPS(device_id, config["user_id"], "LIGHT", "Bedroom Light Bulb")
+    if light_id:
+        modules["light_id"] = light_id
     
     # Save everything to config
     config["modules"] = modules
@@ -484,24 +489,16 @@ def SendDataToAPI(device_id, module_id, data_type, data):
     if not check_tls():
         return False
     
-    # Build payload matching API schema
+    # Build payload with data as JSON string
     payload = {
         "device_id": device_id,
-        "device_module_id": module_id,  # Changed from module_id
-        "timestamp": GetISO8601Timestamp()
+        "device_module_id": module_id,
+        "timestamp": GetISO8601Timestamp(),
+        "data": json.dumps(data)  # Store all sensor data as JSON
     }
     
-    # Add data fields based on type
-    if data_type == "thermostat":
-        payload["temperature"] = data.get("temperature", 0)
-        # Add other thermostat fields if needed
-    elif data_type == "weather":
-        payload["temperature"] = data.get("temperature", 0)
-        payload["humidity"] = data.get("humidity", 0)
-        # Add pressure if API supports it
-    
     body = json.dumps(payload)
-    print(f"    Payload: {body[:100]}")
+    print(f"    Payload: {body[:150]}")
     
     try:
         dns_results = socket.getaddrinfo(API_HOST, API_PORT_HTTPS)
@@ -617,50 +614,59 @@ def GetCommandsFromAPI(device_id):
         print(f"    ✗ Command fetch failed: {e}")
         return []
 
-def ReadThermostatData():
-    """Mock function: Read thermostat data"""
-    # Mock data - in real implementation, read from actual sensor
-    temperature = 72.5
-    target_temp = 70.0
-    mode = "cooling"
+def ReadDoorStatus():
+    """Read door status from LED state"""
+    # LED on = door open (1), LED off = door closed (0)
+    is_open = led.value()
+    status = "open" if is_open else "closed"
     
-    print(f"🌡️  THERMOSTAT:")
-    print(f"   Current: {temperature}°F")
-    print(f"   Target: {target_temp}°F")
-    print(f"   Mode: {mode}")
+    print(f"🚪  DOOR:")
+    print(f"   Status: {status}")
+    print(f"   LED: {'ON' if is_open else 'OFF'}")
     
     return {
-        "temperature": temperature,
-        "target_temperature": target_temp,
-        "mode": mode
+        "status": status,
+        "is_open": is_open
     }
 
-def ReadWeatherSensorData():
-    """Mock function: Read weather sensor data"""
-    # Mock data - in real implementation, read from actual sensors
-    import machine
+def ReadWindowStatus():
+    """Mock function: Read window status"""
+    # Simulate window cycling between open and closed
+    import time
+    # Use seconds to alternate state
+    current_second = time.localtime()[5]
+    is_open = 1 if (current_second % 10) < 5 else 0
+    status = "open" if is_open else "closed"
     
-    # Read actual temperature from Pico's onboard sensor
-    adcpin = 4
-    sensor = machine.ADC(adcpin)
-    adc_value = sensor.read_u16()
-    volt = (3.3/65535) * adc_value
-    c_temperature = 27 - (volt - 0.706)/0.001721
-    f_temperature = (c_temperature * 9 / 5) + 32
-    
-    # Mock other values
-    humidity = 55.0
-    pressure = 1013.25
-    
-    print(f"☀️  WEATHER SENSOR:")
-    print(f"   Temperature: {round(f_temperature, 1)}°F")
-    print(f"   Humidity: {humidity}%")
-    print(f"   Pressure: {pressure} hPa")
+    print(f"🪟  WINDOW:")
+    print(f"   Status: {status}")
+    print(f"   Position: {'Open' if is_open else 'Closed'}")
     
     return {
-        "temperature": round(f_temperature, 1),
-        "humidity": humidity,
-        "pressure": pressure
+        "status": status,
+        "is_open": is_open,
+        "position": 100 if is_open else 0  # 0-100 percentage
+    }
+
+def ReadLightBulbStatus():
+    """Mock function: Read light bulb status"""
+    # Simulate light cycling between on and off
+    import time
+    # Use seconds to alternate state
+    current_second = time.localtime()[5]
+    is_on = 1 if (current_second % 8) < 4 else 0
+    status = "on" if is_on else "off"
+    brightness = 100 if is_on else 0
+    
+    print(f"💡  LIGHT BULB:")
+    print(f"   Status: {status}")
+    print(f"   Brightness: {brightness}%")
+    
+    return {
+        "status": status,
+        "is_on": is_on,
+        "brightness": brightness,
+        "color": "#FFFFFF"  # White light
     }
 
 def Phase3_Operation():
@@ -671,8 +677,8 @@ def Phase3_Operation():
     
     # Blink 4 times: Starting Phase 3 (operational)
     blink_led(4, 0.2, 0.2)
-    # Turn LED on solid to show running
-    led.on()
+    # Set initial door state to closed (LED off)
+    led.off()
     
     config = LoadConfig()
     if not config or not config.get("device_id"):
@@ -705,79 +711,138 @@ def Phase3_Operation():
             print(f"CYCLE {cycle}")
             print("=" * 50)
             
-            # Read thermostat data
-            thermostat_data = ReadThermostatData()
+            # Read door status
+            door_data = ReadDoorStatus()
             
-            # Send thermostat data to API
-            if modules.get("thermostat_id"):
+            # Send door data to API
+            if modules.get("door_id"):
                 print("    📤 Sending to API...", end=" ")
-                if SendDataToAPI(device_id, modules["thermostat_id"], "thermostat", thermostat_data):
+                if SendDataToAPI(device_id, modules["door_id"], "door", door_data):
                     print("✓")
                 else:
                     print("✗")
             
             print()
             
-            # Read weather sensor data
-            weather_data = ReadWeatherSensorData()
+            # Read window status
+            window_data = ReadWindowStatus()
             
-            # Send weather data to API
-            if modules.get("weather_sensor_id"):
+            # Send window data to API
+            if modules.get("window_id"):
                 print("    📤 Sending to API...", end=" ")
-                if SendDataToAPI(device_id, modules["weather_sensor_id"], "weather", weather_data):
+                if SendDataToAPI(device_id, modules["window_id"], "window", window_data):
                     print("✓")
                 else:
                     print("✗")
             
-            # Check for pending commands every 3 cycles (15 seconds)
-            if cycle % 3 == 0:
-                print("\n📥 Checking for commands...")
-                commands = GetCommandsFromAPI(device_id)
-                if commands:
-                    print(f"   Found {len(commands)} command(s):")
-                    for cmd in commands:
-                        print(f"\n   ╔══ COMMAND RECEIVED ══")
-                        print(f"   ║ ID: {cmd.get('id', 'N/A')}")
-                        print(f"   ║ Command: {cmd.get('command', 'N/A')}")
-                        print(f"   ║ Device Module ID: {cmd.get('device_module_id', 'N/A')}")
-                        print(f"   ║ Module Type: {cmd.get('module_type', 'N/A')}")
-                        print(f"   ║ Status: {cmd.get('status', 'N/A')}")
-                        print(f"   ║ Params: {cmd.get('params', {})}")
-                        print(f"   ╚══════════════════════\n")
-                        
-                        # Execute command based on type
-                        command_name = cmd.get('command', '')
-                        if command_name == 'BLINK_PICO1':
-                            params = cmd.get('params', {})
-                            n = params.get('n', 3)
-                            on_time = params.get('on_time', 0.2)
-                            off_time = params.get('off_time', 0.2)
-                            print(f"   🔵 Executing: Blink LED {n} times")
-                            print(f"      On: {on_time}s, Off: {off_time}s")
-                            blink_led(n, on_time, off_time)
-                            led.on()  # Turn back on after blinking
-                        elif command_name == 'CHANGE_WIFI':
-                            params = cmd.get('params', {})
-                            new_ssid = params.get('ssid', '')
-                            new_password = params.get('password', '')
-                            if new_ssid and new_password:
-                                print(f"   📶 Executing: Change WiFi to '{new_ssid}'")
-                                # Update config with new credentials
-                                config['ssid'] = new_ssid
-                                config['password'] = new_password
-                                if SaveConfig(config):
-                                    print(f"      ✓ WiFi credentials updated in config")
-                                    print(f"      🔄 Restarting to apply new WiFi...")
-                                    time.sleep(2)
-                                    machine.reset()
-                                else:
-                                    print(f"      ✗ Failed to save new credentials")
-                            else:
-                                print(f"   ⚠️  Missing ssid or password in CHANGE_WIFI command")
-                        else:
-                            print(f"   ⚠️  Unknown command: {command_name}")
+            print()
+            
+            # Read light bulb status
+            light_data = ReadLightBulbStatus()
+            
+            # Send light data to API
+            if modules.get("light_id"):
+                print("    📤 Sending to API...", end=" ")
+                if SendDataToAPI(device_id, modules["light_id"], "light", light_data):
+                    print("✓")
                 else:
-                    print("   No pending commands")
+                    print("✗")
+            
+            # Check for pending commands every cycle (5 seconds) for faster response
+            print("\n📥 Checking for commands...")
+            commands = GetCommandsFromAPI(device_id)
+            if commands:
+                print(f"   Found {len(commands)} command(s):")
+                for cmd in commands:
+                    print(f"\n   ╔══ COMMAND RECEIVED ══")
+                    print(f"   ║ ID: {cmd.get('id', 'N/A')}")
+                    print(f"   ║ Command: {cmd.get('command', 'N/A')}")
+                    print(f"   ║ Device Module ID: {cmd.get('device_module_id', 'N/A')}")
+                    print(f"   ║ Module Type: {cmd.get('module_type', 'N/A')}")
+                    print(f"   ║ Status: {cmd.get('status', 'N/A')}")
+                    print(f"   ║ Params: {cmd.get('params', {})}")
+                    print(f"   ╚══════════════════════\n")
+                    
+                    # Execute command based on type
+                    command_name = cmd.get('command', '')
+                    cmd_module_id = cmd.get('device_module_id', '')
+                    
+                    # Door commands
+                    if command_name == 'OPEN_DOOR' and cmd_module_id == modules.get("door_id"):
+                        print(f"   🚪 Executing: Open door")
+                        led.on()
+                        print(f"      ✓ Door opened (LED ON)")
+                        # Send updated status immediately
+                        door_data = ReadDoorStatus()
+                        if modules.get("door_id"):
+                            print("      📤 Sending updated status...", end=" ")
+                            if SendDataToAPI(device_id, modules["door_id"], "door", door_data):
+                                print("✓")
+                    elif command_name == 'CLOSE_DOOR' and cmd_module_id == modules.get("door_id"):
+                        print(f"   🚪 Executing: Close door")
+                        led.off()
+                        print(f"      ✓ Door closed (LED OFF)")
+                        # Send updated status immediately
+                        door_data = ReadDoorStatus()
+                        if modules.get("door_id"):
+                            print("      📤 Sending updated status...", end=" ")
+                            if SendDataToAPI(device_id, modules["door_id"], "door", door_data):
+                                print("✓")
+                    
+                    # Window commands (mock - just print confirmation)
+                    elif command_name == 'OPEN_WINDOW' and cmd_module_id == modules.get("window_id"):
+                        print(f"   🪟 Executing: Open window")
+                        print(f"      ✓ Window opened (MOCK)")
+                    elif command_name == 'CLOSE_WINDOW' and cmd_module_id == modules.get("window_id"):
+                        print(f"   🪟 Executing: Close window")
+                        print(f"      ✓ Window closed (MOCK)")
+                    
+                    # Light commands (mock - just print confirmation)
+                    elif command_name == 'LIGHT_ON' and cmd_module_id == modules.get("light_id"):
+                        print(f"   💡 Executing: Turn light on")
+                        print(f"      ✓ Light turned on (MOCK)")
+                    elif command_name == 'LIGHT_OFF' and cmd_module_id == modules.get("light_id"):
+                        print(f"   💡 Executing: Turn light off")
+                        print(f"      ✓ Light turned off (MOCK)")
+                    
+                    # Special commands
+                    elif command_name == 'BLINK_PICO1':
+                        params = cmd.get('params', {})
+                        n = params.get('n', 3)
+                        on_time = params.get('on_time', 0.2)
+                        off_time = params.get('off_time', 0.2)
+                        print(f"   🔵 Executing: Blink LED {n} times")
+                        print(f"      On: {on_time}s, Off: {off_time}s")
+                        # Save current door state
+                        door_was_open = led.value()
+                        blink_led(n, on_time, off_time)
+                        # Restore door state after blinking
+                        if door_was_open:
+                            led.on()
+                        else:
+                            led.off()
+                    elif command_name == 'CHANGE_WIFI':
+                        params = cmd.get('params', {})
+                        new_ssid = params.get('ssid', '')
+                        new_password = params.get('password', '')
+                        if new_ssid and new_password:
+                            print(f"   📶 Executing: Change WiFi to '{new_ssid}'")
+                            # Update config with new credentials
+                            config['ssid'] = new_ssid
+                            config['password'] = new_password
+                            if SaveConfig(config):
+                                print(f"      ✓ WiFi credentials updated in config")
+                                print(f"      🔄 Restarting to apply new WiFi...")
+                                time.sleep(2)
+                                machine.reset()
+                            else:
+                                print(f"      ✗ Failed to save new credentials")
+                        else:
+                            print(f"   ⚠️  Missing ssid or password in CHANGE_WIFI command")
+                    else:
+                        print(f"   ⚠️  Unknown or mismatched command: {command_name}")
+            else:
+                print("   No pending commands")
             
             print("\n⏱️  Waiting 5 seconds...\n")
             time.sleep(5)
