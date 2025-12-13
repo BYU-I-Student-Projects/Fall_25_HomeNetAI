@@ -164,17 +164,17 @@ const LocationCard = ({ location }: { location: LocationWithWeather }) => {
 
   const icon = getWeatherIcon(weather.current_weather.weathercode);
   const Icon = iconMap[icon];
-  const tempF = Math.round(celsiusToFahrenheit(weather.current_weather.temperature));
+  const tempF = Math.round(weather.current_weather.temperature);
   const highF = weather.daily_forecast.temperature_2m_max[0] 
-    ? Math.round(celsiusToFahrenheit(weather.daily_forecast.temperature_2m_max[0])) 
+    ? Math.round(weather.daily_forecast.temperature_2m_max[0]) 
     : tempF;
   const lowF = weather.daily_forecast.temperature_2m_min[0] 
-    ? Math.round(celsiusToFahrenheit(weather.daily_forecast.temperature_2m_min[0])) 
+    ? Math.round(weather.daily_forecast.temperature_2m_min[0]) 
     : tempF;
 
-  // Get hourly temperatures for chart (last 12 hours)
+  // Get hourly temperatures for chart (last 12 hours) - already in Fahrenheit from API
   const hourlyTemps = weather.hourly_forecast?.temperature_2m 
-    ? weather.hourly_forecast.temperature_2m.slice(-12).map(t => celsiusToFahrenheit(t))
+    ? weather.hourly_forecast.temperature_2m.slice(-12)
     : [];
 
   return (
@@ -230,8 +230,8 @@ const LocationCard = ({ location }: { location: LocationWithWeather }) => {
 // Enhanced Device Card Component with Controls
 const DeviceCard = ({ device, onUpdate }: { device: Device; onUpdate?: (id: number, updates: Partial<Device>) => void }) => {
   const [isOn, setIsOn] = useState(device.status === 'on');
-  // Convert Celsius to Fahrenheit for display (device.value is stored in Celsius)
-  const initialValueF = device.value ? Math.round(celsiusToFahrenheit(device.value)) : 70;
+  // Device value is already in Fahrenheit
+  const initialValueF = device.value ? Math.round(device.value) : 70;
   const [valueF, setValueF] = useState(initialValueF);
 
   const getDeviceIcon = () => {
@@ -502,13 +502,13 @@ const LocationsSmartHome = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 to-gray-100 overflow-hidden flex flex-col relative" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col relative">
       <PageHeader title="Locations & Smart Home" />
 
       {/* Main Content - Split View */}
-      <div className="flex-1 overflow-hidden flex flex-row gap-6 pt-20 px-6 pb-6" style={{ height: 'calc(100vh - 80px)' }}>
+      <div className="flex-1 overflow-auto flex flex-row gap-6 pt-20 px-6 pb-6">
         {/* Left Panel - Locations (40%) */}
-        <div className="flex flex-col w-[40%] overflow-hidden">
+        <div className="flex flex-col w-[40%] min-h-0">
           <div className="mb-6 flex items-center justify-between flex-shrink-0">
             <div>
               <h3 className="text-xl font-bold text-slate-900">Weather Locations</h3>
@@ -545,7 +545,7 @@ const LocationsSmartHome = () => {
         </div>
 
         {/* Right Panel - Smart Home (60%) */}
-        <div className="flex flex-col w-[60%] overflow-hidden">
+        <div className="flex flex-col w-[60%] min-h-0">
           <div className="mb-6 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>

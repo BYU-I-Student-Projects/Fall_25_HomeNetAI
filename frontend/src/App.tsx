@@ -14,6 +14,7 @@ import LocationsSmartHome from "./pages/LocationsSmartHome";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import AIInsights from "./pages/AIInsights";
+import PicoDevices from "./pages/PicoDevices";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
@@ -122,6 +123,17 @@ const App = () => {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <AIInsights />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/pico-devices"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <PicoDevices />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

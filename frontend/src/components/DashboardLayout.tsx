@@ -12,7 +12,7 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutProps) => {
   const { chatOpen, setChatOpen } = useChat();
 
   return (
-    <div className="h-screen flex relative z-10 bg-gray-100 overflow-hidden">
+    <div className="min-h-screen flex relative z-10 bg-gray-100">
       {/* Sidebar Component */}
       <Sidebar 
         sidebarCollapsed={sidebarCollapsed}
@@ -21,15 +21,15 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutProps) => {
 
       {/* Main content */}
       <div 
-        className="flex-1 flex flex-col h-screen transition-all duration-300 ease-in-out overflow-hidden"
+        className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out"
         style={{
           marginLeft: sidebarCollapsed ? '96px' : '240px', // Adjusted for floating sidebar with margins
           marginRight: chatOpen ? '420px' : '0px' // Shrink when chat is open
         }}
       >
         {/* Main content area */}
-        <main className="flex-1 overflow-hidden h-full">
-          <div className="h-full overflow-hidden">
+        <main className="flex-1 overflow-auto">
+          <div className="min-h-full">
             {children}
           </div>
         </main>

@@ -1,0 +1,13 @@
+.env
+rsb.py
+__debug_*
+scripts/
+.dockerignore
+ulrs.txt
+test-api.sh
+*.md
+README.txt
+/misc
+
+docker-compose.yml
+Dockerfile

@@ -11,6 +11,7 @@ import {
   X,
   ChevronLeft,
   Sparkles,
+  Radio,
 } from "lucide-react";
 import { authAPI } from "@/services/api";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }: SidebarProps) => {
       items: [
         { path: "/", icon: LayoutDashboard, label: "Dashboard" },
         { path: "/locations", icon: MapPin, label: "Locations & Smart Home" },
+        { path: "/pico-devices", icon: Radio, label: "Pico Devices" },
       ],
     },
     {
