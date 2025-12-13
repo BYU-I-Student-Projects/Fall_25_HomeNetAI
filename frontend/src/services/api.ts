@@ -3,7 +3,7 @@
  * Connects frontend to Fall_25_HomeNetAI backend API
  */
 
-const API_BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://localhost:8000";
 
 // Development bypass - set to true to skip authentication redirects
 const BYPASS_AUTH = false; // Set to false to enable authentication
@@ -19,12 +19,12 @@ const apiRequest = async <T>(
   options: RequestInit = {}
 ): Promise<T> => {
   const token = getToken();
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -114,6 +114,11 @@ export const imagesAPI = {
 // Locations API
 export const locationsAPI = {
   getAll: async () => {
+    return apiRequest<{ locations: Array<{ id: number; name: string; latitude: number; longitude: number; created_at: string }> }>('/locations');
+  },
+
+  // Alias for getAll - used by Analytics page
+  getUserLocations: async () => {
     return apiRequest<{ locations: Array<{ id: number; name: string; latitude: number; longitude: number; created_at: string }> }>('/locations');
   },
 
@@ -228,7 +233,7 @@ export const aiAPI = {
       console.warn('[AI API] Request timeout after 120 seconds');
       controller.abort();
     }, 120000);
-    
+
     try {
       const result = await apiRequest<{
         response: string;
