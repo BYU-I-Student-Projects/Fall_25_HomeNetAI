@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { useSettings } from "@/contexts/SettingsContext";
 
 // Helper function to convert Celsius to Fahrenheit
 const celsiusToFahrenheit = (celsius: number): number => {
@@ -143,12 +144,13 @@ const MiniTemperatureChart = ({ temperatures }: { temperatures: number[] }) => {
 
 // Enhanced Location Card Component
 const LocationCard = ({ location }: { location: LocationWithWeather }) => {
+  const { formatTemperature, convertTemperature, temperatureUnit } = useSettings();
   const weather = location.weather;
   const loading = location.loading;
 
   if (loading) {
     return (
-      <Card className="flex h-full flex-col items-center justify-center rounded-2xl border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 p-4 shadow-md min-h-[200px]">
+      <Card className="flex h-full flex-col items-center justify-center rounded-2xl border-2 border-slate-300 !bg-white p-4 shadow-md min-h-[200px]">
         <Loader2 className="h-6 w-6 animate-spin text-[#f97316]" />
       </Card>
     );
@@ -156,29 +158,29 @@ const LocationCard = ({ location }: { location: LocationWithWeather }) => {
 
   if (!weather) {
     return (
-      <Card className="flex h-full flex-col items-center justify-center rounded-2xl border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 p-4 shadow-md min-h-[200px]">
+      <Card className="flex h-full flex-col items-center justify-center rounded-2xl border-2 border-slate-300 !bg-white p-4 shadow-md min-h-[200px]">
         <p className="text-sm text-slate-500">No weather data</p>
       </Card>
     );
   }
-
   const icon = getWeatherIcon(weather.current_weather.weathercode);
   const Icon = iconMap[icon];
-  const tempF = Math.round(weather.current_weather.temperature);
-  const highF = weather.daily_forecast.temperature_2m_max[0] 
-    ? Math.round(weather.daily_forecast.temperature_2m_max[0]) 
-    : tempF;
-  const lowF = weather.daily_forecast.temperature_2m_min[0] 
-    ? Math.round(weather.daily_forecast.temperature_2m_min[0]) 
-    : tempF;
+  const temp = Math.round(convertTemperature(weather.current_weather.temperature));
+  const high = weather.daily_forecast.temperature_2m_max[0] 
+    ? Math.round(convertTemperature(weather.daily_forecast.temperature_2m_max[0])) 
+    : temp;
+  const low = weather.daily_forecast.temperature_2m_min[0] 
+    ? Math.round(convertTemperature(weather.daily_forecast.temperature_2m_min[0])) 
+    : temp;
+  const unitSymbol = temperatureUnit === "celsius" ? "°C" : "°F";
 
-  // Get hourly temperatures for chart (last 12 hours) - already in Fahrenheit from API
+  // Get hourly temperatures for chart (last 12 hours) - convert based on settings
   const hourlyTemps = weather.hourly_forecast?.temperature_2m 
-    ? weather.hourly_forecast.temperature_2m.slice(-12)
+    ? weather.hourly_forecast.temperature_2m.slice(-12).map(t => convertTemperature(t))
     : [];
 
   return (
-    <Card className="flex h-full flex-col rounded-2xl border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 p-4 shadow-md transition-all hover:shadow-lg hover:border-[#f97316] min-h-[200px]">
+    <Card className="flex h-full flex-col rounded-2xl border-2 border-slate-300 !bg-white p-4 shadow-md transition-all hover:shadow-lg hover:border-[#f97316] min-h-[200px]">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -199,15 +201,15 @@ const LocationCard = ({ location }: { location: LocationWithWeather }) => {
       <div className="flex items-center justify-between gap-3">
         {/* Left: Temperature Info */}
         <div className="flex-1">
-          <p className="text-3xl font-bold text-slate-900 mb-1">{tempF}°F</p>
+          <p className="text-3xl font-bold text-slate-900 mb-1">{temp}{unitSymbol}</p>
           <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
             <span className="flex items-center gap-1">
               <ArrowUp className="h-3 w-3 text-slate-400" />
-              {highF}°F
+              {high}{unitSymbol}
             </span>
             <span className="flex items-center gap-1">
               <ArrowDown className="h-3 w-3 text-slate-400" />
-              {lowF}°F
+              {low}{unitSymbol}
             </span>
           </div>
           {!location.isMainLocation && (
@@ -229,10 +231,15 @@ const LocationCard = ({ location }: { location: LocationWithWeather }) => {
 
 // Enhanced Device Card Component with Controls
 const DeviceCard = ({ device, onUpdate }: { device: Device; onUpdate?: (id: number, updates: Partial<Device>) => void }) => {
+  const { convertTemperature, temperatureUnit } = useSettings();
   const [isOn, setIsOn] = useState(device.status === 'on');
-  // Device value is already in Fahrenheit
+  // Device value is already in Fahrenheit - convert for display
   const initialValueF = device.value ? Math.round(device.value) : 70;
   const [valueF, setValueF] = useState(initialValueF);
+  const displayValue = Math.round(convertTemperature(valueF));
+  const unitSymbol = temperatureUnit === "celsius" ? "°C" : "°F";
+  const sliderMin = temperatureUnit === "celsius" ? 10 : 50;
+  const sliderMax = temperatureUnit === "celsius" ? 32 : 90;
 
   const getDeviceIcon = () => {
     switch (device.type) {
@@ -292,7 +299,7 @@ const DeviceCard = ({ device, onUpdate }: { device: Device; onUpdate?: (id: numb
   };
 
   return (
-    <Card className="flex flex-col rounded-2xl border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 p-5 shadow-md hover:shadow-lg hover:border-[#f97316] transition-all h-[180px]">
+    <Card className="flex flex-col rounded-2xl border-2 border-slate-300 !bg-white p-5 shadow-md hover:shadow-lg hover:border-[#f97316] transition-all h-[180px]">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <p className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-1.5">
@@ -314,7 +321,7 @@ const DeviceCard = ({ device, onUpdate }: { device: Device; onUpdate?: (id: numb
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-slate-600">Temperature</span>
-              <span className="text-xl font-bold text-[#f97316]">{valueF}°F</span>
+              <span className="text-xl font-bold text-[#f97316]">{displayValue}{unitSymbol}</span>
             </div>
             <Slider
               value={[valueF]}
@@ -325,8 +332,8 @@ const DeviceCard = ({ device, onUpdate }: { device: Device; onUpdate?: (id: numb
               className="w-full"
             />
             <div className="flex items-center justify-between text-xs text-slate-400">
-              <span>50°F</span>
-              <span>86°F</span>
+              <span>{sliderMin}{unitSymbol}</span>
+              <span>{sliderMax}{unitSymbol}</span>
             </div>
           </div>
         ) : (
@@ -495,14 +502,14 @@ const LocationsSmartHome = () => {
 
   if (loading && locations.length === 0) {
     return (
-      <div className="h-screen bg-gray-100 flex items-center justify-center">
+      <div className="h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#f97316]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col relative">
+    <div className="min-h-screen bg-background flex flex-col relative">
       <PageHeader title="Locations & Smart Home" />
 
       {/* Main Content - Split View */}
@@ -511,8 +518,8 @@ const LocationsSmartHome = () => {
         <div className="flex flex-col w-[40%] min-h-0">
           <div className="mb-6 flex items-center justify-between flex-shrink-0">
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Weather Locations</h3>
-              <p className="text-sm text-slate-500 mt-1">All your tracked locations</p>
+              <h3 className="text-xl font-bold text-foreground">Weather Locations</h3>
+              <p className="text-sm text-muted-foreground mt-1">All your tracked locations</p>
             </div>
             <Button
               onClick={() => setShowAddLocation(true)}
@@ -530,7 +537,7 @@ const LocationsSmartHome = () => {
             `}</style>
             <div className="grid grid-cols-1 gap-5 locations-scroll">
               {locations.length === 0 ? (
-                <Card className="flex flex-col items-center justify-center rounded-2xl border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 p-8 shadow-md">
+                <Card className="flex flex-col items-center justify-center rounded-2xl border-2 border-slate-300 !bg-white p-8 shadow-md">
                   <Cloud className="h-12 w-12 text-slate-400 mb-4" />
                   <p className="text-sm font-medium text-slate-600">No locations yet</p>
                   <p className="text-xs text-slate-400 mt-1">Add a location to get started</p>
@@ -549,9 +556,9 @@ const LocationsSmartHome = () => {
           <div className="mb-6 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">Smart Home</h3>
+                <h3 className="text-xl font-bold text-foreground">Smart Home</h3>
                 {mainLocation && (
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {mainLocation.name} • {mainLocationDevices.length} {mainLocationDevices.length === 1 ? 'device' : 'devices'}
                   </p>
                 )}
@@ -566,7 +573,7 @@ const LocationsSmartHome = () => {
               }
             `}</style>
             {mainLocationDevices.length === 0 ? (
-              <Card className="flex flex-col items-center justify-center rounded-2xl border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 p-8 shadow-md">
+              <Card className="flex flex-col items-center justify-center rounded-2xl border-2 border-slate-300 !bg-white p-8 shadow-md">
                 <Home className="h-12 w-12 text-slate-400 mb-4" />
                 <p className="text-sm font-medium text-slate-600">No devices yet</p>
                 <p className="text-xs text-slate-400 mt-1">Add devices to control your smart home</p>
@@ -574,7 +581,7 @@ const LocationsSmartHome = () => {
             ) : (
               <div className="space-y-4 devices-scroll">
                 {Object.entries(devicesByRoom).map(([room, roomDevices]) => (
-                  <Card key={room} className="border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 shadow-md rounded-2xl overflow-hidden hover:shadow-lg transition-all">
+                  <Card key={room} className="border-2 border-slate-300 !bg-white shadow-md rounded-2xl overflow-hidden hover:shadow-lg transition-all">
                     <button
                       onClick={() => toggleRoom(room)}
                       className="w-full flex items-center justify-between p-5 hover:bg-slate-100/50 transition-colors border-b border-slate-200"

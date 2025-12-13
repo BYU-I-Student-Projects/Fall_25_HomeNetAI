@@ -11,7 +11,7 @@ export const PageHeader = ({ title }: PageHeaderProps) => {
 
   return (
     <div 
-      className="fixed top-0 left-0 h-20 bg-gradient-to-br from-slate-50 to-gray-100 z-50 flex items-center transition-all duration-300 ease-in-out" 
+      className="fixed top-0 left-0 h-20 bg-gradient-to-br from-background to-secondary z-50 flex items-center transition-all duration-300 ease-in-out" 
       style={{ 
         position: 'fixed', 
         zIndex: 50,
@@ -40,10 +40,10 @@ export const PageHeader = ({ title }: PageHeaderProps) => {
           <MessageCircle className="h-5 w-5" />
           Ask Now
         </Button>
-        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white shadow-sm hover:bg-slate-50 border-0">
+        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-card shadow-sm hover:bg-secondary border-0">
           <Bell className="h-6 w-6 text-[#f97316]" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-white shadow-sm hover:bg-slate-50 border-0">
+        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-card shadow-sm hover:bg-secondary border-0">
           <Menu className="h-6 w-6 text-[#f97316]" />
         </Button>
       </div>

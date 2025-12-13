@@ -67,6 +67,63 @@ All colors MUST be HSL.
     --sidebar-ring: 25 95% 53%;
   }
 
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 25 95% 53%;
+
+    /* Weather theme - Vibrant orange (same in dark) */
+    --weather-primary: 25 95% 53%;
+    --weather-secondary: 25 90% 48%;
+    --weather-gradient: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 90% 48%));
+
+    /* Smart home theme - Vibrant orange variant */
+    --smart-primary: 25 95% 53%;
+    --smart-secondary: 25 90% 48%;
+    --smart-gradient: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 90% 48%));
+
+    /* AI theme - Vibrant orange variant */
+    --ai-primary: 25 95% 53%;
+    --ai-secondary: 25 90% 48%;
+    --ai-gradient: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 90% 48%));
+
+    /* Glass effects - darker variant */
+    --glass-bg: 222 47% 14% / 0.8;
+    --glass-border: 217 33% 30% / 0.3;
+
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 22%;
+    --sidebar-ring: 25 95% 53%;
+  }
 }
 
 @layer base {
@@ -92,6 +149,10 @@ All colors MUST be HSL.
 @layer utilities {
   .glass-card {
     @apply backdrop-blur-xl bg-white/90 border border-gray-200/40 shadow-lg rounded-xl;
+  }
+
+  .dark .glass-card {
+    @apply bg-slate-800/90 border-slate-700/40;
   }
 
   .gradient-weather {

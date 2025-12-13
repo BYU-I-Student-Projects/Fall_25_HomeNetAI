@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SavedLocation } from "@/lib/storage";
 import { Droplets, Wind, Eye, Gauge, MapPin } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface WeatherCardProps {
   location: SavedLocation;
@@ -11,6 +12,7 @@ interface WeatherCardProps {
 
 const WeatherCard = memo(({ location, onClick }: WeatherCardProps) => {
   const { city, weather } = location;
+  const { convertWindSpeed, windSpeedSymbol } = useSettings();
 
   return (
     <Card 
@@ -49,7 +51,7 @@ const WeatherCard = memo(({ location, onClick }: WeatherCardProps) => {
                
                <div className="text-center">
                  <p className="text-xs text-muted-foreground">Wind</p>
-                 <p className="font-medium text-sm">{weather.windSpeed} mph</p>
+                 <p className="font-medium text-sm">{convertWindSpeed(weather.windSpeed).toFixed(1)} {windSpeedSymbol}</p>
                </div>
                
                <div className="text-center">

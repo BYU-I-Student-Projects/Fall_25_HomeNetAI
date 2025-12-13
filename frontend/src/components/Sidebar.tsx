@@ -90,8 +90,8 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }: SidebarProps) => {
       {/* Sidebar - Floating design */}
       <aside
         className={cn(
-          "fixed top-20 bottom-6 left-6 z-50 bg-white flex flex-col",
-          "rounded-2xl shadow-lg border border-gray-200/50",
+          "fixed top-20 bottom-6 left-6 z-50 bg-card flex flex-col",
+          "rounded-2xl shadow-lg border border-border",
           "transition-[width] duration-200 ease-in-out",
           sidebarCollapsed ? "w-20" : "w-52",
           "md:translate-x-0",
@@ -107,20 +107,20 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }: SidebarProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-full hover:bg-gray-100 absolute top-4 right-4"
+              className="h-7 w-7 rounded-full hover:bg-secondary absolute top-4 right-4"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             >
-              <ChevronLeft className="h-3.5 w-3.5 text-gray-600" />
+              <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>
           )}
           {sidebarCollapsed && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-full hover:bg-gray-100"
+              className="h-7 w-7 rounded-full hover:bg-secondary"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             >
-              <ChevronLeft className="h-3.5 w-3.5 text-gray-600 rotate-180" />
+              <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground rotate-180" />
             </Button>
           )}
         </div>
@@ -142,7 +142,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }: SidebarProps) => {
                       "justify-center md:justify-start",
                       isActive
                         ? "bg-smart-primary/10 text-smart-primary"
-                        : "text-gray-600 hover:bg-gray-100"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                     )}
                     title={sidebarCollapsed ? item.label : undefined}
                   >
@@ -165,7 +165,7 @@ const Sidebar = ({ sidebarCollapsed, setSidebarCollapsed }: SidebarProps) => {
             variant="ghost"
             onClick={handleLogout}
             className={cn(
-              "w-full rounded-xl text-gray-600 hover:text-gray-900 hover:bg-orange-50 hover:border-orange-200",
+              "w-full rounded-xl text-muted-foreground hover:text-foreground hover:bg-orange-50 dark:hover:bg-orange-950/30 hover:border-orange-200 dark:hover:border-orange-800",
               "border border-transparent transition-all",
               "justify-center md:justify-start"
             )}
