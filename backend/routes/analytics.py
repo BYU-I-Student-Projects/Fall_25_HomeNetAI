@@ -24,11 +24,24 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     try:
         token = credentials.credentials
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=["HS256"])
-        user_id = payload.get("user_id")
         username = payload.get("sub") or payload.get("username")
+        user_id = payload.get("user_id")
+        
+        # If no user_id in token, look it up by username
+        if not user_id and username:
+            from database.database import HomeNetDatabase
+            db = HomeNetDatabase()
+            conn = db.get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+            result = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            if result:
+                user_id = result[0]
         
         if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token: missing user_id")
+            raise HTTPException(status_code=401, detail="Invalid token: could not determine user")
         
         return {"user_id": user_id, "username": username}
     except jwt.ExpiredSignatureError:
