@@ -73,12 +73,12 @@ export const AIInsights: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Insights</h1>
-          <p className="text-gray-600 text-lg">
+          <h1 className="text-4xl font-bold text-foreground mb-2">AI Insights</h1>
+          <p className="text-muted-foreground text-lg">
             Get intelligent insights and chat with AI about your weather and home data
           </p>
         </div>
@@ -88,7 +88,7 @@ export const AIInsights: React.FC = () => {
           {/* Insights Panel */}
           <div className="lg:col-span-1 space-y-6">
             {/* Smart Insights Card */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="bg-white dark:bg-white rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-300">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Smart Insights</h2>
                 <button
@@ -164,7 +164,7 @@ export const AIInsights: React.FC = () => {
             </div>
 
             {/* Quick Tips Card */}
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg p-6 border border-orange-200">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-orange-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg className="w-5 h-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

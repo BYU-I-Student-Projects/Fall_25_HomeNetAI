@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { locationsAPI } from '../services/api';
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface Location {
   id: number;
@@ -71,6 +72,9 @@ interface AnomalyData {
 }
 
 const Analytics: React.FC = () => {
+  const { convertTemperature, temperatureUnit, convertWindSpeed, windSpeedSymbol } = useSettings();
+  const unitSymbol = temperatureUnit === "celsius" ? "°C" : "°F";
+  
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
   const [timeRange, setTimeRange] = useState<number>(30);
@@ -92,6 +96,13 @@ const Analytics: React.FC = () => {
   const kmhToMph = (kmh: number | null | undefined): number | null => {
     if (kmh === null || kmh === undefined || isNaN(kmh)) return null;
     return kmh * 0.621371;
+  };
+
+  // Convert wind speed from km/h to user's preferred unit
+  const convertWind = (kmh: number | null): number | null => {
+    if (kmh === null) return null;
+    const mph = kmh * 0.621371;
+    return convertWindSpeed(mph);
   };
 
   useEffect(() => {
@@ -196,10 +207,10 @@ const Analytics: React.FC = () => {
   const formatChartData = (data: HistoricalData[]) => {
     return data.map(item => ({
       time: new Date(item.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      temperature: item.temperature,  // Already in Fahrenheit from API
+      temperature: item.temperature !== null ? Math.round(convertTemperature(item.temperature)) : null,
       humidity: item.humidity,
       precipitation: mmToInches(item.precipitation),
-      wind_speed: kmhToMph(item.wind_speed)
+      wind_speed: convertWind(item.wind_speed)
     }));
   };
 
@@ -217,38 +228,17 @@ const Analytics: React.FC = () => {
 
   if (locations.length === 0) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f8fafc',
-        padding: '24px'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '48px',
-          textAlign: 'center',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-        }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '16px' }}>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-[1200px] mx-auto bg-white rounded-xl p-12 text-center shadow-md">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">
             No Locations Found
           </h2>
-          <p style={{ color: '#64748b', marginBottom: '24px' }}>
+          <p className="text-muted-foreground mb-6">
             Add a location to start viewing analytics and insights.
           </p>
           <button
             onClick={() => window.location.href = '/add-location'}
-            style={{
-              backgroundColor: '#007bff',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '500'
-            }}
+            className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
           >
             Add Location
           </button>
@@ -260,46 +250,22 @@ const Analytics: React.FC = () => {
   const chartData = formatChartData(historicalData);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f8fafc',
-      padding: '24px'
-    }}>
+    <div className="min-h-screen bg-background p-6">
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: '700',
-            color: '#1e293b',
-            marginBottom: '8px'
-          }}>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             📊 Weather Analytics
           </h1>
-          <p style={{ fontSize: '16px', color: '#64748b' }}>
+          <p className="text-base text-muted-foreground">
             Advanced insights and predictions for your locations
           </p>
         </div>
 
         {/* Controls */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '24px',
-          marginBottom: '24px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          display: 'flex',
-          gap: '24px',
-          flexWrap: 'wrap'
-        }}>
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-md flex gap-6 flex-wrap">
           <div style={{ flex: '1', minWidth: '200px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '500',
-              color: '#475569',
-              marginBottom: '8px'
-            }}>
+            <label className="block text-sm font-medium text-slate-600 mb-2">
               Location
             </label>
             <select
@@ -388,7 +354,7 @@ const Analytics: React.FC = () => {
                   <div>
                     <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Temperature</p>
                     <p style={{ fontSize: '28px', fontWeight: '700', color: '#1e293b' }}>
-                      {summary.statistics?.temperature?.mean?.toFixed(1) ?? '--'}°F
+                      {summary.statistics.temperature.mean !== null ? Math.round(convertTemperature(summary.statistics.temperature.mean)) : '--'}{unitSymbol}
                     </p>
                   </div>
                   <span style={{ fontSize: '32px' }}>🌡️</span>
@@ -400,12 +366,14 @@ const Analytics: React.FC = () => {
                     color: getTrendColor(trends.temperature?.direction),
                     fontWeight: '500'
                   }}>
-                    {trends.temperature?.slope_per_day != null ? ((trends.temperature.slope_per_day * 1.8).toFixed(2)) : '0.00'}°F/day
+                    {temperatureUnit === "celsius" 
+                      ? (trends.temperature?.slope_per_day)?.toFixed(2) 
+                      : (trends.temperature?.slope_per_day * 1.8)?.toFixed(2)}{unitSymbol}/day
                   </span>
                 </div>
                 <div style={{ marginTop: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                  Min: {summary.statistics?.temperature?.min?.toFixed(1) ?? '--'}°F |
-                  Max: {summary.statistics?.temperature?.max?.toFixed(1) ?? '--'}°F
+                  Min: {summary.statistics.temperature.min !== null ? Math.round(convertTemperature(summary.statistics.temperature.min)) : '--'}{unitSymbol} | 
+                  Max: {summary.statistics.temperature.max !== null ? Math.round(convertTemperature(summary.statistics.temperature.max)) : '--'}{unitSymbol}
                 </div>
               </div>
 
@@ -483,7 +451,7 @@ const Analytics: React.FC = () => {
                   <div>
                     <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Wind Speed</p>
                     <p style={{ fontSize: '28px', fontWeight: '700', color: '#1e293b' }}>
-                      {kmhToMph(summary.statistics?.wind_speed?.mean)?.toFixed(1) ?? '--'} mph
+                      {convertWind(summary.statistics.wind_speed.mean)?.toFixed(1)} {windSpeedSymbol}
                     </p>
                   </div>
                   <span style={{ fontSize: '32px' }}>💨</span>
@@ -499,7 +467,7 @@ const Analytics: React.FC = () => {
                   </span>
                 </div>
                 <div style={{ marginTop: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                  Max: {kmhToMph(summary.statistics?.wind_speed?.max)?.toFixed(1) ?? '--'} mph
+                  Max: {convertWind(summary.statistics.wind_speed.max)?.toFixed(1)} {windSpeedSymbol}
                 </div>
               </div>
             </div>

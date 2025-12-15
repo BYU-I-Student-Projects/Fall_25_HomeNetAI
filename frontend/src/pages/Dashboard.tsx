@@ -8,6 +8,7 @@ import { locationsAPI, weatherAPI } from "@/services/api";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { useSettings } from "@/contexts/SettingsContext";
 
 // Helper function to convert Celsius to Fahrenheit
 const celsiusToFahrenheit = (celsius: number): number => {
@@ -23,13 +24,14 @@ const kmhToMph = (kmh: number): number => {
 const WindChart = ({ windData, currentTempF, currentWindSpeed, locationIndex }: { windData?: Array<{ time: string; speedKmh: number }>; currentTempF?: number; currentWindSpeed?: number; locationIndex?: number }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+  const { convertWindSpeed, windSpeedSymbol } = useSettings();
 
   if (!windData || windData.length === 0) {
     return <div className="h-full flex items-center justify-center text-slate-400 text-sm">No wind data</div>;
   }
   
-  // Convert to mph
-  const data = windData.map(d => ({ ...d, speedMph: kmhToMph(d.speedKmh) }));
+  // Convert km/h to mph first, then to user's preferred unit
+  const data = windData.map(d => ({ ...d, speed: convertWindSpeed(kmhToMph(d.speedKmh)) }));
 
   // Use responsive dimensions - even padding on all sides, adjusted to fit card
   const padding = { top: 15, right: 20, bottom: 15, left: 50 };
@@ -38,12 +40,12 @@ const WindChart = ({ windData, currentTempF, currentWindSpeed, locationIndex }: 
   const graphWidth = baseWidth - padding.left - padding.right;
   const graphHeight = baseHeight - padding.top - padding.bottom;
 
-  const minSpeed = Math.min(...data.map(d => d.speedMph));
-  const maxSpeed = Math.max(...data.map(d => d.speedMph));
+  const minSpeed = Math.min(...data.map(d => d.speed));
+  const maxSpeed = Math.max(...data.map(d => d.speed));
   const speedRange = maxSpeed - minSpeed || 1;
-  const avgSpeed = data.reduce((sum, d) => sum + d.speedMph, 0) / data.length;
-  const currentSpeed = currentWindSpeed !== undefined ? kmhToMph(currentWindSpeed * 3.6) : data[data.length - 1]?.speedMph || 0;
-  const previousSpeed = data[data.length - 2]?.speedMph || currentSpeed;
+  const avgSpeed = data.reduce((sum, d) => sum + d.speed, 0) / data.length;
+  const currentSpeed = currentWindSpeed !== undefined ? convertWindSpeed(kmhToMph(currentWindSpeed * 3.6)) : data[data.length - 1]?.speed || 0;
+  const previousSpeed = data[data.length - 2]?.speed || currentSpeed;
   const trend = currentSpeed > previousSpeed ? 'rising' : currentSpeed < previousSpeed ? 'falling' : 'steady';
   const trendDiff = Math.abs(currentSpeed - previousSpeed).toFixed(1);
   const changePercent = previousSpeed !== 0 ? ((currentSpeed - previousSpeed) / previousSpeed * 100).toFixed(1) : '0.0';
@@ -58,8 +60,8 @@ const WindChart = ({ windData, currentTempF, currentWindSpeed, locationIndex }: 
   // Calculate points for the line
   const points = data.map((point, index) => {
     const x = padding.left + (index / (data.length - 1)) * graphWidth;
-    const y = padding.top + graphHeight - ((point.speedMph - minSpeed) / speedRange) * graphHeight;
-    return { x, y, time: point.time, speed: point.speedMph };
+    const y = padding.top + graphHeight - ((point.speed - minSpeed) / speedRange) * graphHeight;
+    return { x, y, time: point.time, speed: point.speed };
   });
 
   // Create smooth curved path using Catmull-Rom spline for smooth curves without sharp edges
@@ -142,7 +144,7 @@ const WindChart = ({ windData, currentTempF, currentWindSpeed, locationIndex }: 
         {/* Current Wind Speed - compact */}
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-slate-900">{currentSpeed.toFixed(1)} mph</span>
+            <span className="text-xl font-bold text-slate-900">{currentSpeed.toFixed(1)} {windSpeedSymbol}</span>
           </div>
         </div>
       </div>
@@ -226,7 +228,7 @@ const WindChart = ({ windData, currentTempF, currentWindSpeed, locationIndex }: 
               className="text-[10px] fill-slate-600 font-medium"
               style={{ dominantBaseline: 'middle' }}
             >
-              {speedValue.toFixed(0)} mph
+              {speedValue.toFixed(0)} {windSpeedSymbol}
             </text>
           );
         })}
@@ -348,7 +350,7 @@ const WindChart = ({ windData, currentTempF, currentWindSpeed, locationIndex }: 
               textAnchor="middle"
               className="text-xs fill-slate-900 font-semibold"
             >
-              {points[hoveredIndex].speed.toFixed(1)} mph
+              {points[hoveredIndex].speed.toFixed(1)} {windSpeedSymbol}
             </text>
             <text
               x={points[hoveredIndex].x}
@@ -381,6 +383,7 @@ interface TemperatureTrendChartProps {
 const TemperatureTrendChart = ({ data, locationIndex }: TemperatureTrendChartProps & { locationIndex?: number } = {}) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+  const { formatTemperature, convertTemperature, temperatureUnit } = useSettings();
 
   if (!data || data.length === 0) {
     return (
@@ -390,8 +393,11 @@ const TemperatureTrendChart = ({ data, locationIndex }: TemperatureTrendChartPro
     );
   }
   
-  // Data is already in Fahrenheit from API
-  const tempData: TemperatureDataPoint[] = data;
+  // Data is already in Fahrenheit from API - convert for display
+  const tempData: TemperatureDataPoint[] = data.map(d => ({
+    ...d,
+    temperature: convertTemperature(d.temperature)
+  }));
 
   // Use responsive dimensions - even padding on all sides
   const padding = { top: 20, right: 20, bottom: 20, left: 35 };
@@ -405,6 +411,7 @@ const TemperatureTrendChart = ({ data, locationIndex }: TemperatureTrendChartPro
   const maxTemp = Math.max(...tempData.map(d => d.temperature));
   const tempRange = maxTemp - minTemp || 1;
   const avgTemp = tempData.reduce((sum, d) => sum + d.temperature, 0) / tempData.length;
+  const unitSymbol = temperatureUnit === "celsius" ? "°C" : "°F";
   
   // Round min/max for Y-axis labels
   const yAxisMin = Math.floor(minTemp);
@@ -478,15 +485,15 @@ const TemperatureTrendChart = ({ data, locationIndex }: TemperatureTrendChartPro
           <div className="flex items-center gap-3 text-xs">
             <div className="flex items-center gap-1">
               <span className="text-slate-500">High:</span>
-              <span className="font-semibold text-slate-900">{maxTemp.toFixed(1)}°F</span>
+              <span className="font-semibold text-slate-900">{maxTemp.toFixed(1)}{unitSymbol}</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="text-slate-500">Low:</span>
-              <span className="font-semibold text-slate-900">{minTemp.toFixed(1)}°F</span>
+              <span className="font-semibold text-slate-900">{minTemp.toFixed(1)}{unitSymbol}</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="text-slate-500">Avg:</span>
-              <span className="font-semibold text-slate-900">{avgTemp.toFixed(1)}°F</span>
+              <span className="font-semibold text-slate-900">{avgTemp.toFixed(1)}{unitSymbol}</span>
             </div>
           </div>
         </div>
@@ -494,7 +501,7 @@ const TemperatureTrendChart = ({ data, locationIndex }: TemperatureTrendChartPro
         {/* Current Temperature - compact */}
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-slate-900">{currentTemp.toFixed(1)}°F</span>
+            <span className="text-xl font-bold text-slate-900">{currentTemp.toFixed(1)}{unitSymbol}</span>
           </div>
         </div>
       </div>
@@ -579,7 +586,7 @@ const TemperatureTrendChart = ({ data, locationIndex }: TemperatureTrendChartPro
               className="text-[10px] fill-slate-600 font-medium"
               style={{ dominantBaseline: 'middle' }}
             >
-              {tempValue.toFixed(0)}°F
+              {tempValue.toFixed(0)}{unitSymbol}
             </text>
           );
         })}
@@ -701,7 +708,7 @@ const TemperatureTrendChart = ({ data, locationIndex }: TemperatureTrendChartPro
               textAnchor="middle"
               className="text-xs fill-slate-900 font-semibold"
             >
-              {points[hoveredIndex].temp.toFixed(1)}°F
+              {points[hoveredIndex].temp.toFixed(1)}{unitSymbol}
             </text>
             <text
               x={points[hoveredIndex].x}
@@ -774,11 +781,18 @@ interface WeatherMetricsCardProps {
 }
 
 const WeatherMetricsCard = ({ weather, locationName }: WeatherMetricsCardProps) => {
-  // Get current values
-  const temp = weather?.current_weather?.temperature;
+  const { convertTemperature, temperatureUnit, convertWindSpeed, windSpeedSymbol } = useSettings();
+  
+  // Get current values - convert temperature based on settings
+  const tempF = weather?.current_weather?.temperature;
+  const temp = tempF !== undefined ? convertTemperature(tempF) : undefined;
   const windSpeed = weather?.current_weather?.windspeed;
+  const windSpeedConverted = windSpeed !== undefined ? convertWindSpeed(kmhToMph(windSpeed * 3.6)) : undefined;
   const humidity = weather?.hourly_forecast?.relative_humidity_2m?.[0];
   const uvIndex = weather?.hourly_forecast?.uv_index?.[0];
+  const unitSymbol = temperatureUnit === "celsius" ? "°C" : "°F";
+  const tempMax = temperatureUnit === "celsius" ? 50 : 120;
+  const windMax = windSpeedSymbol === "km/h" ? 80 : 50;
   
   // Get timestamp for "as of" display
   const weatherTime = weather?.current_weather?.time 
@@ -883,9 +897,9 @@ const WeatherMetricsCard = ({ weather, locationName }: WeatherMetricsCardProps) 
           {/* Temperature Gauge */}
           <Gauge
             value={temp}
-            max={120}
+            max={tempMax}
             label="Temperature"
-            unit="°F"
+            unit={unitSymbol}
             color="#f97316"
             size={80}
           />
@@ -902,10 +916,10 @@ const WeatherMetricsCard = ({ weather, locationName }: WeatherMetricsCardProps) 
 
           {/* Wind Speed Gauge */}
           <Gauge
-            value={windSpeed ? kmhToMph(windSpeed * 3.6) : undefined}
-            max={50}
+            value={windSpeedConverted}
+            max={windMax}
             label="Wind Speed"
-            unit="mph"
+            unit={windSpeedSymbol}
             color="#14b8a6"
             size={80}
           />
@@ -1043,6 +1057,7 @@ const ForecastSkeleton = () => (
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { formatTemperature, convertTemperature, temperatureUnit } = useSettings();
   const today = new Date();
   const [locations, setLocations] = useState<LocationWithWeather[]>([]);
   const [currentLocationIndex, setCurrentLocationIndex] = useState(0);
@@ -1308,7 +1323,7 @@ const Dashboard = () => {
       })()
     : undefined;
 
-  // Prepare 7-day forecast - convert to Fahrenheit
+  // Prepare 7-day forecast - convert based on settings
   const forecastData = currentWeather?.daily_forecast?.time && currentWeather?.daily_forecast?.temperature_2m_max && currentWeather?.daily_forecast?.temperature_2m_min
     ? currentWeather.daily_forecast.time.slice(0, 7).map((dateStr, idx) => {
         const date = new Date(dateStr);
@@ -1321,16 +1336,18 @@ const Dashboard = () => {
         noonDate.setHours(12, 0, 0, 0);
         return {
           icon: getWeatherEmoji(weatherCode, noonDate),
-          high: Math.round(currentWeather.daily_forecast.temperature_2m_max[idx]),
-          low: Math.round(currentWeather.daily_forecast.temperature_2m_min[idx]),
+          high: Math.round(convertTemperature(currentWeather.daily_forecast.temperature_2m_max[idx])),
+          low: Math.round(convertTemperature(currentWeather.daily_forecast.temperature_2m_min[idx])),
           date: format(date, 'd MMM'),
           day: dayShort,
         };
       })
     : [];
+  
+  const unitSymbol = temperatureUnit === "celsius" ? "°C" : "°F";
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col relative">
+    <div className="min-h-screen bg-background flex flex-col relative">
       <PageHeader title="Overview Dashboard" />
       
       <div className="flex-1 overflow-auto flex flex-col pt-20 px-6 pb-6">
@@ -1349,21 +1366,21 @@ const Dashboard = () => {
             {/* Date, Time, and Location Info */}
             <div className="flex flex-col justify-center gap-1">
               <div className="flex items-center gap-3">
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {format(today, "EEEE")}, {format(today, "MMMM yyyy")}
                 </p>
-                <span className="text-slate-300">•</span>
-                <p className="text-sm font-semibold text-slate-900">
+                <span className="text-slate-300 dark:text-slate-500">•</span>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {format(today, "h:mm a")} {Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ')}
                 </p>
               </div>
               {currentLocation && (
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-[#f97316] flex-shrink-0" />
-                  <p className="text-base font-bold text-slate-900">
+                  <p className="text-base font-bold text-slate-900 dark:text-slate-100">
                     {currentLocation.name}
                     {locations.length > 1 && (
-                      <span className="text-sm font-normal text-slate-500 ml-1.5">
+                      <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-1.5">
                         ({currentLocationIndex + 1} of {locations.length})
                       </span>
                     )}
@@ -1406,7 +1423,7 @@ const Dashboard = () => {
               <div className="mt-2">
                 {/* Temperature Text */}
                 <div className="text-[42px] font-bold text-black leading-none">
-                  {displayWeather ? `${Math.round(displayWeather.temperature)}°F` : "--°F"}
+                  {displayWeather ? formatTemperature(displayWeather.temperature) : `--${temperatureUnit === "celsius" ? "°C" : "°F"}`}
                 </div>
                 
                 {/* Condition Row */}
@@ -1486,8 +1503,8 @@ const Dashboard = () => {
                   <div key={i} className="flex items-center justify-between rounded-2xl bg-white px-4 py-2.5 shadow-sm" style={{ flexShrink: 0, minHeight: '48px' }}>
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{forecast.icon}</span>
-                      <span className="text-lg font-bold text-[#f97316]">+{forecast.high}°F</span>
-                      <span className="text-xs font-medium text-green-400">/ {forecast.low}°F</span>
+                      <span className="text-lg font-bold text-[#f97316]">+{forecast.high}{unitSymbol}</span>
+                      <span className="text-xs font-medium text-green-400">/ {forecast.low}{unitSymbol}</span>
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-slate-400">{forecast.date}</div>

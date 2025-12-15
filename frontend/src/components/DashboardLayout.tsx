@@ -12,7 +12,7 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutProps) => {
   const { chatOpen, setChatOpen } = useChat();
 
   return (
-    <div className="min-h-screen flex relative z-10 bg-gray-100">
+    <div className="min-h-screen flex relative z-10 bg-background">
       {/* Sidebar Component */}
       <Sidebar 
         sidebarCollapsed={sidebarCollapsed}
