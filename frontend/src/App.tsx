@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Locations from "./pages/Locations";
 import LocationDetail from "./pages/LocationDetail";
+import AddLocation from "./pages/AddLocation";
 import SmartHome from "./pages/SmartHome";
 import LocationsSmartHome from "./pages/LocationsSmartHome";
 import Analytics from "./pages/Analytics";
@@ -28,18 +29,18 @@ const App = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <SettingsProvider>
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-            <BrowserRouter
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-              }}
-            >
-            <Routes>
+      <SettingsProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
+          <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
@@ -142,6 +143,17 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+                path="/add-location"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <AddLocation />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
