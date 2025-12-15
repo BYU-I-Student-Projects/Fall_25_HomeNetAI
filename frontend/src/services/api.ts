@@ -3,7 +3,7 @@
  * Connects frontend to Fall_25_HomeNetAI backend API
  */
 
-const API_BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://localhost:8000";
 
 // Development bypass - set to true to skip authentication redirects
 const BYPASS_AUTH = false; // Set to false to enable authentication
